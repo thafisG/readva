@@ -3,56 +3,151 @@
     <aside class="left-column">
       <app-streak-challenge [progress]="userProgress()"></app-streak-challenge>
 
-      <div class="mini-card mini-nav">
-        <button class="nav-item active">🏠 Dashboard</button>
-        <button class="nav-item">📚 Biblioteca</button>
-        <button class="nav-item">🏆 Desafios</button>
-      </div>
+      <nav class="navigation-card">
+        <button class="nav-button active"><span class="icon">🏠</span> Dashboard</button>
+        <button class="nav-button"><span class="icon">📚</span> Minha Biblioteca</button>
+        <button class="nav-button"><span class="icon">🏆</span> Desafios e Metas</button>
+      </nav>
     </aside>
 
     <main class="center-column">
+      @if (!bookService.myCurrentBook()) {
+        <div class="premium-activity-card post-box">
+          <h3>Qual livro você vai ler agora?</h3>
+          <div class="form-grid">
+            <input [(ngModel)]="newTitle" placeholder="Título do Livro" class="premium-input" />
+            <input [(ngModel)]="newAuthor" placeholder="Autor" class="premium-input" />
+            <div class="inline-inputs">
+              <input
+                type="number"
+                [(ngModel)]="newTotalPages"
+                placeholder="Total Páginas"
+                class="premium-input"
+              />
+              <input
+                [(ngModel)]="newCategory"
+                placeholder="Categoria (ex: Ficção)"
+                class="premium-input"
+              />
+            </div>
+            <button (click)="handleStartBook()" class="premium-btn">Começar Leitura</button>
+          </div>
+        </div>
+      } @else {
+        <div class="premium-activity-card post-box">
+          <h3>📝 Registrar Progresso de Leitura</h3>
+          <p class="reading-now-label">
+            Lendo: <strong>{{ bookService.myCurrentBook()?.title }}</strong>
+          </p>
+          <div class="form-grid">
+            <input
+              type="number"
+              [(ngModel)]="pagesRead"
+              placeholder="Quantas páginas você leu hoje?"
+              class="premium-input"
+            />
+            <input
+              [(ngModel)]="userComment"
+              placeholder="O que está achando? (Pensamento do momento)"
+              class="premium-input"
+            />
+            <button (click)="handlePostProgress()" class="premium-btn success">
+              Publicar Atividade
+            </button>
+          </div>
+        </div>
+      }
+
       <div class="feed-header">
-        <h1>Atividades Recentes (Readva Feed)</h1>
+        <h2>Seu Feed de Leituras</h2>
       </div>
 
       <div class="feed-list">
-        @for (activity of activities(); track activity.id) {
-          <div class="activity-card">
-            <div class="activity-header">
-              <img [src]="activity.userAvatar" class="avatar" />
-              <div class="meta">
+        @for (activity of bookService.myActivities(); track activity.id) {
+          <article class="premium-activity-card">
+            <div class="card-header">
+              <img [src]="activity.userAvatar" class="user-avatar" />
+              <div class="user-meta">
                 <span class="username">{{ activity.userName }}</span>
                 <span class="timestamp">{{ activity.timestamp }}</span>
               </div>
             </div>
-            <p class="action-text">
-              <strong>{{ activity.bookTitle }}</strong> — {{ activity.detail }}
-            </p>
-            <div class="activity-actions">
+
+            <div class="card-content">
+              <p class="activity-detail">
+                📖 Registrou progresso em
+                <strong class="book-title">{{ activity.bookTitle }}</strong> de
+                {{ activity.bookAuthor }}
+              </p>
+              <span class="activity-subtext">{{ activity.detail }}</span>
+            </div>
+
+            <div class="card-actions">
               <button
-                class="like-btn"
-                [class.liked]="activity.hasLiked"
+                class="action-trigger"
+                [class.has-liked]="activity.hasLiked"
                 (click)="onLikeTriggered(activity.id)"
               >
-                ❤️ {{ activity.likes }} Curtidas
+                <span class="heart-icon">❤️</span> {{ activity.likes }}
               </button>
             </div>
+          </article>
+        } @empty {
+          <div class="empty-feed">
+            <p>
+              📭 Seu feed está vazio. Use a caixa acima para começar um livro e registrar seu
+              progresso real!
+            </p>
           </div>
         }
       </div>
     </main>
 
     <aside class="right-column">
-      <div class="card current-book-card">
-        <h3>Lendo Atualmente</h3>
-        <div class="book-content">
-          <img [src]="currentBook().coverUrl" class="cover" />
-          <div>
-            <h4>{{ currentBook().title }}</h4>
-            <p>{{ currentBook().author }}</p>
+      <section class="premium-sidebar-card">
+        <h3 class="sidebar-title">Lendo Atualmente</h3>
+
+        @if (bookService.myCurrentBook(); as current) {
+          <div class="current-book-layout">
+            <img [src]="current.coverUrl" class="book-cover" />
+            <div class="book-details">
+              <span class="tag">{{ current.category }}</span>
+              <h4>{{ current.title }}</h4>
+              <p class="author">por {{ current.author }}</p>
+
+              <div class="mini-progress">
+                <div class="progress-info">
+                  <span>{{ current.currentPage }} de {{ current.totalPages }} pág.</span>
+                </div>
+                <div class="bar-background">
+                  <div
+                    class="bar-fill"
+                    [style.width.%]="(current.currentPage / current.totalPages) * 100"
+                  ></div>
+                </div>
+              </div>
+            </div>
           </div>
+        } @else {
+          <p class="no-book-text">Nenhum livro ativo no momento.</p>
+        }
+      </section>
+
+      <section class="premium-sidebar-card text-suggestions">
+        <h3 class="sidebar-title">Sugestões de Leitura</h3>
+        <div class="suggestions-grid">
+          @for (sug of suggestions(); track sug.id) {
+            <div class="suggestion-row">
+              <img [src]="sug.coverUrl" class="sug-cover" />
+              <div class="sug-meta">
+                <h5>{{ sug.title }}</h5>
+                <p>{{ sug.author }}</p>
+                <span class="match-indicator">🔥 {{ sug.matchPercentage }}% match</span>
+              </div>
+            </div>
+          }
         </div>
-      </div>
+      </section>
     </aside>
   </div>
 </div>
