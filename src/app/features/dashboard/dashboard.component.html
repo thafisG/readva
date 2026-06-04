@@ -62,7 +62,7 @@
       <main class="center-column">
         @if (!bookService.myCurrentBook()) {
           <div class="premium-activity-card post-box">
-            <h3>✨ Qual livro você vai ler agora?</h3>
+            <h3>Qual livro você vai ler agora?</h3>
             <div class="form-grid">
               <input [(ngModel)]="newTitle" placeholder="Título do Livro" class="premium-input" />
               <input [(ngModel)]="newAuthor" placeholder="Autor" class="premium-input" />
@@ -79,12 +79,12 @@
                   class="premium-input"
                 />
               </div>
-              <button (click)="handleStartBook()" class="premium-btn">Começar Leitura 🚀</button>
+              <button (click)="handleStartBook()" class="premium-btn">Começar Leitura</button>
             </div>
           </div>
         } @else {
           <div class="premium-activity-card post-box">
-            <h3>📝 Registrar Progresso de Leitura</h3>
+            <h3>Registrar Progresso de Leitura</h3>
             <p class="reading-now-label">
               Lendo atualmente: <strong>{{ bookService.myCurrentBook()?.title }}</strong>
             </p>

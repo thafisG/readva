@@ -1,6 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { AuthService } from './auth.service';
-// Importe suas interfaces de Livro e Atividade aqui
 
 @Injectable({
   providedIn: 'root',
@@ -8,12 +7,10 @@ import { AuthService } from './auth.service';
 export class BookService {
   private authService = inject(AuthService);
 
-  // Pega o e-mail do usuário ativo para isolar o banco
   private get userEmail() {
     return this.authService.currentUser()?.email || 'guest';
   }
 
-  // Chaves dinâmicas por usuário
   private get BOOKS_KEY() {
     return `@readva:books:${this.userEmail}`;
   }
@@ -60,7 +57,6 @@ export class BookService {
     this.myCurrentBook.set(updatedBook);
     localStorage.setItem(this.BOOKS_KEY, JSON.stringify(updatedBook));
 
-    // Salva atividade no feed privado do usuário
     const newActivity = {
       id: Math.random().toString(36).substr(2, 9),
       userName: user.name,
