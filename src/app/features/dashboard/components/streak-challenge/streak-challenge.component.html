@@ -1,0 +1,30 @@
+<div class="streak-card">
+  <div class="user-info">
+    <img [src]="progress().avatar" [alt]="progress().name" class="avatar" />
+    <div class="user-text">
+      <h2>Olá, {{ progress().name.split(' ')[0] }}!</h2>
+      <p class="subtitle">Pronto para a leitura de hoje?</p>
+    </div>
+  </div>
+
+  <div class="streak-badge">
+    <span class="fire-icon">🔥</span>
+    <div class="streak-details">
+      <span class="count">{{ progress().currentStreak }} Dias</span>
+      <span class="label">Sequência de leitura atual</span>
+    </div>
+  </div>
+
+  <div class="goal-section">
+    <div class="goal-header">
+      <span class="goal-title">Meta Diária</span>
+      <span class="goal-ratio">
+        {{ progress().dailyMinutesRead }}/{{ progress().dailyGoalMinutes }} min
+      </span>
+    </div>
+
+    <div class="progress-bar-container">
+      <div class="progress-bar" [style.width.%]="getPercentage()"></div>
+    </div>
+  </div>
+</div>
