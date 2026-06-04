@@ -1,8 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DashboardService } from './services/dashboard.service';
-import { BookService } from './services/book.service'; // Mudamos a importação para a nova pasta!
+import { BookService } from './services/book.service';
+import { AuthService } from './services/auth.service';
 import { StreakChallengeComponent } from './components/streak-challenge/streak-challenge.component';
 import { Activity } from './interfaces/dashboard.interface';
 
@@ -16,9 +17,14 @@ import { Activity } from './interfaces/dashboard.interface';
 export class DashboardComponent {
   private dashboardService = inject(DashboardService);
   public bookService = inject(BookService);
+  public authService = inject(AuthService);
 
   public userProgress = this.dashboardService.userProgress;
   public suggestions = this.dashboardService.suggestions;
+
+  loginEmail = '';
+  loginName = '';
+  showNameField = false;
 
   newTitle = '';
   newAuthor = '';
@@ -27,6 +33,27 @@ export class DashboardComponent {
 
   pagesRead = 0;
   userComment = '';
+
+  handleLogin() {
+    if (!this.loginEmail.trim()) return;
+
+    const cleanedEmail = this.loginEmail.trim().toLowerCase();
+    const usersList = JSON.parse(localStorage.getItem('@readva:users_db') || '[]');
+    const existingUser = usersList.find((u: any) => u.email === cleanedEmail);
+
+    if (existingUser) {
+      this.authService.authenticate(cleanedEmail, existingUser.name);
+    } else if (!this.showNameField) {
+      this.showNameField = true;
+    } else {
+      if (!this.loginName.trim()) return;
+      this.authService.authenticate(cleanedEmail, this.loginName);
+    }
+  }
+
+  handleLogout() {
+    this.authService.logout();
+  }
 
   onLikeTriggered(activityId: string) {
     this.bookService.myActivities.update((items: Activity[]) =>
@@ -43,7 +70,7 @@ export class DashboardComponent {
   }
 
   handleStartBook() {
-    if (!this.newTitle || !this.newAuthor) return;
+    if (!this.newTitle.trim() || !this.newAuthor.trim()) return;
     this.bookService.startNewBook(
       this.newTitle,
       this.newAuthor,
