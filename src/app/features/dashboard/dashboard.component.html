@@ -1,0 +1,58 @@
+<div class="dashboard-wrapper">
+  <div class="dashboard-container">
+    <aside class="left-column">
+      <app-streak-challenge [progress]="userProgress()"></app-streak-challenge>
+
+      <div class="mini-card mini-nav">
+        <button class="nav-item active">🏠 Dashboard</button>
+        <button class="nav-item">📚 Biblioteca</button>
+        <button class="nav-item">🏆 Desafios</button>
+      </div>
+    </aside>
+
+    <main class="center-column">
+      <div class="feed-header">
+        <h1>Atividades Recentes (Readva Feed)</h1>
+      </div>
+
+      <div class="feed-list">
+        @for (activity of activities(); track activity.id) {
+          <div class="activity-card">
+            <div class="activity-header">
+              <img [src]="activity.userAvatar" class="avatar" />
+              <div class="meta">
+                <span class="username">{{ activity.userName }}</span>
+                <span class="timestamp">{{ activity.timestamp }}</span>
+              </div>
+            </div>
+            <p class="action-text">
+              <strong>{{ activity.bookTitle }}</strong> — {{ activity.detail }}
+            </p>
+            <div class="activity-actions">
+              <button
+                class="like-btn"
+                [class.liked]="activity.hasLiked"
+                (click)="onLikeTriggered(activity.id)"
+              >
+                ❤️ {{ activity.likes }} Curtidas
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    </main>
+
+    <aside class="right-column">
+      <div class="card current-book-card">
+        <h3>Lendo Atualmente</h3>
+        <div class="book-content">
+          <img [src]="currentBook().coverUrl" class="cover" />
+          <div>
+            <h4>{{ currentBook().title }}</h4>
+            <p>{{ currentBook().author }}</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>

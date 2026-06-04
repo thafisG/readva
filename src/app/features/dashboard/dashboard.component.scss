@@ -1,0 +1,100 @@
+.dashboard-wrapper {
+  background-color: #fafafa;
+  min-height: 100vh;
+  padding: 40px 0;
+  font-family: system-ui, sans-serif;
+}
+.dashboard-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 280px 1fr 320px;
+  gap: 32px;
+  padding: 0 24px;
+}
+.mini-nav {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 8px;
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.nav-item {
+  background: none;
+  border: none;
+  padding: 10px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 8px;
+  font-weight: 500;
+  &.active {
+    background: #eff6ff;
+    color: #2563eb;
+  }
+}
+.activity-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.activity-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.meta {
+  display: flex;
+  flex-direction: column;
+}
+.username {
+  font-weight: 600;
+  color: #111827;
+}
+.timestamp {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+.like-btn {
+  background: #f3f4f6;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  &.liked {
+    background: #fee2e2;
+    color: #ef4444;
+  }
+}
+.current-book-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px;
+  h3 {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-top: 0;
+  }
+}
+.book-content {
+  display: flex;
+  gap: 12px;
+}
+.cover {
+  width: 50px;
+  height: 75px;
+  object-fit: cover;
+  border-radius: 4px;
+}
