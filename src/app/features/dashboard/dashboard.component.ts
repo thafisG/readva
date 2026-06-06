@@ -6,6 +6,7 @@ import { BookService } from './services/book.service';
 import { AuthService } from './services/auth.service';
 import { StreakChallengeComponent } from './components/streak-challenge/streak-challenge.component';
 import { Activity } from './interfaces/dashboard.interface';
+import { UtilsService } from './services/utils.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -15,6 +16,7 @@ import { Activity } from './interfaces/dashboard.interface';
   styleUrls: ['./dashboard.component.scss'],
 })
 export class DashboardComponent {
+  public utilsService = inject(UtilsService);
   private dashboardService = inject(DashboardService);
   public bookService = inject(BookService);
   public authService = inject(AuthService);
