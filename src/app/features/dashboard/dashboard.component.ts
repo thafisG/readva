@@ -28,6 +28,7 @@ export class DashboardComponent implements OnDestroy {
   public bookService = inject(BookService);
   public authService = inject(AuthService);
   private catalogService = inject(BookCatalogService);
+  private recommendationService = inject(RecommendationService);
 
   public suggestions = signal<BookSuggestion[]>([]);
 
@@ -93,7 +94,32 @@ export class DashboardComponent implements OnDestroy {
 
   loadSuggestions() {
     this.catalogService.getBooks().subscribe((catalog: any[]) => {
-      this.suggestions.set(catalog.slice(0, 3));
+      const activities = this.bookService.myActivities?.() ?? [];
+
+      const profile = this.recommendationService.getReaderProfile(
+        activities.map((a) => ({
+          category: a.bookCategory || a.category,
+          completed: a.completed,
+          progress: a.progress,
+          totalPages: a.totalPages,
+          likes: a.likes,
+        })),
+      );
+
+      const recommendations = catalog
+        .map((book) => {
+          const score = profile.categoryScore[book.category] || 0;
+
+          return {
+            ...book,
+            score,
+            matchPercentage: Math.min(100, Math.round(score * 20)),
+          };
+        })
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3);
+
+      this.suggestions.set(recommendations);
     });
   }
 
@@ -132,11 +158,12 @@ export class DashboardComponent implements OnDestroy {
   }
 
   handlePostProgress() {
-    if (this.pagesRead <= 0) return;
+    const pages = Number(this.pagesRead);
+    if (isNaN(pages) || pages <= 0) return;
 
-    const minutesRead = Math.floor(this.readingElapsedSeconds() / 60);
+    const minutesRead = Math.floor((this.readingElapsedSeconds() || 0) / 60);
 
-    this.bookService.registerProgress(this.pagesRead, this.userComment, minutesRead);
+    this.bookService.registerProgress(pages, this.userComment, minutesRead);
 
     this.userProgress.update((p) => ({
       ...p,
