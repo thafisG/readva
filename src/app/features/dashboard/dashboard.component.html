@@ -28,23 +28,42 @@
         <div class="premium-activity-card post-box">
           <h3>Qual livro você vai ler agora?</h3>
           <div class="form-grid">
-            <input [(ngModel)]="newTitle" placeholder="Título do Livro" class="premium-input" />
-            <input [(ngModel)]="newAuthor" placeholder="Autor" class="premium-input" />
-            <div class="inline-inputs">
+            <div class="field-wrapper">
+              <label class="field-label">Título do Livro <span class="required">*</span></label>
+              <input [(ngModel)]="newTitle" placeholder="Ex: Dom Casmurro" class="premium-input" />
+            </div>
+
+            <div class="field-wrapper">
+              <label class="field-label">Autor <span class="required">*</span></label>
               <input
-                type="number"
-                [(ngModel)]="newTotalPages"
-                placeholder="Total Páginas"
+                [(ngModel)]="newAuthor"
+                placeholder="Ex: Machado de Assis"
                 class="premium-input"
               />
-              <select [(ngModel)]="newCategory" class="premium-input half">
-                <option value="" disabled>Selecione uma categoria</option>
-
-                @for (cat of categories; track cat) {
-                  <option [value]="cat">{{ cat }}</option>
-                }
-              </select>
             </div>
+
+            <div class="inline-inputs">
+              <div class="field-wrapper">
+                <label class="field-label">Total de Páginas <span class="required">*</span></label>
+                <input
+                  type="number"
+                  [(ngModel)]="newTotalPages"
+                  placeholder="Ex: 320"
+                  class="premium-input"
+                />
+              </div>
+
+              <div class="field-wrapper">
+                <label class="field-label">Categoria <span class="required">*</span></label>
+                <select [(ngModel)]="newCategory" class="premium-input half">
+                  <option value="" disabled>Selecione uma categoria</option>
+                  @for (cat of categories; track cat) {
+                    <option [value]="cat">{{ cat }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
             <button (click)="handleStartBook()" class="premium-btn">Começar leitura</button>
           </div>
         </div>
@@ -72,23 +91,28 @@
                   }}
                 </button>
                 @if (readingElapsedSeconds() > 0) {
-                  <button class="timer-btn reset" (click)="resetTimer()">✕ Zerar</button>
+                  <button class="timer-btn reset" (click)="resetTimer()">Cancelar</button>
                 }
               </div>
             </div>
 
             <div class="form-grid">
-              <input
-                type="number"
-                [(ngModel)]="pagesRead"
-                placeholder="Quantas páginas você leu hoje?"
-                class="premium-input"
-              />
+              <div class="field-wrapper">
+                <label class="field-label">Páginas lidas <span class="required">*</span></label>
+                <input
+                  type="number"
+                  [(ngModel)]="pagesRead"
+                  placeholder="Quantas páginas você leu hoje?"
+                  class="premium-input"
+                />
+              </div>
+
               <input
                 [(ngModel)]="userComment"
                 placeholder="O que está achando da leitura? (Pensamento do momento)"
                 class="premium-input"
               />
+
               <button (click)="handlePostProgress()" class="premium-btn success">
                 Publicar atividade
               </button>

@@ -64,7 +64,7 @@
 .logout-btn {
   margin-top: 24px;
   &:hover {
-    color: #ef4444 !important;
+    color: #c77c7b !important;
     background: #fef2f2 !important;
   }
 }
@@ -131,11 +131,8 @@
   }
 }
 
-.premium-input.half {
-  width: 50%;
-}
 .premium-btn {
-  background: var(--text-primary);
+  background: var(--btn-primary);
   color: #ffffff;
   border: none;
   padding: 11px;
@@ -147,6 +144,10 @@
   &:hover {
     opacity: 0.9;
   }
+  max-width: 200px;
+  height: auto;
+  margin-left: auto;
+  display: block;
 }
 
 .feed-header {
@@ -438,7 +439,7 @@
 }
 
 .timer-btn {
-  background: var(--text-primary);
+  background: var(--btn-primary);
   color: #fff;
   border: none;
   padding: 6px 12px;
@@ -459,8 +460,24 @@
 
     &:hover {
       background: #fef2f2;
-      color: #ef4444;
       border-color: #fca5a5;
     }
   }
+}
+.field-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.required {
+  color: #c77c7b;
+  font-weight: 200;
+  margin-left: 2px;
 }
