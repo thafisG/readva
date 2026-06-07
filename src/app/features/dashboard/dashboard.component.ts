@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -19,7 +19,7 @@ import { Activity, BookSuggestion, UserProgress } from './interfaces/dashboard.i
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnDestroy {
   public utilsService = inject(UtilsService);
   public bookService = inject(BookService);
   public authService = inject(AuthService);
@@ -49,10 +49,46 @@ export class DashboardComponent {
   pagesRead = 0;
   userComment = '';
   showProgressForm = false;
+  readingStartTime: number | null = null;
+  readingElapsedSeconds = signal(0);
+  timerInterval: any = null;
+  isReading = false;
 
   constructor() {
     console.log('DASHBOARD CRIADO');
     this.loadSuggestions();
+  }
+
+  ngOnDestroy() {
+    clearInterval(this.timerInterval);
+  }
+
+  toggleReadingTimer() {
+    if (!this.isReading) {
+      this.isReading = true;
+      this.readingStartTime = Date.now() - this.readingElapsedSeconds() * 1000;
+      this.timerInterval = setInterval(() => {
+        this.readingElapsedSeconds.set(Math.floor((Date.now() - this.readingStartTime!) / 1000));
+      }, 1000);
+    } else {
+      this.isReading = false;
+      clearInterval(this.timerInterval);
+    }
+  }
+
+  resetTimer() {
+    this.isReading = false;
+    clearInterval(this.timerInterval);
+    this.readingElapsedSeconds.set(0);
+    this.readingStartTime = null;
+  }
+
+  get formattedTime(): string {
+    const m = Math.floor(this.readingElapsedSeconds() / 60)
+      .toString()
+      .padStart(2, '0');
+    const s = (this.readingElapsedSeconds() % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
   }
 
   loadSuggestions() {
@@ -65,9 +101,7 @@ export class DashboardComponent {
     if (!this.loginEmail.trim()) return;
 
     const cleanedEmail = this.loginEmail.trim().toLowerCase();
-
     const usersList = JSON.parse(localStorage.getItem('@readva:users_db') || '[]');
-
     const existingUser = usersList.find((u: any) => u.email === cleanedEmail);
 
     if (existingUser) {
@@ -76,7 +110,6 @@ export class DashboardComponent {
       this.showNameField = true;
     } else {
       if (!this.loginName.trim()) return;
-
       this.authService.authenticate(cleanedEmail, this.loginName);
     }
   }
@@ -117,10 +150,11 @@ export class DashboardComponent {
 
   handlePostProgress() {
     if (this.pagesRead <= 0) return;
-    this.bookService.registerProgress(this.pagesRead, this.userComment);
+    const minutesRead = Math.floor(this.readingElapsedSeconds() / 60);
+    this.bookService.registerProgress(this.pagesRead, this.userComment, minutesRead);
     this.pagesRead = 0;
     this.userComment = '';
     this.showProgressForm = false;
+    this.resetTimer();
   }
-
 }

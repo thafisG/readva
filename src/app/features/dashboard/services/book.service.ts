@@ -38,9 +38,7 @@ export class BookService {
 
     if (savedBook) this.myCurrentBook.set(JSON.parse(savedBook));
     if (savedActivities) this.myActivities.set(JSON.parse(savedActivities));
-    if (savedHistory) {
-      this.myBooks.set(JSON.parse(savedHistory));
-    }
+    if (savedHistory) this.myBooks.set(JSON.parse(savedHistory));
   }
 
   startNewBook(title: string, author: string, totalPages: number, category: string) {
@@ -54,19 +52,16 @@ export class BookService {
     };
 
     this.myCurrentBook.set(newBook);
-
     localStorage.setItem(this.BOOKS_KEY, JSON.stringify(newBook));
 
     this.myBooks.update((books) => {
       const updated = [...books, newBook];
-
       localStorage.setItem(this.HISTORY_KEY, JSON.stringify(updated));
-
       return updated;
     });
   }
 
-  registerProgress(pages: number, comment: string) {
+  registerProgress(pages: number, comment: string, minutesRead: number = 0) {
     const current = this.myCurrentBook();
     const user = this.authService.currentUser();
     if (!current || !user) return;
@@ -77,6 +72,8 @@ export class BookService {
     this.myCurrentBook.set(updatedBook);
     localStorage.setItem(this.BOOKS_KEY, JSON.stringify(updatedBook));
 
+    const minutesLabel = minutesRead > 0 ? ` • ${minutesRead} min de leitura` : '';
+
     const newActivity = {
       id: Math.random().toString(36).substr(2, 9),
       userName: user.name,
@@ -84,7 +81,7 @@ export class BookService {
       timestamp: 'Agora mesmo',
       bookTitle: current.title,
       bookAuthor: current.author,
-      detail: comment || `Leu mais ${pages} páginas.`,
+      detail: comment || `Leu mais ${pages} páginas${minutesLabel}.`,
       likes: 0,
       hasLiked: false,
     };
