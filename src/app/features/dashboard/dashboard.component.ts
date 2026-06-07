@@ -12,6 +12,7 @@ import { StreakChallengeComponent } from './components/streak-challenge/streak-c
 import { LoginComponent } from '../login/login.component';
 
 import { Activity, BookSuggestion, UserProgress } from './interfaces/dashboard.interface';
+import { BOOK_CATEGORIES } from '../../constants/book-categories';
 
 @Component({
   selector: 'app-dashboard',
@@ -26,8 +27,6 @@ export class DashboardComponent implements OnDestroy {
   public utilsService = inject(UtilsService);
   public bookService = inject(BookService);
   public authService = inject(AuthService);
-
-  private recommendationService = inject(RecommendationService);
   private catalogService = inject(BookCatalogService);
 
   public suggestions = signal<BookSuggestion[]>([]);
@@ -39,6 +38,8 @@ export class DashboardComponent implements OnDestroy {
     dailyGoalMinutes: 60,
     dailyMinutesRead: 0,
   });
+
+  categories = BOOK_CATEGORIES;
 
   newTitle = '';
   newAuthor = '';
