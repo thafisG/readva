@@ -131,9 +131,6 @@
   }
 }
 
-.premium-input.half {
-  width: 50%;
-}
 .premium-btn {
   background: var(--text-primary);
   color: #ffffff;
@@ -463,4 +460,21 @@
       border-color: #fca5a5;
     }
   }
+}
+.field-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.required {
+  color: #c77c7b;
+  font-weight: 200;
+  margin-left: 2px;
 }
