@@ -95,6 +95,8 @@ export class DashboardComponent implements OnDestroy {
   loadSuggestions() {
     this.catalogService.getBooks().subscribe((catalog: any[]) => {
       const activities = this.bookService.myActivities?.() ?? [];
+      const hasHistory = activities.length > 0;
+      const currentBookTitle = this.bookService.myCurrentBook()?.title;
 
       const profile = this.recommendationService.getReaderProfile(
         activities.map((a) => ({
@@ -106,18 +108,35 @@ export class DashboardComponent implements OnDestroy {
         })),
       );
 
-      const recommendations = catalog
-        .map((book) => {
-          const score = profile.categoryScore[book.category] || 0;
+      const byCategory = catalog.reduce((acc: Record<string, any[]>, book) => {
+        if (book.title === currentBookTitle) return acc;
+        (acc[book.category] ??= []).push(book);
+        return acc;
+      }, {});
 
-          return {
-            ...book,
-            score,
-            matchPercentage: Math.min(100, Math.round(score * 20)),
-          };
-        })
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 3);
+      let orderedCategories = Object.keys(byCategory).sort((a, b) => {
+        const sa = profile.categoryScore[a] ?? 0;
+        const sb = profile.categoryScore[b] ?? 0;
+        return sb - sa;
+      });
+
+      if (!hasHistory) {
+        orderedCategories = orderedCategories.sort(() => Math.random() - 0.5);
+      }
+
+      const recommendations: any[] = [];
+      for (const cat of orderedCategories) {
+        if (recommendations.length >= 3) break;
+
+        const pick = byCategory[cat][Math.floor(Math.random() * byCategory[cat].length)];
+        const score = profile.categoryScore[cat] ?? 0;
+
+        recommendations.push({
+          ...pick,
+          score,
+          matchPercentage: hasHistory ? Math.round(score * 100) : 0,
+        });
+      }
 
       this.suggestions.set(recommendations);
     });
