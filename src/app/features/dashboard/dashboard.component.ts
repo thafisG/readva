@@ -1,11 +1,16 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DashboardService } from './services/dashboard.service';
+
 import { BookService } from './services/book.service';
 import { AuthService } from './services/auth.service';
+import { UtilsService } from './services/utils.service';
+import { RecommendationService } from './services/recommendation.service';
+import { BookCatalogService } from './services/book-catalog.service';
+
 import { StreakChallengeComponent } from './components/streak-challenge/streak-challenge.component';
-import { Activity } from './interfaces/dashboard.interface';
+
+import { Activity, BookSuggestion, UserProgress } from './interfaces/dashboard.interface';
 
 @Component({
   selector: 'app-dashboard',
@@ -14,13 +19,23 @@ import { Activity } from './interfaces/dashboard.interface';
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
 })
-export class DashboardComponent {
-  private dashboardService = inject(DashboardService);
+export class DashboardComponent implements OnDestroy {
+  public utilsService = inject(UtilsService);
   public bookService = inject(BookService);
   public authService = inject(AuthService);
 
-  public userProgress = this.dashboardService.userProgress;
-  public suggestions = this.dashboardService.suggestions;
+  private recommendationService = inject(RecommendationService);
+  private catalogService = inject(BookCatalogService);
+
+  public suggestions = signal<BookSuggestion[]>([]);
+
+  public userProgress = signal<UserProgress>({
+    name: 'Leitor',
+    avatar: '',
+    currentStreak: 0,
+    dailyGoalMinutes: 60,
+    dailyMinutesRead: 0,
+  });
 
   loginEmail = '';
   loginName = '';
@@ -33,6 +48,54 @@ export class DashboardComponent {
 
   pagesRead = 0;
   userComment = '';
+  showProgressForm = false;
+  readingStartTime: number | null = null;
+  readingElapsedSeconds = signal(0);
+  timerInterval: any = null;
+  isReading = false;
+
+  constructor() {
+    console.log('DASHBOARD CRIADO');
+    this.loadSuggestions();
+  }
+
+  ngOnDestroy() {
+    clearInterval(this.timerInterval);
+  }
+
+  toggleReadingTimer() {
+    if (!this.isReading) {
+      this.isReading = true;
+      this.readingStartTime = Date.now() - this.readingElapsedSeconds() * 1000;
+      this.timerInterval = setInterval(() => {
+        this.readingElapsedSeconds.set(Math.floor((Date.now() - this.readingStartTime!) / 1000));
+      }, 1000);
+    } else {
+      this.isReading = false;
+      clearInterval(this.timerInterval);
+    }
+  }
+
+  resetTimer() {
+    this.isReading = false;
+    clearInterval(this.timerInterval);
+    this.readingElapsedSeconds.set(0);
+    this.readingStartTime = null;
+  }
+
+  get formattedTime(): string {
+    const m = Math.floor(this.readingElapsedSeconds() / 60)
+      .toString()
+      .padStart(2, '0');
+    const s = (this.readingElapsedSeconds() % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  }
+
+  loadSuggestions() {
+    this.catalogService.getBooks().subscribe((catalog: any[]) => {
+      this.suggestions.set(catalog.slice(0, 3));
+    });
+  }
 
   handleLogin() {
     if (!this.loginEmail.trim()) return;
@@ -71,20 +134,27 @@ export class DashboardComponent {
 
   handleStartBook() {
     if (!this.newTitle.trim() || !this.newAuthor.trim()) return;
+
     this.bookService.startNewBook(
       this.newTitle,
       this.newAuthor,
       this.newTotalPages,
       this.newCategory,
     );
+
+    this.loadSuggestions();
+
     this.newTitle = '';
     this.newAuthor = '';
   }
 
   handlePostProgress() {
     if (this.pagesRead <= 0) return;
-    this.bookService.registerProgress(this.pagesRead, this.userComment);
+    const minutesRead = Math.floor(this.readingElapsedSeconds() / 60);
+    this.bookService.registerProgress(this.pagesRead, this.userComment, minutesRead);
     this.pagesRead = 0;
     this.userComment = '';
+    this.showProgressForm = false;
+    this.resetTimer();
   }
 }

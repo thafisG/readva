@@ -388,3 +388,130 @@
   font-weight: 500;
   margin-bottom: -2px;
 }
+.logo-icon {
+  width: 100%;
+  max-width: 200px;
+  max-height: 200px;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 1rem;
+}
+.clickable-book {
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 8px;
+  margin: -8px;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: #f3f4f6;
+  }
+}
+
+.register-hint {
+  display: block;
+  font-size: 0.7rem;
+  color: #6b7280;
+  margin-top: 8px;
+  font-weight: 500;
+  transition: color 0.15s ease;
+
+  .clickable-book:hover & {
+    color: var(--text-primary);
+  }
+}
+
+.progress-box {
+  border-left: 3px solid var(--text-primary);
+  animation: slideDown 0.2s ease;
+}
+
+.progress-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+
+  h3 {
+    margin-bottom: 0 !important;
+  }
+}
+
+.close-progress-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
+
+  &:hover {
+    background: #f3f4f6;
+    color: var(--text-primary);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.timer-block {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f9fafb;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 4px;
+}
+
+.timer-display {
+  font-size: 1.4rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+}
+
+.timer-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.timer-btn {
+  background: var(--text-primary);
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 0.85;
+  }
+
+  &.reset {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+
+    &:hover {
+      background: #fef2f2;
+      color: #ef4444;
+      border-color: #fca5a5;
+    }
+  }
+}

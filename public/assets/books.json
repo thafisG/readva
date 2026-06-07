@@ -1,0 +1,361 @@
+[
+  {
+    "id": 1,
+    "title": "Hábitos Atômicos",
+    "author": "James Clear",
+    "category": "Produtividade",
+    "coverUrl": "https://picsum.photos/200/300?1"
+  },
+  {
+    "id": 2,
+    "title": "Essencialismo",
+    "author": "Greg McKeown",
+    "category": "Produtividade",
+    "coverUrl": "https://picsum.photos/200/300?2"
+  },
+  {
+    "id": 3,
+    "title": "Deep Work",
+    "author": "Cal Newport",
+    "category": "Produtividade",
+    "coverUrl": "https://picsum.photos/200/300?3"
+  },
+  {
+    "id": 4,
+    "title": "A Única Coisa",
+    "author": "Gary Keller",
+    "category": "Produtividade",
+    "coverUrl": "https://picsum.photos/200/300?4"
+  },
+  {
+    "id": 5,
+    "title": "Mindset",
+    "author": "Carol Dweck",
+    "category": "Desenvolvimento Pessoal",
+    "coverUrl": "https://picsum.photos/200/300?5"
+  },
+
+  {
+    "id": 6,
+    "title": "1984",
+    "author": "George Orwell",
+    "category": "Ficção",
+    "coverUrl": "https://picsum.photos/200/300?6"
+  },
+  {
+    "id": 7,
+    "title": "A Revolução dos Bichos",
+    "author": "George Orwell",
+    "category": "Ficção",
+    "coverUrl": "https://picsum.photos/200/300?7"
+  },
+  {
+    "id": 8,
+    "title": "Dom Casmurro",
+    "author": "Machado de Assis",
+    "category": "Ficção",
+    "coverUrl": "https://picsum.photos/200/300?8"
+  },
+  {
+    "id": 9,
+    "title": "O Alquimista",
+    "author": "Paulo Coelho",
+    "category": "Ficção",
+    "coverUrl": "https://picsum.photos/200/300?9"
+  },
+  {
+    "id": 10,
+    "title": "A Menina que Roubava Livros",
+    "author": "Markus Zusak",
+    "category": "Ficção",
+    "coverUrl": "https://picsum.photos/200/300?10"
+  },
+
+  {
+    "id": 11,
+    "title": "Duna",
+    "author": "Frank Herbert",
+    "category": "Fantasia",
+    "coverUrl": "https://picsum.photos/200/300?11"
+  },
+  {
+    "id": 12,
+    "title": "O Hobbit",
+    "author": "J.R.R. Tolkien",
+    "category": "Fantasia",
+    "coverUrl": "https://picsum.photos/200/300?12"
+  },
+  {
+    "id": 13,
+    "title": "O Senhor dos Anéis",
+    "author": "J.R.R. Tolkien",
+    "category": "Fantasia",
+    "coverUrl": "https://picsum.photos/200/300?13"
+  },
+  {
+    "id": 14,
+    "title": "Harry Potter e a Pedra Filosofal",
+    "author": "J.K. Rowling",
+    "category": "Fantasia",
+    "coverUrl": "https://picsum.photos/200/300?14"
+  },
+  {
+    "id": 15,
+    "title": "Eragon",
+    "author": "Christopher Paolini",
+    "category": "Fantasia",
+    "coverUrl": "https://picsum.photos/200/300?15"
+  },
+
+  {
+    "id": 16,
+    "title": "Clean Code",
+    "author": "Robert C. Martin",
+    "category": "Tecnologia",
+    "coverUrl": "https://picsum.photos/200/300?16"
+  },
+  {
+    "id": 17,
+    "title": "The Pragmatic Programmer",
+    "author": "Andrew Hunt",
+    "category": "Tecnologia",
+    "coverUrl": "https://picsum.photos/200/300?17"
+  },
+  {
+    "id": 18,
+    "title": "Refactoring",
+    "author": "Martin Fowler",
+    "category": "Tecnologia",
+    "coverUrl": "https://picsum.photos/200/300?18"
+  },
+  {
+    "id": 19,
+    "title": "Código Limpo na Prática",
+    "author": "Mauricio Aniche",
+    "category": "Tecnologia",
+    "coverUrl": "https://picsum.photos/200/300?19"
+  },
+  {
+    "id": 20,
+    "title": "Entendendo Algoritmos",
+    "author": "Aditya Bhargava",
+    "category": "Tecnologia",
+    "coverUrl": "https://picsum.photos/200/300?20"
+  },
+
+  {
+    "id": 21,
+    "title": "Pai Rico, Pai Pobre",
+    "author": "Robert Kiyosaki",
+    "category": "Finanças",
+    "coverUrl": "https://picsum.photos/200/300?21"
+  },
+  {
+    "id": 22,
+    "title": "Os Segredos da Mente Milionária",
+    "author": "T. Harv Eker",
+    "category": "Finanças",
+    "coverUrl": "https://picsum.photos/200/300?22"
+  },
+  {
+    "id": 23,
+    "title": "Do Mil ao Milhão",
+    "author": "Thiago Nigro",
+    "category": "Finanças",
+    "coverUrl": "https://picsum.photos/200/300?23"
+  },
+  {
+    "id": 24,
+    "title": "O Homem Mais Rico da Babilônia",
+    "author": "George Clason",
+    "category": "Finanças",
+    "coverUrl": "https://picsum.photos/200/300?24"
+  },
+  {
+    "id": 25,
+    "title": "Me Poupe!",
+    "author": "Nathalia Arcuri",
+    "category": "Finanças",
+    "coverUrl": "https://picsum.photos/200/300?25"
+  },
+
+  {
+    "id": 26,
+    "title": "Sapiens",
+    "author": "Yuval Noah Harari",
+    "category": "História",
+    "coverUrl": "https://picsum.photos/200/300?26"
+  },
+  {
+    "id": 27,
+    "title": "Homo Deus",
+    "author": "Yuval Noah Harari",
+    "category": "História",
+    "coverUrl": "https://picsum.photos/200/300?27"
+  },
+  {
+    "id": 28,
+    "title": "Armas, Germes e Aço",
+    "author": "Jared Diamond",
+    "category": "História",
+    "coverUrl": "https://picsum.photos/200/300?28"
+  },
+  {
+    "id": 29,
+    "title": "1808",
+    "author": "Laurentino Gomes",
+    "category": "História",
+    "coverUrl": "https://picsum.photos/200/300?29"
+  },
+  {
+    "id": 30,
+    "title": "1822",
+    "author": "Laurentino Gomes",
+    "category": "História",
+    "coverUrl": "https://picsum.photos/200/300?30"
+  },
+
+  {
+    "id": 31,
+    "title": "O Poder do Hábito",
+    "author": "Charles Duhigg",
+    "category": "Psicologia",
+    "coverUrl": "https://picsum.photos/200/300?31"
+  },
+  {
+    "id": 32,
+    "title": "Rápido e Devagar",
+    "author": "Daniel Kahneman",
+    "category": "Psicologia",
+    "coverUrl": "https://picsum.photos/200/300?32"
+  },
+  {
+    "id": 33,
+    "title": "Inteligência Emocional",
+    "author": "Daniel Goleman",
+    "category": "Psicologia",
+    "coverUrl": "https://picsum.photos/200/300?33"
+  },
+  {
+    "id": 34,
+    "title": "Psicologia Financeira",
+    "author": "Morgan Housel",
+    "category": "Psicologia",
+    "coverUrl": "https://picsum.photos/200/300?34"
+  },
+  {
+    "id": 35,
+    "title": "A Coragem de Ser Imperfeito",
+    "author": "Brené Brown",
+    "category": "Psicologia",
+    "coverUrl": "https://picsum.photos/200/300?35"
+  },
+
+  {
+    "id": 36,
+    "title": "Orgulho e Preconceito",
+    "author": "Jane Austen",
+    "category": "Romance",
+    "coverUrl": "https://picsum.photos/200/300?36"
+  },
+  {
+    "id": 37,
+    "title": "Como Eu Era Antes de Você",
+    "author": "Jojo Moyes",
+    "category": "Romance",
+    "coverUrl": "https://picsum.photos/200/300?37"
+  },
+  {
+    "id": 38,
+    "title": "É Assim que Acaba",
+    "author": "Colleen Hoover",
+    "category": "Romance",
+    "coverUrl": "https://picsum.photos/200/300?38"
+  },
+  {
+    "id": 39,
+    "title": "A Hipótese do Amor",
+    "author": "Ali Hazelwood",
+    "category": "Romance",
+    "coverUrl": "https://picsum.photos/200/300?39"
+  },
+  {
+    "id": 40,
+    "title": "Teto para Dois",
+    "author": "Beth O'Leary",
+    "category": "Romance",
+    "coverUrl": "https://picsum.photos/200/300?40"
+  },
+
+  {
+    "id": 41,
+    "title": "Sherlock Holmes",
+    "author": "Arthur Conan Doyle",
+    "category": "Mistério",
+    "coverUrl": "https://picsum.photos/200/300?41"
+  },
+  {
+    "id": 42,
+    "title": "Assassinato no Expresso do Oriente",
+    "author": "Agatha Christie",
+    "category": "Mistério",
+    "coverUrl": "https://picsum.photos/200/300?42"
+  },
+  {
+    "id": 43,
+    "title": "O Código Da Vinci",
+    "author": "Dan Brown",
+    "category": "Mistério",
+    "coverUrl": "https://picsum.photos/200/300?43"
+  },
+  {
+    "id": 44,
+    "title": "Anjos e Demônios",
+    "author": "Dan Brown",
+    "category": "Mistério",
+    "coverUrl": "https://picsum.photos/200/300?44"
+  },
+  {
+    "id": 45,
+    "title": "Garota Exemplar",
+    "author": "Gillian Flynn",
+    "category": "Mistério",
+    "coverUrl": "https://picsum.photos/200/300?45"
+  },
+
+  {
+    "id": 46,
+    "title": "A Arte da Guerra",
+    "author": "Sun Tzu",
+    "category": "Negócios",
+    "coverUrl": "https://picsum.photos/200/300?46"
+  },
+  {
+    "id": 47,
+    "title": "Sonho Grande",
+    "author": "Cristiane Correa",
+    "category": "Negócios",
+    "coverUrl": "https://picsum.photos/200/300?47"
+  },
+  {
+    "id": 48,
+    "title": "De Zero a Um",
+    "author": "Peter Thiel",
+    "category": "Negócios",
+    "coverUrl": "https://picsum.photos/200/300?48"
+  },
+  {
+    "id": 49,
+    "title": "Startup Enxuta",
+    "author": "Eric Ries",
+    "category": "Negócios",
+    "coverUrl": "https://picsum.photos/200/300?49"
+  },
+  {
+    "id": 50,
+    "title": "O Poder da Ação",
+    "author": "Paulo Vieira",
+    "category": "Negócios",
+    "coverUrl": "https://picsum.photos/200/300?50"
+  }
+]
