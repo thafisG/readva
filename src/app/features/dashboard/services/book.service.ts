@@ -5,6 +5,12 @@ import { AuthService } from './auth.service';
   providedIn: 'root',
 })
 export class BookService {
+  private get HISTORY_KEY() {
+    return `@readva:history:${this.userEmail}`;
+  }
+
+  public myBooks = signal<any[]>([]);
+
   private authService = inject(AuthService);
 
   private get userEmail() {
@@ -28,9 +34,13 @@ export class BookService {
   private loadUserData() {
     const savedBook = localStorage.getItem(this.BOOKS_KEY);
     const savedActivities = localStorage.getItem(this.ACTIVITIES_KEY);
+    const savedHistory = localStorage.getItem(this.HISTORY_KEY);
 
     if (savedBook) this.myCurrentBook.set(JSON.parse(savedBook));
     if (savedActivities) this.myActivities.set(JSON.parse(savedActivities));
+    if (savedHistory) {
+      this.myBooks.set(JSON.parse(savedHistory));
+    }
   }
 
   startNewBook(title: string, author: string, totalPages: number, category: string) {
@@ -40,10 +50,20 @@ export class BookService {
       totalPages,
       category,
       currentPage: 0,
-      coverUrl: 'assets/default-cover.png',
+      coverUrl: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f',
     };
+
     this.myCurrentBook.set(newBook);
+
     localStorage.setItem(this.BOOKS_KEY, JSON.stringify(newBook));
+
+    this.myBooks.update((books) => {
+      const updated = [...books, newBook];
+
+      localStorage.setItem(this.HISTORY_KEY, JSON.stringify(updated));
+
+      return updated;
+    });
   }
 
   registerProgress(pages: number, comment: string) {

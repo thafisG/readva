@@ -36,9 +36,10 @@ export interface WeeklyStat {
 }
 
 export interface BookSuggestion {
-  id: string;
+  id: number;
   title: string;
   author: string;
   coverUrl: string;
-  matchPercentage: number;
+  category?: string;
+  matchPercentage?: number;
 }

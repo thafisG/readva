@@ -1,12 +1,16 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DashboardService } from './services/dashboard.service';
+
 import { BookService } from './services/book.service';
 import { AuthService } from './services/auth.service';
-import { StreakChallengeComponent } from './components/streak-challenge/streak-challenge.component';
-import { Activity } from './interfaces/dashboard.interface';
 import { UtilsService } from './services/utils.service';
+import { RecommendationService } from './services/recommendation.service';
+import { BookCatalogService } from './services/book-catalog.service';
+
+import { StreakChallengeComponent } from './components/streak-challenge/streak-challenge.component';
+
+import { Activity, BookSuggestion, UserProgress } from './interfaces/dashboard.interface';
 
 @Component({
   selector: 'app-dashboard',
@@ -17,12 +21,21 @@ import { UtilsService } from './services/utils.service';
 })
 export class DashboardComponent {
   public utilsService = inject(UtilsService);
-  private dashboardService = inject(DashboardService);
   public bookService = inject(BookService);
   public authService = inject(AuthService);
 
-  public userProgress = this.dashboardService.userProgress;
-  public suggestions = this.dashboardService.suggestions;
+  private recommendationService = inject(RecommendationService);
+  private catalogService = inject(BookCatalogService);
+
+  public suggestions = signal<BookSuggestion[]>([]);
+
+  public userProgress = signal<UserProgress>({
+    name: 'Leitor',
+    avatar: '',
+    currentStreak: 0,
+    dailyGoalMinutes: 60,
+    dailyMinutesRead: 0,
+  });
 
   loginEmail = '';
   loginName = '';
@@ -36,11 +49,24 @@ export class DashboardComponent {
   pagesRead = 0;
   userComment = '';
 
+  constructor() {
+    console.log('DASHBOARD CRIADO');
+    this.loadSuggestions();
+  }
+
+  loadSuggestions() {
+    this.catalogService.getBooks().subscribe((catalog: any[]) => {
+      this.suggestions.set(catalog.slice(0, 3));
+    });
+  }
+
   handleLogin() {
     if (!this.loginEmail.trim()) return;
 
     const cleanedEmail = this.loginEmail.trim().toLowerCase();
+
     const usersList = JSON.parse(localStorage.getItem('@readva:users_db') || '[]');
+
     const existingUser = usersList.find((u: any) => u.email === cleanedEmail);
 
     if (existingUser) {
@@ -49,6 +75,7 @@ export class DashboardComponent {
       this.showNameField = true;
     } else {
       if (!this.loginName.trim()) return;
+
       this.authService.authenticate(cleanedEmail, this.loginName);
     }
   }
@@ -73,19 +100,25 @@ export class DashboardComponent {
 
   handleStartBook() {
     if (!this.newTitle.trim() || !this.newAuthor.trim()) return;
+
     this.bookService.startNewBook(
       this.newTitle,
       this.newAuthor,
       this.newTotalPages,
       this.newCategory,
     );
+
+    this.loadSuggestions();
+
     this.newTitle = '';
     this.newAuthor = '';
   }
 
   handlePostProgress() {
     if (this.pagesRead <= 0) return;
+
     this.bookService.registerProgress(this.pagesRead, this.userComment);
+
     this.pagesRead = 0;
     this.userComment = '';
   }
