@@ -66,7 +66,8 @@ export class BookService {
     const user = this.authService.currentUser();
     if (!current || !user) return;
 
-    const updatedPage = Math.min(current.currentPage + pages, current.totalPages);
+    const safePages = Number(pages);
+    const updatedPage = Math.min(current.currentPage + safePages, current.totalPages);
     const updatedBook = { ...current, currentPage: updatedPage };
 
     this.myCurrentBook.set(updatedBook);
@@ -81,7 +82,7 @@ export class BookService {
       timestamp: 'Agora mesmo',
       bookTitle: current.title,
       bookAuthor: current.author,
-      detail: comment || `Leu mais ${pages} páginas${minutesLabel}.`,
+      detail: comment || `Leu mais ${safePages} páginas${minutesLabel}.`,
       likes: 0,
       hasLiked: false,
     };
