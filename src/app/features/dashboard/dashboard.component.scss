@@ -342,61 +342,6 @@
   font-size: 0.85rem;
 }
 
-.login-wrapper {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #fafafa;
-  padding: 24px;
-}
-
-.login-card {
-  background: #ffffff;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 40px;
-  width: 100%;
-  max-width: 380px;
-  box-shadow: var(--shadow-md);
-
-  .login-header {
-    text-align: center;
-    margin-bottom: 28px;
-    .logo-icon {
-      font-size: 2.25rem;
-      display: block;
-      margin-bottom: 8px;
-    }
-    h1 {
-      font-size: 1.2rem;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-    }
-    p {
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-      margin-top: 4px;
-      line-height: 1.4;
-    }
-  }
-}
-
-.register-notice {
-  font-size: 0.75rem;
-  color: #2563eb;
-  font-weight: 500;
-  margin-bottom: -2px;
-}
-.logo-icon {
-  width: 100%;
-  max-width: 200px;
-  max-height: 200px;
-  height: 100%;
-  object-fit: contain;
-  display: block;
-  margin: 0 auto 1rem;
-}
 .clickable-book {
   cursor: pointer;
   border-radius: 8px;
@@ -464,6 +409,7 @@
     transform: translateY(0);
   }
 }
+
 .timer-block {
   display: flex;
   align-items: center;

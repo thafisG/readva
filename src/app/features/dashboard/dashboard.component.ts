@@ -11,11 +11,12 @@ import { BookCatalogService } from './services/book-catalog.service';
 import { StreakChallengeComponent } from './components/streak-challenge/streak-challenge.component';
 
 import { Activity, BookSuggestion, UserProgress } from './interfaces/dashboard.interface';
+import { LoginComponent } from '../login/login.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, StreakChallengeComponent],
+  imports: [CommonModule, FormsModule, StreakChallengeComponent, LoginComponent],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
 })
@@ -36,10 +37,6 @@ export class DashboardComponent implements OnDestroy {
     dailyGoalMinutes: 60,
     dailyMinutesRead: 0,
   });
-
-  loginEmail = '';
-  loginName = '';
-  showNameField = false;
 
   newTitle = '';
   newAuthor = '';
@@ -95,23 +92,6 @@ export class DashboardComponent implements OnDestroy {
     this.catalogService.getBooks().subscribe((catalog: any[]) => {
       this.suggestions.set(catalog.slice(0, 3));
     });
-  }
-
-  handleLogin() {
-    if (!this.loginEmail.trim()) return;
-
-    const cleanedEmail = this.loginEmail.trim().toLowerCase();
-    const usersList = JSON.parse(localStorage.getItem('@readva:users_db') || '[]');
-    const existingUser = usersList.find((u: any) => u.email === cleanedEmail);
-
-    if (existingUser) {
-      this.authService.authenticate(cleanedEmail, existingUser.name);
-    } else if (!this.showNameField) {
-      this.showNameField = true;
-    } else {
-      if (!this.loginName.trim()) return;
-      this.authService.authenticate(cleanedEmail, this.loginName);
-    }
   }
 
   handleLogout() {

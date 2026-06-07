@@ -1,40 +1,5 @@
 @if (!authService.isLoggedIn()) {
-  <div class="login-wrapper">
-    <div class="login-card">
-      <div class="login-header">
-        <img [src]="utilsService.logoReadva" alt="Logo Readva" class="logo-icon" />
-        <h1>Entrar no Readva</h1>
-        <p>Acesse seu painel exclusivo</p>
-      </div>
-
-      <div class="form-grid">
-        <input
-          [(ngModel)]="loginEmail"
-          placeholder="Seu e-mail"
-          class="premium-input"
-          type="email"
-          [disabled]="showNameField"
-        />
-
-        @if (showNameField) {
-          <p class="register-notice">
-            Percebemos que é seu primeiro acesso! Como quer ser chamado?
-          </p>
-          <input
-            [(ngModel)]="loginName"
-            placeholder="Seu nome completo"
-            class="premium-input"
-            type="text"
-            (keyup.enter)="handleLogin()"
-          />
-        }
-
-        <button (click)="handleLogin()" class="premium-btn">
-          {{ showNameField ? 'Criar Conta e Entrar' : 'Continuar' }}
-        </button>
-      </div>
-    </div>
-  </div>
+  <app-login></app-login>
 } @else {
   <div class="dashboard-wrapper">
     <div class="dashboard-container">
@@ -60,7 +25,6 @@
       </aside>
 
       <main class="center-column">
-        <!-- Box: Iniciar novo livro (sempre visível) -->
         <div class="premium-activity-card post-box">
           <h3>Qual livro você vai ler agora?</h3>
           <div class="form-grid">
@@ -83,7 +47,6 @@
           </div>
         </div>
 
-        <!-- Box: Registrar progresso (aparece ao clicar no livro atual) -->
         @if (showProgressForm && bookService.myCurrentBook()) {
           <div class="premium-activity-card post-box progress-box">
             <div class="progress-box-header">
@@ -94,7 +57,6 @@
               Lendo atualmente: <strong>{{ bookService.myCurrentBook()?.title }}</strong>
             </p>
 
-            <!-- Timer -->
             <div class="timer-block">
               <span class="timer-display">{{ formattedTime }}</span>
               <div class="timer-actions">
