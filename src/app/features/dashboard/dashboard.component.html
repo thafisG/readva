@@ -37,11 +37,13 @@
                 placeholder="Total Páginas"
                 class="premium-input"
               />
-              <input
-                [(ngModel)]="newCategory"
-                placeholder="Categoria (ex: Ficção)"
-                class="premium-input"
-              />
+              <select [(ngModel)]="newCategory" class="premium-input half">
+                <option value="" disabled>Selecione uma categoria</option>
+
+                @for (cat of categories; track cat) {
+                  <option [value]="cat">{{ cat }}</option>
+                }
+              </select>
             </div>
             <button (click)="handleStartBook()" class="premium-btn">Começar leitura</button>
           </div>
