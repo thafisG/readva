@@ -48,6 +48,7 @@ export class DashboardComponent {
 
   pagesRead = 0;
   userComment = '';
+  showProgressForm = false;
 
   constructor() {
     console.log('DASHBOARD CRIADO');
@@ -116,10 +117,10 @@ export class DashboardComponent {
 
   handlePostProgress() {
     if (this.pagesRead <= 0) return;
-
     this.bookService.registerProgress(this.pagesRead, this.userComment);
-
     this.pagesRead = 0;
     this.userComment = '';
+    this.showProgressForm = false;
   }
+
 }

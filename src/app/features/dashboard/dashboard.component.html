@@ -60,31 +60,34 @@
       </aside>
 
       <main class="center-column">
-        @if (!bookService.myCurrentBook()) {
-          <div class="premium-activity-card post-box">
-            <h3>Qual livro você vai ler agora?</h3>
-            <div class="form-grid">
-              <input [(ngModel)]="newTitle" placeholder="Título do Livro" class="premium-input" />
-              <input [(ngModel)]="newAuthor" placeholder="Autor" class="premium-input" />
-              <div class="inline-inputs">
-                <input
-                  type="number"
-                  [(ngModel)]="newTotalPages"
-                  placeholder="Total Páginas"
-                  class="premium-input"
-                />
-                <input
-                  [(ngModel)]="newCategory"
-                  placeholder="Categoria (ex: Ficção)"
-                  class="premium-input"
-                />
-              </div>
-              <button (click)="handleStartBook()" class="premium-btn">Começar Leitura</button>
+        <div class="premium-activity-card post-box">
+          <h3>Qual livro você vai ler agora?</h3>
+          <div class="form-grid">
+            <input [(ngModel)]="newTitle" placeholder="Título do Livro" class="premium-input" />
+            <input [(ngModel)]="newAuthor" placeholder="Autor" class="premium-input" />
+            <div class="inline-inputs">
+              <input
+                type="number"
+                [(ngModel)]="newTotalPages"
+                placeholder="Total Páginas"
+                class="premium-input"
+              />
+              <input
+                [(ngModel)]="newCategory"
+                placeholder="Categoria (ex: Ficção)"
+                class="premium-input"
+              />
             </div>
+            <button (click)="handleStartBook()" class="premium-btn">Começar leitura</button>
           </div>
-        } @else {
-          <div class="premium-activity-card post-box">
-            <h3>Registrar Progresso de Leitura</h3>
+        </div>
+
+        @if (showProgressForm && bookService.myCurrentBook()) {
+          <div class="premium-activity-card post-box progress-box">
+            <div class="progress-box-header">
+              <h3>Registrar progresso de leitura</h3>
+              <button class="close-progress-btn" (click)="showProgressForm = false">✕</button>
+            </div>
             <p class="reading-now-label">
               Lendo atualmente: <strong>{{ bookService.myCurrentBook()?.title }}</strong>
             </p>
@@ -101,14 +104,14 @@
                 class="premium-input"
               />
               <button (click)="handlePostProgress()" class="premium-btn success">
-                Publicar Atividade 📖
+                Publicar atividade
               </button>
             </div>
           </div>
         }
 
         <div class="feed-header">
-          <h2>Seu Feed de Leituras</h2>
+          <h2>Seu feed de leituras</h2>
         </div>
 
         <div class="feed-list">
@@ -124,7 +127,7 @@
 
               <div class="card-content">
                 <p class="activity-detail">
-                  📖 Registrou progresso em
+                  Compartilhou pensamentos em
                   <strong class="book-title">{{ activity.bookTitle }}</strong> de
                   {{ activity.bookAuthor }}
                 </p>
@@ -155,7 +158,11 @@
         <section class="premium-sidebar-card">
           <h3 class="sidebar-title">Lendo Atualmente</h3>
           @if (bookService.myCurrentBook(); as current) {
-            <div class="current-book-layout">
+            <div
+              class="current-book-layout clickable-book"
+              (click)="showProgressForm = !showProgressForm"
+              title="Clique para registrar progresso"
+            >
               <img [src]="current.coverUrl" class="book-cover" />
               <div class="book-details">
                 <span class="tag">{{ current.category }}</span>
@@ -172,6 +179,9 @@
                     ></div>
                   </div>
                 </div>
+                <span class="register-hint">
+                  {{ showProgressForm ? '▲ Fechar registro' : '✏️ Registrar progresso' }}
+                </span>
               </div>
             </div>
           } @else {
@@ -187,11 +197,9 @@
               @for (sug of suggestions(); track sug.id) {
                 <div class="suggestion-row">
                   <img [src]="sug.coverUrl" [alt]="sug.title" class="sug-cover" />
-
                   <div class="sug-meta">
                     <h5>{{ sug.title }}</h5>
                     <p>{{ sug.author }}</p>
-
                     @if (sug.matchPercentage) {
                       <span class="match"> {{ sug.matchPercentage }}% compatível </span>
                     }
