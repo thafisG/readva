@@ -46,26 +46,112 @@
   border: 1px solid #f3f4f6;
   padding: 12px;
   border-radius: 8px;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+  user-select: none;
 
-  .fire-icon {
-    font-size: 1.25rem;
+  &:hover {
+    background: #f3f4f6;
+    border-color: #e5e7eb;
   }
 
-  .streak-details {
-    display: flex;
-    flex-direction: column;
+  &.marked {
+    background: #fefce8;
+    border-color: #fde68a;
+  }
+}
 
-    .count {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: #111827;
-    }
+.fire-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
 
-    .label {
-      font-size: 0.75rem;
-      color: #6b7280;
-      margin-top: 1px;
-    }
+.fire-icon {
+  font-size: 1.25rem;
+  display: inline-block;
+  transition: transform 0.15s ease;
+
+  &.fire-pop {
+    animation: flamePop 0.4s ease forwards;
+  }
+}
+
+.fire-hint {
+  font-size: 0.6rem;
+  color: #9ca3af;
+  white-space: nowrap;
+}
+
+@keyframes flamePop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.5) rotate(-10deg);
+  }
+  65% {
+    transform: scale(0.88) rotate(5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+
+.streak-details {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+
+  .count {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  .label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 1px;
+  }
+}
+
+.week-days {
+  display: flex;
+  gap: 4px;
+}
+
+.day-dot {
+  flex: 1;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 500;
+  border: 1px solid #f3f4f6;
+  background: #fafafa;
+  color: #9ca3af;
+  transition: all 0.2s ease;
+
+  &.read {
+    background: #dcfce7;
+    color: #166534;
+    border-color: #bbf7d0;
+  }
+
+  &.today {
+    border-color: #111827;
+    color: #111827;
+    font-weight: 600;
+  }
+
+  &.read.today {
+    border-color: #16a34a;
   }
 }
 
@@ -86,6 +172,12 @@
 
     .goal-ratio {
       color: #6b7280;
+      transition: color 0.2s ease;
+
+      &.reached {
+        color: #16a34a;
+        font-weight: 600;
+      }
     }
   }
 
@@ -100,6 +192,22 @@
     background: #111827;
     height: 100%;
     border-radius: 4px;
-    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition:
+      width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+      background 0.3s ease;
+
+    &.reached {
+      background: #16a34a;
+    }
   }
+}
+
+.confetti-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
 }

@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnDestroy } from '@angular/core';
+import { Component, inject, signal, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -9,9 +9,9 @@ import { RecommendationService } from './services/recommendation.service';
 import { BookCatalogService } from './services/book-catalog.service';
 
 import { StreakChallengeComponent } from './components/streak-challenge/streak-challenge.component';
+import { LoginComponent } from '../login/login.component';
 
 import { Activity, BookSuggestion, UserProgress } from './interfaces/dashboard.interface';
-import { LoginComponent } from '../login/login.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -21,6 +21,8 @@ import { LoginComponent } from '../login/login.component';
   styleUrls: ['./dashboard.component.scss'],
 })
 export class DashboardComponent implements OnDestroy {
+  @ViewChild(StreakChallengeComponent) streakComponent!: StreakChallengeComponent;
+
   public utilsService = inject(UtilsService);
   public bookService = inject(BookService);
   public authService = inject(AuthService);
@@ -130,8 +132,18 @@ export class DashboardComponent implements OnDestroy {
 
   handlePostProgress() {
     if (this.pagesRead <= 0) return;
+
     const minutesRead = Math.floor(this.readingElapsedSeconds() / 60);
+
     this.bookService.registerProgress(this.pagesRead, this.userComment, minutesRead);
+
+    this.userProgress.update((p) => ({
+      ...p,
+      dailyMinutesRead: p.dailyMinutesRead + minutesRead,
+    }));
+
+    this.streakComponent?.markTodayRead();
+
     this.pagesRead = 0;
     this.userComment = '';
     this.showProgressForm = false;
