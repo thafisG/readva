@@ -1,4 +1,5 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { Router } from '@angular/router';
 
 export interface UserSession {
   email: string;
@@ -10,6 +11,7 @@ export interface UserSession {
   providedIn: 'root',
 })
 export class AuthService {
+  private router = inject(Router);
   private currentUserSignal = signal<UserSession | null>(null);
 
   public currentUser = computed(() => this.currentUserSignal());
@@ -44,13 +46,13 @@ export class AuthService {
     localStorage.setItem('@readva:active_session', JSON.stringify(user));
     this.currentUserSignal.set(user);
 
-    window.location.reload();
+    this.router.navigate(['/']);
     return true;
   }
 
   logout() {
     localStorage.removeItem('@readva:active_session');
     this.currentUserSignal.set(null);
-    window.location.reload();
+    this.router.navigate(['/']);
   }
 }

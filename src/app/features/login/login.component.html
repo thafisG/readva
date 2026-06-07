@@ -1,0 +1,34 @@
+<div class="login-wrapper">
+  <div class="login-card">
+    <div class="login-header">
+      <img [src]="utilsService.logoReadva" alt="Logo Readva" class="logo-icon" />
+      <h1>Entrar no Readva</h1>
+      <p>Acesse seu painel exclusivo</p>
+    </div>
+
+    <div class="form-grid">
+      <input
+        [(ngModel)]="loginEmail"
+        placeholder="Seu e-mail"
+        class="premium-input"
+        type="email"
+        [disabled]="showNameField"
+      />
+
+      @if (showNameField) {
+        <p class="register-notice">Percebemos que é seu primeiro acesso! Como quer ser chamado?</p>
+        <input
+          [(ngModel)]="loginName"
+          placeholder="Seu nome completo"
+          class="premium-input"
+          type="text"
+          (keyup.enter)="handleLogin()"
+        />
+      }
+
+      <button (click)="handleLogin()" class="premium-btn">
+        {{ showNameField ? 'Criar Conta e Entrar' : 'Continuar' }}
+      </button>
+    </div>
+  </div>
+</div>
