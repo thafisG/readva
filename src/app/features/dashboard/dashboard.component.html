@@ -15,8 +15,17 @@
         ></app-streak-challenge>
 
         <nav class="navigation-card">
-          <button class="nav-button active"><span class="icon">🏠</span> Dashboard</button>
-          <button class="nav-button"><span class="icon">📚</span> Minha Biblioteca</button>
+          <button
+            routerLink="/"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+            class="nav-button"
+          >
+            <span class="icon">🏠</span> Dashboard
+          </button>
+          <button routerLink="/biblioteca" routerLinkActive="active" class="nav-button">
+            <span class="icon">📚</span> Minha Biblioteca
+          </button>
           <button class="nav-button"><span class="icon">🏆</span> Desafios e Metas</button>
           <button (click)="handleLogout()" class="nav-button logout-btn">
             <span class="icon">🚪</span> Sair da Conta

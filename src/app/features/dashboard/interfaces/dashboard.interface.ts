@@ -23,11 +23,19 @@ export interface Activity {
   actionType: 'progress' | 'finished' | 'started';
   bookTitle: string;
   bookAuthor: string;
+  bookId: string;
+  bookCategory?: string;
   detail: string;
   timestamp: string;
   likes: number;
   commentsCount: number;
   hasLiked: boolean;
+  comment?: string;
+  minutesRead?: number;
+  pagesRead?: number;
+  progress?: number;
+  totalPages?: number;
+  completed?: boolean;
 }
 
 export interface WeeklyStat {

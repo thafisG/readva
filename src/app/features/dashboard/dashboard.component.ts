@@ -1,6 +1,7 @@
 import { Component, inject, signal, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 
 import { BookService } from './services/book.service';
 import { AuthService } from './services/auth.service';
@@ -17,7 +18,14 @@ import { BOOK_CATEGORIES } from '../../constants/book-categories';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, StreakChallengeComponent, LoginComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    StreakChallengeComponent,
+    LoginComponent,
+    RouterLink,
+    RouterLinkActive,
+  ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
 })
@@ -27,6 +35,7 @@ export class DashboardComponent implements OnDestroy {
   public utilsService = inject(UtilsService);
   public bookService = inject(BookService);
   public authService = inject(AuthService);
+  private router = inject(Router);
   private catalogService = inject(BookCatalogService);
   private recommendationService = inject(RecommendationService);
 

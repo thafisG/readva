@@ -1,0 +1,66 @@
+<div class="library-wrapper">
+  <div class="library-header">
+    <button class="back-btn" (click)="goBack()" aria-label="Voltar">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 16 16"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M10 3L5 8L10 13"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </button>
+    <h2>Minha Biblioteca</h2>
+  </div>
+
+  @if (booksWithStats().length > 0) {
+    <div class="shelf-container">
+      <span class="book-count">
+        {{ booksWithStats().length }} {{ booksWithStats().length === 1 ? 'livro' : 'livros' }}
+      </span>
+
+      <div class="shelf-row">
+        @for (book of booksWithStats(); track book.id) {
+          <div
+            class="book-spine-wrapper"
+            [class.completed]="book.completed"
+            (click)="openBookDetail(book)"
+            title="{{ book.title }}"
+          >
+            <div class="book-item">
+              <img [src]="book.coverUrl" [alt]="book.title" class="book-cover" />
+              <div class="book-progress-bar">
+                <div class="book-progress-fill" [style.height.%]="book.progressPercent"></div>
+              </div>
+            </div>
+            @if (book.completed) {
+              <span class="completed-badge">✓</span>
+            }
+          </div>
+        }
+
+        <div class="shelf-plank"></div>
+      </div>
+    </div>
+  } @else {
+    <div class="empty-library">
+      <span class="empty-icon">📚</span>
+      <p>Sua biblioteca está vazia.</p>
+      <p class="empty-sub">Adicione um livro no dashboard para começar!</p>
+    </div>
+  }
+</div>
+
+@if (isModalOpen() && selectedBook()) {
+  <app-book-detail-modal
+    [book]="selectedBook()!"
+    (closeModal)="closeModal()"
+  ></app-book-detail-modal>
+}
