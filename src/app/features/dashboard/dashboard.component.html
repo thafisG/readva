@@ -68,14 +68,14 @@
           </div>
         </div>
 
-        @if (showProgressForm && bookService.myCurrentBook()) {
+        @if (showProgressForm && selectedBook()) {
           <div class="premium-activity-card post-box progress-box">
             <div class="progress-box-header">
               <h3>Registrar progresso de leitura</h3>
-              <button class="close-progress-btn" (click)="showProgressForm = false">✕</button>
+              <button class="close-progress-btn" (click)="closeProgressForm()">✕</button>
             </div>
             <p class="reading-now-label">
-              Lendo atualmente: <strong>{{ bookService.myCurrentBook()?.title }}</strong>
+              Lendo atualmente: <strong>{{ selectedBook()?.title }}</strong>
             </p>
 
             <div class="timer-block">
@@ -142,6 +142,9 @@
                   {{ activity.bookAuthor }}
                 </p>
                 <span class="activity-subtext">{{ activity.detail }}</span>
+                @if (activity.comment) {
+                  <span class="activity-comment">"{{ activity.comment }}"</span>
+                }
               </div>
 
               <div class="card-actions">
@@ -167,32 +170,42 @@
       <aside class="right-column">
         <section class="premium-sidebar-card">
           <h3 class="sidebar-title">Lendo Atualmente</h3>
-          @if (bookService.myCurrentBook(); as current) {
-            <div
-              class="current-book-layout clickable-book"
-              (click)="showProgressForm = !showProgressForm"
-              title="Clique para registrar progresso"
-            >
-              <img [src]="current.coverUrl" class="book-cover" />
-              <div class="book-details">
-                <span class="tag">{{ current.category }}</span>
-                <h4>{{ current.title }}</h4>
-                <p class="author">por {{ current.author }}</p>
-                <div class="mini-progress">
-                  <div class="progress-info">
-                    <span>{{ current.currentPage }} de {{ current.totalPages }} pág.</span>
-                  </div>
-                  <div class="bar-background">
-                    <div
-                      class="bar-fill"
-                      [style.width.%]="(current.currentPage / current.totalPages) * 100"
-                    ></div>
+
+          @if (bookService.myCurrentBook().length > 0) {
+            <div class="current-books-list">
+              @for (book of bookService.myCurrentBook(); track book.id) {
+                <div
+                  class="current-book-layout clickable-book"
+                  [class.active-progress]="selectedBook()?.id === book.id && showProgressForm"
+                  (click)="selectBookForProgress(book)"
+                  title="Clique para registrar progresso"
+                >
+                  <img [src]="book.coverUrl" class="book-cover" />
+                  <div class="book-details">
+                    <span class="tag">{{ book.category }}</span>
+                    <h4>{{ book.title }}</h4>
+                    <p class="author">por {{ book.author }}</p>
+                    <div class="mini-progress">
+                      <div class="progress-info">
+                        <span>{{ book.currentPage }} de {{ book.totalPages }} pág.</span>
+                      </div>
+                      <div class="bar-background">
+                        <div
+                          class="bar-fill"
+                          [style.width.%]="(book.currentPage / book.totalPages) * 100"
+                        ></div>
+                      </div>
+                    </div>
+                    <span class="register-hint">
+                      {{
+                        selectedBook()?.id === book.id && showProgressForm
+                          ? '▲ Fechar registro'
+                          : '✏️ Registrar progresso'
+                      }}
+                    </span>
                   </div>
                 </div>
-                <span class="register-hint">
-                  {{ showProgressForm ? '▲ Fechar registro' : '✏️ Registrar progresso' }}
-                </span>
-              </div>
+              }
             </div>
           } @else {
             <p class="no-book-text">Nenhum livro ativo no momento.</p>

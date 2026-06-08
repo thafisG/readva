@@ -50,6 +50,7 @@ export class DashboardComponent implements OnDestroy {
   pagesRead = 0;
   userComment = '';
   showProgressForm = false;
+  selectedBook = signal<any | null>(null);
   readingStartTime: number | null = null;
   readingElapsedSeconds = signal(0);
   timerInterval: any = null;
@@ -92,11 +93,30 @@ export class DashboardComponent implements OnDestroy {
     return `${m}:${s}`;
   }
 
+  selectBookForProgress(book: any) {
+    if (this.selectedBook()?.id === book.id && this.showProgressForm) {
+      this.closeProgressForm();
+      return;
+    }
+
+    this.selectedBook.set(book);
+    this.showProgressForm = true;
+    this.resetTimer();
+    this.pagesRead = 0;
+    this.userComment = '';
+  }
+
+  closeProgressForm() {
+    this.showProgressForm = false;
+    this.selectedBook.set(null);
+    this.resetTimer();
+  }
+
   loadSuggestions() {
     this.catalogService.getBooks().subscribe((catalog: any[]) => {
       const activities = this.bookService.myActivities?.() ?? [];
       const hasHistory = activities.length > 0;
-      const currentBookTitle = this.bookService.myCurrentBook()?.title;
+      const currentBookTitles = this.bookService.myCurrentBook().map((b) => b.title);
 
       const profile = this.recommendationService.getReaderProfile(
         activities.map((a) => ({
@@ -109,7 +129,7 @@ export class DashboardComponent implements OnDestroy {
       );
 
       const byCategory = catalog.reduce((acc: Record<string, any[]>, book) => {
-        if (book.title === currentBookTitle) return acc;
+        if (currentBookTitles.includes(book.title)) return acc;
         (acc[book.category] ??= []).push(book);
         return acc;
       }, {});
@@ -177,12 +197,15 @@ export class DashboardComponent implements OnDestroy {
   }
 
   handlePostProgress() {
+    const book = this.selectedBook();
+    if (!book) return;
+
     const pages = Number(this.pagesRead);
     if (isNaN(pages) || pages <= 0) return;
 
     const minutesRead = Math.floor((this.readingElapsedSeconds() || 0) / 60);
 
-    this.bookService.registerProgress(pages, this.userComment, minutesRead);
+    this.bookService.registerProgress(book.id, pages, this.userComment, minutesRead);
 
     this.userProgress.update((p) => ({
       ...p,
@@ -194,6 +217,7 @@ export class DashboardComponent implements OnDestroy {
     this.pagesRead = 0;
     this.userComment = '';
     this.showProgressForm = false;
+    this.selectedBook.set(null);
     this.resetTimer();
   }
 }

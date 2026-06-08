@@ -24,7 +24,7 @@ export class BookService {
     return `@readva:activities:${this.userEmail}`;
   }
 
-  public myCurrentBook = signal<any | null>(null);
+  public myCurrentBook = signal<any[]>([]);
   public myActivities = signal<any[]>([]);
 
   constructor() {
@@ -32,17 +32,21 @@ export class BookService {
   }
 
   private loadUserData() {
-    const savedBook = localStorage.getItem(this.BOOKS_KEY);
+    const savedBooks = localStorage.getItem(this.BOOKS_KEY);
     const savedActivities = localStorage.getItem(this.ACTIVITIES_KEY);
     const savedHistory = localStorage.getItem(this.HISTORY_KEY);
 
-    if (savedBook) this.myCurrentBook.set(JSON.parse(savedBook));
+    if (savedBooks) {
+      const parsed = JSON.parse(savedBooks);
+      this.myCurrentBook.set(Array.isArray(parsed) ? parsed : [parsed]);
+    }
     if (savedActivities) this.myActivities.set(JSON.parse(savedActivities));
     if (savedHistory) this.myBooks.set(JSON.parse(savedHistory));
   }
 
   startNewBook(title: string, author: string, totalPages: number, category: string) {
     const newBook = {
+      id: Math.random().toString(36).substr(2, 9),
       title,
       author,
       totalPages,
@@ -51,8 +55,11 @@ export class BookService {
       coverUrl: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f',
     };
 
-    this.myCurrentBook.set(newBook);
-    localStorage.setItem(this.BOOKS_KEY, JSON.stringify(newBook));
+    this.myCurrentBook.update((books) => {
+      const updated = [...books, newBook];
+      localStorage.setItem(this.BOOKS_KEY, JSON.stringify(updated));
+      return updated;
+    });
 
     this.myBooks.update((books) => {
       const updated = [...books, newBook];
@@ -61,8 +68,8 @@ export class BookService {
     });
   }
 
-  registerProgress(pages: number, comment: string, minutesRead: number = 0) {
-    const current = this.myCurrentBook();
+  registerProgress(bookId: string, pages: number, comment: string, minutesRead: number = 0) {
+    const current = this.myCurrentBook().find((b) => b.id === bookId);
     const user = this.authService.currentUser();
     if (!current || !user) return;
 
@@ -70,8 +77,11 @@ export class BookService {
     const updatedPage = Math.min(current.currentPage + safePages, current.totalPages);
     const updatedBook = { ...current, currentPage: updatedPage };
 
-    this.myCurrentBook.set(updatedBook);
-    localStorage.setItem(this.BOOKS_KEY, JSON.stringify(updatedBook));
+    this.myCurrentBook.update((books) => {
+      const updated = books.map((b) => (b.id === bookId ? updatedBook : b));
+      localStorage.setItem(this.BOOKS_KEY, JSON.stringify(updated));
+      return updated;
+    });
 
     const minutesLabel = minutesRead > 0 ? ` • ${minutesRead} min de leitura` : '';
 
@@ -82,7 +92,8 @@ export class BookService {
       timestamp: 'Agora mesmo',
       bookTitle: current.title,
       bookAuthor: current.author,
-      detail: comment || `Leu mais ${safePages} páginas${minutesLabel}.`,
+      detail: `Leu mais ${safePages} páginas${minutesLabel}`,
+      comment: comment || '',
       likes: 0,
       hasLiked: false,
     };
