@@ -192,4 +192,30 @@ export class BookService {
       return updated;
     });
   }
+
+  // ✅ NOVO — move um livro de myBooks (biblioteca/histórico) de volta para myCurrentBook
+  moveToCurrentReading(bookId: string): void {
+    const book = this.myBooks().find((b) => b.id === bookId);
+    if (!book) return;
+
+    // Remove completedAt e garante completed = false
+    const { completedAt, ...bookWithoutCompleted } = book;
+    const readingBook = { ...bookWithoutCompleted, completed: false };
+
+    // Adiciona em lendo atualmente (evita duplicata)
+    this.myCurrentBook.update((books) => {
+      const alreadyReading = books.some((b) => b.id === bookId);
+      if (alreadyReading) return books;
+      const updated = [...books, readingBook];
+      localStorage.setItem(this.BOOKS_KEY, JSON.stringify(updated));
+      return updated;
+    });
+
+    // Atualiza myBooks para refletir o estado sem completedAt
+    this.myBooks.update((books) => {
+      const updated = books.map((b) => (b.id === bookId ? readingBook : b));
+      localStorage.setItem(this.HISTORY_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  }
 }

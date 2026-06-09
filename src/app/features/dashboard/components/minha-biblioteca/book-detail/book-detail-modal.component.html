@@ -14,7 +14,11 @@
 
       <div class="book-half right">
         <div class="book-face front">
-          <div class="modal-panel" (click)="$event.stopPropagation()">
+          <div
+            class="modal-panel"
+            (click)="$event.stopPropagation()"
+            (wheel)="$event.stopPropagation()"
+          >
             <button class="modal-close" (click)="closeModal.emit()" aria-label="Fechar">✕</button>
 
             <div class="modal-hero">
@@ -80,6 +84,49 @@
                 </div>
               </div>
             }
+
+            <div class="actions-section">
+              <button class="btn-move-reading" (click)="moveToDashboard()">
+                📖 Continuar lendo este livro
+              </button>
+            </div>
+
+            <div class="delete-section">
+              @if (!showDeleteConfirm) {
+                <button class="btn-delete-trigger" (click)="showDeleteConfirm = true">
+                  Excluir
+                </button>
+              } @else {
+                <div class="delete-confirm-box">
+                  <p class="delete-warn">Esta ação é permanente e não pode ser desfeita.</p>
+                  <p class="delete-instruction">
+                    Digite <strong>DELETAR LIVRO</strong> para confirmar:
+                  </p>
+                  <input
+                    [(ngModel)]="deleteInput"
+                    class="delete-input"
+                    placeholder="DELETAR LIVRO"
+                    autocomplete="off"
+                    spellcheck="false"
+                  />
+                  <div class="delete-actions">
+                    <button
+                      class="btn-cancel"
+                      (click)="showDeleteConfirm = false; deleteInput = ''"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      class="btn-confirm-delete"
+                      [disabled]="!canConfirmDelete"
+                      (click)="confirmDelete()"
+                    >
+                      Excluir permanentemente
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
           </div>
         </div>
 

@@ -62,5 +62,7 @@
   <app-book-detail-modal
     [book]="selectedBook()!"
     (closeModal)="closeModal()"
+    (deleteBook)="onDeleteBook($event)"
+    (moveToReading)="onMoveToReading($event)"
   ></app-book-detail-modal>
 }
