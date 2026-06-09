@@ -1,70 +1,100 @@
-<div class="modal-backdrop" (click)="onBackdropClick($event)">
-  <div class="modal-panel" role="dialog" aria-modal="true">
-    <button class="modal-close" (click)="closeModal.emit()" aria-label="Fechar">✕</button>
-
-    <div class="modal-hero">
-      <img [src]="book.coverUrl" [alt]="book.title" class="modal-cover" />
-      <div class="modal-title-block">
-        <span class="modal-category">{{ book.category }}</span>
-        <h2>{{ book.title }}</h2>
-        <p class="modal-author">{{ book.author }}</p>
-
-        @if (book.completed) {
-          <span class="status-badge completed">✓ Concluído</span>
-        } @else {
-          <span class="status-badge reading">📖 Em leitura</span>
-        }
-      </div>
-    </div>
-
-    <div class="progress-section">
-      <div class="progress-label-row">
-        <span>Progresso</span>
-        <strong>{{ book.progressPercent }}%</strong>
-      </div>
-      <div class="progress-track">
-        <div class="progress-thumb" [style.width.%]="book.progressPercent"></div>
-      </div>
-      <div class="progress-pages-row">
-        <span>{{ book.currentPage }} páginas lidas</span>
-        <span>{{ book.totalPages }} páginas no total</span>
-      </div>
-    </div>
-
-    <div class="stats-grid">
-      <div class="stat-card">
-        <span class="stat-icon">⏱</span>
-        <span class="stat-value">{{ formatReadingTime(book.totalMinutesRead) }}</span>
-        <span class="stat-label">Tempo total lido</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-icon">📋</span>
-        <span class="stat-value">{{ book.sessions }}</span>
-        <span class="stat-label">Sessões de leitura</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-icon">⚡</span>
-        <span class="stat-value">{{ formatReadingTime(avgMinutesPerSession) }}</span>
-        <span class="stat-label">Média por sessão</span>
-      </div>
-      @if (!book.completed && estimatedMinutesLeft > 0) {
-        <div class="stat-card highlight">
-          <span class="stat-icon">🎯</span>
-          <span class="stat-value">{{ formatReadingTime(estimatedMinutesLeft) }}</span>
-          <span class="stat-label">Estimativa p/ terminar</span>
+<div class="modal-backdrop" (click)="toggleBook()">
+  <div class="book-scene">
+    <div class="book-container" role="dialog" aria-modal="true" [class.is-open]="isOpen">
+      <div class="book-half left">
+        <div class="book-face front">
+          <img [src]="book.coverUrl" [alt]="book.title" class="book-cover-half" />
         </div>
-      }
-    </div>
-
-    @if (book.comments.length > 0) {
-      <div class="comments-section">
-        <h4 class="section-title">Seus pensamentos durante a leitura</h4>
-        <div class="comments-list">
-          @for (comment of book.comments; track $index) {
-            <blockquote class="comment-item">"{{ comment }}"</blockquote>
-          }
+        <div class="book-face back">
+          <div class="back-page-lines">
+            <div class="back-line" *ngFor="let i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"></div>
+          </div>
         </div>
       </div>
-    }
+
+      <div class="book-half right">
+        <div class="book-face front">
+          <div class="modal-panel" (click)="$event.stopPropagation()">
+            <button class="modal-close" (click)="closeModal.emit()" aria-label="Fechar">✕</button>
+
+            <div class="modal-hero">
+              <div class="modal-title-block">
+                <span class="modal-category">{{ book.category }}</span>
+                <h2>{{ book.title }}</h2>
+                <p class="modal-author">{{ book.author }}</p>
+
+                @if (book.completed) {
+                  <span class="status-badge completed">✓ Concluído</span>
+                } @else {
+                  <span class="status-badge reading">📖 Em leitura</span>
+                }
+              </div>
+            </div>
+
+            <div class="progress-section">
+              <div class="progress-label-row">
+                <span>Progresso</span>
+                <strong>{{ book.progressPercent }}%</strong>
+              </div>
+              <div class="progress-track">
+                <div class="progress-thumb" [style.width.%]="book.progressPercent"></div>
+              </div>
+              <div class="progress-pages-row">
+                <span>{{ book.currentPage }} páginas lidas</span>
+                <span>{{ book.totalPages }} páginas no total</span>
+              </div>
+            </div>
+
+            <div class="stats-grid">
+              <div class="stat-card">
+                <span class="stat-icon">⏱</span>
+                <span class="stat-value">{{ formatReadingTime(book.totalMinutesRead) }}</span>
+                <span class="stat-label">Tempo total lido</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-icon">📋</span>
+                <span class="stat-value">{{ book.sessions }}</span>
+                <span class="stat-label">Sessões de leitura</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-icon">⚡</span>
+                <span class="stat-value">{{ formatReadingTime(avgMinutesPerSession) }}</span>
+                <span class="stat-label">Média por sessão</span>
+              </div>
+              @if (!book.completed && estimatedMinutesLeft > 0) {
+                <div class="stat-card highlight">
+                  <span class="stat-icon">🎯</span>
+                  <span class="stat-value">{{ formatReadingTime(estimatedMinutesLeft) }}</span>
+                  <span class="stat-label">Estimativa p/ terminar</span>
+                </div>
+              }
+            </div>
+
+            @if (book.comments.length > 0) {
+              <div class="comments-section">
+                <h4 class="section-title">Seus pensamentos durante a leitura</h4>
+                <div class="comments-list">
+                  @for (comment of book.comments; track $index) {
+                    <blockquote class="comment-item">"{{ comment }}"</blockquote>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="book-face back back-cover">
+          <div class="back-cover-content">
+            <span class="back-cover-icon">🌙</span>
+            <p class="back-cover-quote">
+              "Todo livro fechado<br />é uma história esperando<br />por você de volta."
+            </p>
+            <span class="back-cover-hint">clique para abrir</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="spine-line"></div>
+    </div>
   </div>
 </div>

@@ -90,10 +90,13 @@ export class BookService {
       userName: user.name,
       userAvatar: user.avatar,
       timestamp: 'Agora mesmo',
+      bookId: bookId,
       bookTitle: current.title,
       bookAuthor: current.author,
       detail: `Leu mais ${safePages} páginas${minutesLabel}`,
       comment: comment || '',
+      minutesRead: minutesRead,
+      pagesRead: safePages,
       likes: 0,
       hasLiked: false,
     };

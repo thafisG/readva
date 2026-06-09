@@ -13,15 +13,15 @@ export class BookDetailModalComponent {
   @Input() book!: BookStats;
   @Output() closeModal = new EventEmitter<void>();
 
+  isOpen = true;
+
+  toggleBook() {
+    this.isOpen = !this.isOpen;
+  }
+
   @HostListener('document:keydown.escape')
   onEscape() {
     this.closeModal.emit();
-  }
-
-  onBackdropClick(event: MouseEvent) {
-    if ((event.target as HTMLElement).classList.contains('modal-backdrop')) {
-      this.closeModal.emit();
-    }
   }
 
   formatReadingTime(minutes: number): string {
