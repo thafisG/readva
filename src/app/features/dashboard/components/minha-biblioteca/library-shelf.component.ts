@@ -34,7 +34,7 @@ export class LibraryShelfComponent {
   isModalOpen = signal(false);
 
   booksWithStats = computed<BookStats[]>(() => {
-    const books = this.bookService.myCurrentBook();
+    const books = this.bookService.myBooks();
     const activities: Activity[] = this.bookService.myActivities?.() ?? [];
 
     return books.map((book) => {

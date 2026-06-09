@@ -8,11 +8,9 @@
     [attr.aria-label]="book.title"
   >
     <div class="book-modal" [class.closing]="isClosing">
-      <!-- Lombada -->
       <div class="book-spine"></div>
 
       <div class="modal-body">
-        <!-- Coluna esquerda: capa + info + progresso -->
         <aside class="book-left">
           <div class="cover-art">
             <img
@@ -44,7 +42,6 @@
           </div>
         </aside>
 
-        <!-- Coluna direita: abas + conteúdo -->
         <div class="book-right">
           <div class="modal-tabs" role="tablist">
             <button
@@ -73,7 +70,6 @@
             </button>
           </div>
 
-          <!-- Aba: Progresso -->
           @if (activeTab === 'progress') {
             <div class="tab-body" role="tabpanel">
               <div class="timer-block">
@@ -116,7 +112,6 @@
             </div>
           }
 
-          <!-- Aba: Editar -->
           @if (activeTab === 'edit') {
             <div class="tab-body" role="tabpanel">
               <div class="field">
@@ -151,7 +146,6 @@
             </div>
           }
 
-          <!-- Aba: Gerenciar -->
           @if (activeTab === 'manage') {
             <div class="tab-body" role="tabpanel">
               <div class="manage-item">
@@ -192,7 +186,6 @@
             </div>
           }
 
-          <!-- Footer -->
           <div class="modal-footer">
             <button class="btn ghost" (click)="close()">Fechar</button>
             @if (footerLabel) {
@@ -208,7 +201,6 @@
         </div>
       </div>
 
-      <!-- Botão fechar (X) -->
       <button class="close-x" (click)="close()" aria-label="Fechar modal">✕</button>
     </div>
   </div>

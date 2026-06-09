@@ -132,9 +132,20 @@ export class BookService {
   }
 
   moveToLibrary(id: string) {
+    const book = this.myCurrentBook().find((b) => b.id === id);
+    if (!book) return;
+
     this.myCurrentBook.update((books) => {
       const updated = books.filter((b) => b.id !== id);
       localStorage.setItem(this.BOOKS_KEY, JSON.stringify(updated));
+      return updated;
+    });
+
+    this.myBooks.update((books) => {
+      const alreadyExists = books.some((b) => b.id === id);
+      if (alreadyExists) return books;
+      const updated = [...books, book];
+      localStorage.setItem(this.HISTORY_KEY, JSON.stringify(updated));
       return updated;
     });
   }
