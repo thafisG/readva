@@ -38,9 +38,9 @@
   <div class="goal-section">
     <div class="goal-header">
       <span class="goal-title">Meta Diária</span>
-      <span class="goal-ratio" [class.reached]="goalReached">
+      <span class="goal-ratio" [class.reached]="goalReached()">
         {{ progress().dailyMinutesRead }}/{{ progress().dailyGoalMinutes }} min
-        @if (goalReached) {
+        @if (goalReached()) {
           🎯
         }
       </span>
@@ -49,8 +49,8 @@
     <div class="progress-bar-container">
       <div
         class="progress-bar"
-        [style.width.%]="getPercentage()"
-        [class.reached]="goalReached"
+        [style.width.%]="percentage()"
+        [class.reached]="goalReached()"
       ></div>
     </div>
   </div>

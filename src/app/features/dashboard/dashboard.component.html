@@ -112,6 +112,25 @@
                 >
                   <span class="heart-icon">❤️</span> {{ activity.likes }}
                 </button>
+
+                @if (activity.isOwner) {
+                  <button class="action-trigger edit-btn" (click)="openEditActivityModal(activity)">
+                    <span class="edit-icon">
+                      <img src="assets/icon_edit.png" alt="Editar" class="edit-icon" />
+                    </span>
+                    Editar
+                  </button>
+
+                  <button
+                    class="action-trigger delete-btn"
+                    (click)="confirmDeleteActivity(activity)"
+                  >
+                    <span class="delete-icon">
+                      <img src="assets/icon_lixo.png" alt="lixeira" class="lixo-icon" />
+                    </span>
+                    Excluir
+                  </button>
+                }
               </div>
             </article>
           } @empty {
@@ -122,6 +141,94 @@
             </div>
           }
         </div>
+
+        @if (editingActivity()) {
+          <div class="modal-overlay" (click)="closeEditModal()">
+            <div class="modal-content" (click)="$event.stopPropagation()">
+              <div class="modal-header">
+                <h3>Editar atividade</h3>
+                <button class="close-modal" (click)="closeEditModal()">✕</button>
+              </div>
+
+              <div class="modal-body">
+                <div class="inline-inputs">
+                  <div class="field-wrapper">
+                    <label class="field-label">Páginas lidas</label>
+                    <input
+                      type="number"
+                      [(ngModel)]="editPagesRead"
+                      min="0"
+                      placeholder="Ex: 50"
+                      class="premium-input"
+                    />
+                  </div>
+
+                  <div class="field-wrapper">
+                    <label class="field-label">Minutos lidos</label>
+                    <input
+                      type="number"
+                      [(ngModel)]="editMinutesRead"
+                      min="0"
+                      placeholder="Ex: 30"
+                      class="premium-input"
+                    />
+                  </div>
+                </div>
+
+                <div class="field-wrapper">
+                  <label class="field-label">Comentário</label>
+                  <textarea
+                    [(ngModel)]="editComment"
+                    rows="3"
+                    placeholder="O que você achou da leitura?"
+                    class="premium-input"
+                  ></textarea>
+                </div>
+
+                <div class="detail-preview">
+                  <span class="detail-preview-label">Prévia</span>
+                  <span class="detail-preview-text">
+                    Leu mais {{ editPagesRead }} páginas
+                    @if (editMinutesRead > 0) {
+                      • {{ editMinutesRead }} min de leitura
+                    }
+                  </span>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button class="premium-btn-secondary" (click)="closeEditModal()">Cancelar</button>
+                <button class="premium-btn" (click)="saveEditedActivity()">
+                  Salvar alterações
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (deletingActivity()) {
+          <div class="modal-overlay" (click)="cancelDeleteActivity()">
+            <div class="modal-content delete-modal" (click)="$event.stopPropagation()">
+              <div class="delete-modal-icon">
+                <img src="assets/icon_triste.gif" alt="Progresso" class="icon-triste" />
+              </div>
+              <h3>Excluir atividade?</h3>
+              <p>
+                Você está prestes a excluir sua atividade e publicação em
+                <strong>{{ deletingActivity()!.bookTitle }}</strong
+                >. Essa ação não pode ser desfeita.
+              </p>
+              <div class="modal-footer">
+                <button class="premium-btn-secondary" (click)="cancelDeleteActivity()">
+                  Cancelar
+                </button>
+                <button class="delete-confirm-btn" (click)="executeDeleteActivity()">
+                  Excluir
+                </button>
+              </div>
+            </div>
+          </div>
+        }
       </main>
 
       <aside class="right-column">

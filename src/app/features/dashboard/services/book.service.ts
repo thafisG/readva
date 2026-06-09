@@ -1,5 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { AuthService } from './auth.service';
+import { BookCatalogService } from './book-catalog.service';
 
 @Injectable({
   providedIn: 'root',
@@ -12,6 +13,7 @@ export class BookService {
   public myBooks = signal<any[]>([]);
 
   private authService = inject(AuthService);
+  private catalogService = inject(BookCatalogService);
 
   private get userEmail() {
     return this.authService.currentUser()?.email || 'guest';
@@ -44,7 +46,15 @@ export class BookService {
     if (savedHistory) this.myBooks.set(JSON.parse(savedHistory));
   }
 
-  startNewBook(title: string, author: string, totalPages: number, category: string) {
+  async startNewBook(
+    title: string,
+    author: string,
+    totalPages: number,
+    category: string,
+    coverUrl?: string,
+  ) {
+    const cover = coverUrl || (await this.catalogService.fetchBookCover(title, author));
+
     const newBook = {
       id: Math.random().toString(36).substr(2, 9),
       title,
@@ -52,7 +62,7 @@ export class BookService {
       totalPages,
       category,
       currentPage: 0,
-      coverUrl: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f',
+      coverUrl: cover,
     };
 
     this.myCurrentBook.update((books) => {
@@ -66,6 +76,15 @@ export class BookService {
       localStorage.setItem(this.HISTORY_KEY, JSON.stringify(updated));
       return updated;
     });
+  }
+
+  private getCurrentTimestamp(): string {
+    const now = new Date();
+    return (
+      now.toLocaleDateString('pt-BR') +
+      ' às ' +
+      now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    );
   }
 
   registerProgress(bookId: string, pages: number, comment: string, minutesRead: number = 0) {
@@ -89,16 +108,19 @@ export class BookService {
       id: Math.random().toString(36).substr(2, 9),
       userName: user.name,
       userAvatar: user.avatar,
-      timestamp: 'Agora mesmo',
+      timestamp: this.getCurrentTimestamp(),
       bookId: bookId,
       bookTitle: current.title,
       bookAuthor: current.author,
+      bookCategory: current.category,
       detail: `Leu mais ${safePages} páginas${minutesLabel}`,
       comment: comment || '',
       minutesRead: minutesRead,
       pagesRead: safePages,
       likes: 0,
       hasLiked: false,
+      isOwner: true,
+      userId: user.email,
     };
 
     this.myActivities.update((list) => {
@@ -193,16 +215,13 @@ export class BookService {
     });
   }
 
-  // ✅ NOVO — move um livro de myBooks (biblioteca/histórico) de volta para myCurrentBook
   moveToCurrentReading(bookId: string): void {
     const book = this.myBooks().find((b) => b.id === bookId);
     if (!book) return;
 
-    // Remove completedAt e garante completed = false
     const { completedAt, ...bookWithoutCompleted } = book;
     const readingBook = { ...bookWithoutCompleted, completed: false };
 
-    // Adiciona em lendo atualmente (evita duplicata)
     this.myCurrentBook.update((books) => {
       const alreadyReading = books.some((b) => b.id === bookId);
       if (alreadyReading) return books;
@@ -211,11 +230,50 @@ export class BookService {
       return updated;
     });
 
-    // Atualiza myBooks para refletir o estado sem completedAt
     this.myBooks.update((books) => {
       const updated = books.map((b) => (b.id === bookId ? readingBook : b));
       localStorage.setItem(this.HISTORY_KEY, JSON.stringify(updated));
       return updated;
     });
+  }
+
+  deleteActivity(activityId: string): void {
+    this.myActivities.update((activities) => {
+      const updated = activities.filter((activity) => activity.id !== activityId);
+      localStorage.setItem(this.ACTIVITIES_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  }
+
+  updateActivity(activityId: string, updatedData: Partial<any>): void {
+    const existing = this.myActivities().find((a) => a.id === activityId);
+
+    this.myActivities.update((activities) =>
+      activities.map((activity) =>
+        activity.id === activityId
+          ? { ...activity, ...updatedData, timestamp: this.getCurrentTimestamp() }
+          : activity,
+      ),
+    );
+    localStorage.setItem(this.ACTIVITIES_KEY, JSON.stringify(this.myActivities()));
+
+    if (existing && updatedData['detail'] !== undefined) {
+      const newPages = this._parsePagesFromDetail(updatedData['detail']);
+      const oldPages = this._parsePagesFromDetail(existing['detail']);
+      const diff = newPages - oldPages;
+
+      if (diff !== 0) {
+        const book = this.myCurrentBook().find((b) => b.id === existing['bookId']);
+        if (book) {
+          const newCurrentPage = Math.min(Math.max(0, book.currentPage + diff), book.totalPages);
+          this.updateBook(existing['bookId'], { currentPage: newCurrentPage });
+        }
+      }
+    }
+  }
+
+  private _parsePagesFromDetail(detail: string): number {
+    const match = detail?.match(/(\d+)\s*p[áa]g/i);
+    return match ? parseInt(match[1], 10) : 0;
   }
 }
