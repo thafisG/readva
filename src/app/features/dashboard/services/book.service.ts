@@ -68,6 +68,15 @@ export class BookService {
     });
   }
 
+  private getCurrentTimestamp(): string {
+    const now = new Date();
+    return (
+      now.toLocaleDateString('pt-BR') +
+      ' às ' +
+      now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    );
+  }
+
   registerProgress(bookId: string, pages: number, comment: string, minutesRead: number = 0) {
     const current = this.myCurrentBook().find((b) => b.id === bookId);
     const user = this.authService.currentUser();
@@ -89,16 +98,19 @@ export class BookService {
       id: Math.random().toString(36).substr(2, 9),
       userName: user.name,
       userAvatar: user.avatar,
-      timestamp: 'Agora mesmo',
+      timestamp: this.getCurrentTimestamp(),
       bookId: bookId,
       bookTitle: current.title,
       bookAuthor: current.author,
+      bookCategory: current.category,
       detail: `Leu mais ${safePages} páginas${minutesLabel}`,
       comment: comment || '',
       minutesRead: minutesRead,
       pagesRead: safePages,
       likes: 0,
       hasLiked: false,
+      isOwner: true,
+      userId: user.email,
     };
 
     this.myActivities.update((list) => {
@@ -193,16 +205,13 @@ export class BookService {
     });
   }
 
-  // ✅ NOVO — move um livro de myBooks (biblioteca/histórico) de volta para myCurrentBook
   moveToCurrentReading(bookId: string): void {
     const book = this.myBooks().find((b) => b.id === bookId);
     if (!book) return;
 
-    // Remove completedAt e garante completed = false
     const { completedAt, ...bookWithoutCompleted } = book;
     const readingBook = { ...bookWithoutCompleted, completed: false };
 
-    // Adiciona em lendo atualmente (evita duplicata)
     this.myCurrentBook.update((books) => {
       const alreadyReading = books.some((b) => b.id === bookId);
       if (alreadyReading) return books;
@@ -211,11 +220,50 @@ export class BookService {
       return updated;
     });
 
-    // Atualiza myBooks para refletir o estado sem completedAt
     this.myBooks.update((books) => {
       const updated = books.map((b) => (b.id === bookId ? readingBook : b));
       localStorage.setItem(this.HISTORY_KEY, JSON.stringify(updated));
       return updated;
     });
+  }
+
+  deleteActivity(activityId: string): void {
+    this.myActivities.update((activities) => {
+      const updated = activities.filter((activity) => activity.id !== activityId);
+      localStorage.setItem(this.ACTIVITIES_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  }
+
+  updateActivity(activityId: string, updatedData: Partial<any>): void {
+    const existing = this.myActivities().find((a) => a.id === activityId);
+
+    this.myActivities.update((activities) =>
+      activities.map((activity) =>
+        activity.id === activityId
+          ? { ...activity, ...updatedData, timestamp: this.getCurrentTimestamp() }
+          : activity,
+      ),
+    );
+    localStorage.setItem(this.ACTIVITIES_KEY, JSON.stringify(this.myActivities()));
+
+    if (existing && updatedData['detail'] !== undefined) {
+      const newPages = this._parsePagesFromDetail(updatedData['detail']);
+      const oldPages = this._parsePagesFromDetail(existing['detail']);
+      const diff = newPages - oldPages;
+
+      if (diff !== 0) {
+        const book = this.myCurrentBook().find((b) => b.id === existing['bookId']);
+        if (book) {
+          const newCurrentPage = Math.min(Math.max(0, book.currentPage + diff), book.totalPages);
+          this.updateBook(existing['bookId'], { currentPage: newCurrentPage });
+        }
+      }
+    }
+  }
+
+  private _parsePagesFromDetail(detail: string): number {
+    const match = detail?.match(/(\d+)\s*p[áa]g/i);
+    return match ? parseInt(match[1], 10) : 0;
   }
 }

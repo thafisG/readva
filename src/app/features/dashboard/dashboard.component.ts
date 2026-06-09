@@ -14,7 +14,10 @@ import { LoginComponent } from '../login/login.component';
 
 import { Activity, BookSuggestion, UserProgress } from './interfaces/dashboard.interface';
 import { BOOK_CATEGORIES } from '../../constants/book-categories';
-import { BookActionEvent, BookActionPanelComponent } from './book-action-panel/book-action-panel.component';
+import {
+  BookActionEvent,
+  BookActionPanelComponent,
+} from './book-action-panel/book-action-panel.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -37,11 +40,13 @@ export class DashboardComponent implements OnDestroy {
   public utilsService = inject(UtilsService);
   public bookService = inject(BookService);
   public authService = inject(AuthService);
-  private router = inject(Router);
   private catalogService = inject(BookCatalogService);
   private recommendationService = inject(RecommendationService);
-
+  public deletingActivity = signal<Activity | null>(null);
   public suggestions = signal<BookSuggestion[]>([]);
+  public editingActivity = signal<Activity | null>(null);
+  public editComment = '';
+  public editDetail = '';
 
   public userProgress = signal<UserProgress>({
     name: 'Leitor',
@@ -75,6 +80,47 @@ export class DashboardComponent implements OnDestroy {
     this.selectedBook.set(null);
   }
 
+  openEditActivityModal(activity: Activity): void {
+    this.editingActivity.set(activity);
+    this.editComment = activity.comment || '';
+    this.editDetail = activity.detail;
+  }
+
+  closeEditModal(): void {
+    this.editingActivity.set(null);
+    this.editComment = '';
+    this.editDetail = '';
+  }
+
+  saveEditedActivity(): void {
+    const activity = this.editingActivity();
+    if (!activity) return;
+
+    this.bookService.updateActivity(activity.id, {
+      comment: this.editComment,
+      detail: this.editDetail,
+    });
+
+    if (this.selectedBook()?.id === activity.bookId) {
+      const updated = this.bookService.myCurrentBook().find((b) => b.id === activity.bookId);
+      if (updated) this.selectedBook.set({ ...updated });
+    }
+
+    this.closeEditModal();
+  }
+
+  confirmDeleteActivity(activity: Activity): void {
+    this.deletingActivity.set(activity);
+  }
+  executeDeleteActivity(): void {
+    const activity = this.deletingActivity();
+    if (!activity) return;
+    this.bookService.deleteActivity(activity.id);
+    this.deletingActivity.set(null);
+  }
+  cancelDeleteActivity(): void {
+    this.deletingActivity.set(null);
+  }
   handlePanelAction(event: BookActionEvent): void {
     switch (event.type) {
       case 'post-progress':
@@ -146,6 +192,10 @@ export class DashboardComponent implements OnDestroy {
             }
           : item,
       ),
+    );
+    localStorage.setItem(
+      `@readva:activities:${this.authService.currentUser()?.email || 'guest'}`,
+      JSON.stringify(this.bookService.myActivities()),
     );
   }
 

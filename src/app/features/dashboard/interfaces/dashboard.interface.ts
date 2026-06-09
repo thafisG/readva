@@ -36,6 +36,7 @@ export interface Activity {
   progress?: number;
   totalPages?: number;
   completed?: boolean;
+  isOwner?: boolean;
 }
 
 export interface WeeklyStat {
