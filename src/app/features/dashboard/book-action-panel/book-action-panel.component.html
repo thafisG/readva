@@ -1,0 +1,207 @@
+@if (book) {
+  <div
+    class="modal-overlay"
+    [class.closing]="isClosing"
+    (click)="onOverlayClick($event)"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="book.title"
+  >
+    <div class="book-modal" [class.closing]="isClosing">
+      <div class="book-spine"></div>
+
+      <div class="modal-body">
+        <aside class="book-left">
+          <div class="cover-art">
+            <img
+              [src]="book.coverUrl"
+              [alt]="book.title"
+              class="cover-img"
+              onerror="this.style.display = 'none'"
+            />
+            <div class="cover-fallback">
+              <span>{{ book.title }}</span>
+            </div>
+          </div>
+
+          <div class="book-meta">
+            <h3>{{ book.title }}</h3>
+            <p class="author">{{ book.author }}</p>
+            <span class="cat-badge">{{ book.category }}</span>
+          </div>
+
+          <div class="prog-block">
+            <div class="prog-header">
+              <span>Progresso</span>
+              <span>{{ progressPercent }}%</span>
+            </div>
+            <div class="prog-bar">
+              <div class="prog-fill" [style.width.%]="progressPercent"></div>
+            </div>
+            <p class="prog-pages">{{ book.currentPage }} de {{ book.totalPages }} págs.</p>
+          </div>
+        </aside>
+
+        <div class="book-right">
+          <div class="modal-tabs" role="tablist">
+            <button
+              class="mtab"
+              [class.active]="activeTab === 'progress'"
+              (click)="selectTab('progress')"
+              role="tab"
+            >
+              📊 Progresso
+            </button>
+            <button
+              class="mtab"
+              [class.active]="activeTab === 'edit'"
+              (click)="selectTab('edit')"
+              role="tab"
+            >
+              ✏️ Editar
+            </button>
+            <button
+              class="mtab"
+              [class.active]="activeTab === 'manage'"
+              (click)="selectTab('manage')"
+              role="tab"
+            >
+              ⚙️ Gerenciar
+            </button>
+          </div>
+
+          @if (activeTab === 'progress') {
+            <div class="tab-body" role="tabpanel">
+              <div class="timer-block">
+                <span class="timer-display">{{ formattedTime }}</span>
+                <div class="timer-actions">
+                  <button class="btn" (click)="toggleTimer()">
+                    {{
+                      isReading
+                        ? '⏸ Pausar'
+                        : readingElapsedSeconds() > 0
+                          ? '▶ Continuar'
+                          : '▶ Iniciar'
+                    }}
+                  </button>
+                  @if (readingElapsedSeconds() > 0) {
+                    <button class="btn ghost" (click)="resetTimer()">Cancelar</button>
+                  }
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="flabel">Páginas lidas agora <span class="req">*</span></label>
+                <input
+                  type="number"
+                  [(ngModel)]="pagesRead"
+                  placeholder="Quantas páginas você leu?"
+                  class="finput"
+                  min="1"
+                />
+              </div>
+
+              <div class="field">
+                <label class="flabel">Comentário <span class="opt">(opcional)</span></label>
+                <input
+                  [(ngModel)]="userComment"
+                  placeholder="O que está achando da leitura?"
+                  class="finput"
+                />
+              </div>
+            </div>
+          }
+
+          @if (activeTab === 'edit') {
+            <div class="tab-body" role="tabpanel">
+              <div class="field">
+                <label class="flabel">Título <span class="req">*</span></label>
+                <input [(ngModel)]="editTitle" class="finput" />
+              </div>
+
+              <div class="field">
+                <label class="flabel">Autor <span class="req">*</span></label>
+                <input [(ngModel)]="editAuthor" class="finput" />
+              </div>
+
+              <div class="row2">
+                <div class="field">
+                  <label class="flabel">Página atual</label>
+                  <input type="number" [(ngModel)]="editCurrentPage" class="finput" min="0" />
+                </div>
+                <div class="field">
+                  <label class="flabel">Total de páginas</label>
+                  <input type="number" [(ngModel)]="editTotalPages" class="finput" min="1" />
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="flabel">Categoria</label>
+                <select [(ngModel)]="editCategory" class="finput">
+                  @for (cat of categories; track cat) {
+                    <option [value]="cat">{{ cat }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+          }
+
+          @if (activeTab === 'manage') {
+            <div class="tab-body" role="tabpanel">
+              <div class="manage-item">
+                <div class="manage-text">
+                  <h4>Mover para biblioteca</h4>
+                  <p>Remove de "Lendo agora", mas mantém salvo</p>
+                </div>
+                <button class="btn" (click)="moveToLibrary()">Mover</button>
+              </div>
+
+              <div class="manage-item">
+                <div class="manage-text">
+                  <h4>Marcar como concluído</h4>
+                  <p>Registra a data de término do livro</p>
+                </div>
+                <button class="btn success" (click)="markCompleted()">Concluir ✓</button>
+              </div>
+
+              <div class="manage-divider">ações irreversíveis</div>
+
+              @if (!confirmDelete) {
+                <div class="manage-item danger">
+                  <div class="manage-text">
+                    <h4>Excluir livro</h4>
+                    <p>Remove permanentemente da sua conta</p>
+                  </div>
+                  <button class="btn danger" (click)="confirmDelete = true">Excluir</button>
+                </div>
+              } @else {
+                <div class="confirm-delete">
+                  <p>Tem certeza? Esta ação não pode ser desfeita.</p>
+                  <div class="confirm-actions">
+                    <button class="btn ghost" (click)="confirmDelete = false">Cancelar</button>
+                    <button class="btn danger" (click)="deleteBook()">Sim, excluir</button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+
+          <div class="modal-footer">
+            <button class="btn ghost" (click)="close()">Fechar</button>
+            @if (footerLabel) {
+              <button
+                class="btn primary"
+                (click)="onFooterAction()"
+                [disabled]="activeTab === 'progress' && pagesRead <= 0"
+              >
+                {{ footerLabel }}
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <button class="close-x" (click)="close()" aria-label="Fechar modal">✕</button>
+    </div>
+  </div>
+}
