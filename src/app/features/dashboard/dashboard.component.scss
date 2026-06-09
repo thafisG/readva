@@ -745,3 +745,25 @@
     opacity: 0.85;
   }
 }
+.detail-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #f9fafb;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 14px;
+
+  .detail-preview-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+  }
+
+  .detail-preview-text {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+  }
+}

@@ -115,9 +115,9 @@
 
                 @if (activity.isOwner) {
                   <button class="action-trigger edit-btn" (click)="openEditActivityModal(activity)">
-                    <span class="edit-icon"
-                      ><img src="assets/icon_edit.png" alt="Editar" class="edit-icon"
-                    /></span>
+                    <span class="edit-icon">
+                      <img src="assets/icon_edit.png" alt="Editar" class="edit-icon" />
+                    </span>
                     Editar
                   </button>
 
@@ -125,9 +125,9 @@
                     class="action-trigger delete-btn"
                     (click)="confirmDeleteActivity(activity)"
                   >
-                    <span class="delete-icon"
-                      ><img src="assets/icon_lixo.png" alt="lixeira" class="lixo-icon"
-                    /></span>
+                    <span class="delete-icon">
+                      <img src="assets/icon_lixo.png" alt="lixeira" class="lixo-icon" />
+                    </span>
                     Excluir
                   </button>
                 }
@@ -151,6 +151,30 @@
               </div>
 
               <div class="modal-body">
+                <div class="inline-inputs">
+                  <div class="field-wrapper">
+                    <label class="field-label">Páginas lidas</label>
+                    <input
+                      type="number"
+                      [(ngModel)]="editPagesRead"
+                      min="0"
+                      placeholder="Ex: 50"
+                      class="premium-input"
+                    />
+                  </div>
+
+                  <div class="field-wrapper">
+                    <label class="field-label">Minutos lidos</label>
+                    <input
+                      type="number"
+                      [(ngModel)]="editMinutesRead"
+                      min="0"
+                      placeholder="Ex: 30"
+                      class="premium-input"
+                    />
+                  </div>
+                </div>
+
                 <div class="field-wrapper">
                   <label class="field-label">Comentário</label>
                   <textarea
@@ -161,13 +185,14 @@
                   ></textarea>
                 </div>
 
-                <div class="field-wrapper">
-                  <label class="field-label">Detalhe da atividade</label>
-                  <input
-                    [(ngModel)]="editDetail"
-                    placeholder="Ex: Li mais 50 páginas"
-                    class="premium-input"
-                  />
+                <div class="detail-preview">
+                  <span class="detail-preview-label">Prévia</span>
+                  <span class="detail-preview-text">
+                    Leu mais {{ editPagesRead }} páginas
+                    @if (editMinutesRead > 0) {
+                      • {{ editMinutesRead }} min de leitura
+                    }
+                  </span>
                 </div>
               </div>
 

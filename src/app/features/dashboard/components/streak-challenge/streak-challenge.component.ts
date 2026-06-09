@@ -31,6 +31,17 @@ export class StreakChallengeComponent implements OnInit, OnDestroy, AfterViewChe
   showConfetti = signal(false);
   weekDays = signal<{ label: string; read: boolean; isToday: boolean }[]>([]);
 
+  // computed garante reatividade automática quando o input muda
+  goalReached = computed(
+    () => this.progress().dailyMinutesRead >= this.progress().dailyGoalMinutes,
+  );
+
+  percentage = computed(() => {
+    const current = this.progress();
+    if (!current?.dailyGoalMinutes) return 0;
+    return Math.min((current.dailyMinutesRead / current.dailyGoalMinutes) * 100, 100);
+  });
+
   private confettiTimeout: any = null;
   private animTimeout: any = null;
   private confettiRunning = false;
@@ -41,16 +52,6 @@ export class StreakChallengeComponent implements OnInit, OnDestroy, AfterViewChe
 
   get todayKey(): string {
     return new Date().toISOString().split('T')[0];
-  }
-
-  get goalReached(): boolean {
-    return this.progress().dailyMinutesRead >= this.progress().dailyGoalMinutes;
-  }
-
-  getPercentage(): number {
-    const current = this.progress();
-    if (!current?.dailyGoalMinutes) return 0;
-    return Math.min((current.dailyMinutesRead / current.dailyGoalMinutes) * 100, 100);
   }
 
   ngOnInit() {
