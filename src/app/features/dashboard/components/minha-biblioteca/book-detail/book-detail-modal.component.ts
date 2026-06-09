@@ -1,19 +1,44 @@
-import { Component, Input, Output, EventEmitter, HostListener } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  HostListener,
+  AfterViewInit,
+  OnDestroy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { BookStats } from '../library-shelf.component';
 
 @Component({
   selector: 'app-book-detail-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './book-detail-modal.component.html',
   styleUrls: ['./book-detail-modal.component.scss'],
 })
-export class BookDetailModalComponent {
+export class BookDetailModalComponent implements AfterViewInit, OnDestroy {
   @Input() book!: BookStats;
   @Output() closeModal = new EventEmitter<void>();
+  @Output() deleteBook = new EventEmitter<string>();
+  @Output() moveToReading = new EventEmitter<string>();
 
   isOpen = true;
+  showDeleteConfirm = false;
+  deleteInput = '';
+
+  private panel: HTMLElement | null = null;
+  private wheelHandler = (e: WheelEvent) => e.stopPropagation();
+
+  ngAfterViewInit() {
+    document.body.style.overflow = 'hidden';
+  }
+
+  ngOnDestroy() {
+    document.body.style.overflow = '';
+    this.panel?.removeEventListener('wheel', this.wheelHandler);
+  }
 
   toggleBook() {
     this.isOpen = !this.isOpen;
@@ -21,6 +46,21 @@ export class BookDetailModalComponent {
 
   @HostListener('document:keydown.escape')
   onEscape() {
+    this.closeModal.emit();
+  }
+
+  get canConfirmDelete(): boolean {
+    return this.deleteInput === 'DELETAR LIVRO';
+  }
+
+  confirmDelete() {
+    if (!this.canConfirmDelete) return;
+    this.deleteBook.emit(this.book.id);
+    this.closeModal.emit();
+  }
+
+  moveToDashboard() {
+    this.moveToReading.emit(this.book.id);
     this.closeModal.emit();
   }
 

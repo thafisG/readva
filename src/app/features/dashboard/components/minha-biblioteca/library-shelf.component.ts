@@ -33,6 +33,11 @@ export class LibraryShelfComponent {
   selectedBook = signal<BookStats | null>(null);
   isModalOpen = signal(false);
 
+  onDeleteBook(bookId: string) {
+    this.bookService.deleteBook(bookId);
+    this.closeModal();
+  }
+
   booksWithStats = computed<BookStats[]>(() => {
     const books = this.bookService.myBooks();
     const activities: Activity[] = this.bookService.myActivities?.() ?? [];
@@ -87,5 +92,8 @@ export class LibraryShelfComponent {
 
   goBack() {
     this.location.back();
+  }
+  onMoveToReading(bookId: string): void {
+    this.bookService.moveToCurrentReading(bookId);
   }
 }
