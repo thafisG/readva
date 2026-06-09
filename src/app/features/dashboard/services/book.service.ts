@@ -107,4 +107,78 @@ export class BookService {
       return newList;
     });
   }
+
+  updateBook(
+    id: string,
+    data: {
+      title?: string;
+      author?: string;
+      totalPages?: number;
+      currentPage?: number;
+      category?: string;
+    },
+  ) {
+    this.myCurrentBook.update((books) => {
+      const updated = books.map((b) => (b.id === id ? { ...b, ...data } : b));
+      localStorage.setItem(this.BOOKS_KEY, JSON.stringify(updated));
+      return updated;
+    });
+
+    this.myBooks.update((books) => {
+      const updated = books.map((b) => (b.id === id ? { ...b, ...data } : b));
+      localStorage.setItem(this.HISTORY_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  }
+
+  moveToLibrary(id: string) {
+    this.myCurrentBook.update((books) => {
+      const updated = books.filter((b) => b.id !== id);
+      localStorage.setItem(this.BOOKS_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  }
+
+  markCompleted(id: string) {
+    const book = this.myCurrentBook().find((b) => b.id === id);
+    if (!book) return;
+
+    const completedBook = {
+      ...book,
+      currentPage: book.totalPages,
+      completedAt: new Date().toISOString(),
+    };
+
+    this.myBooks.update((books) => {
+      const updated = books.map((b) => (b.id === id ? completedBook : b));
+      localStorage.setItem(this.HISTORY_KEY, JSON.stringify(updated));
+      return updated;
+    });
+
+    this.myCurrentBook.update((books) => {
+      const updated = books.filter((b) => b.id !== id);
+      localStorage.setItem(this.BOOKS_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  }
+
+  deleteBook(id: string) {
+    this.myCurrentBook.update((books) => {
+      const updated = books.filter((b) => b.id !== id);
+      localStorage.setItem(this.BOOKS_KEY, JSON.stringify(updated));
+      return updated;
+    });
+
+    this.myBooks.update((books) => {
+      const updated = books.filter((b) => b.id !== id);
+      localStorage.setItem(this.HISTORY_KEY, JSON.stringify(updated));
+      return updated;
+    });
+
+    this.myActivities.update((list) => {
+      const updated = list.filter((a) => a.bookId !== id);
+      localStorage.setItem(this.ACTIVITIES_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  }
 }

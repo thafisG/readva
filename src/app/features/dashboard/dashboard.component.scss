@@ -487,3 +487,47 @@
   color: var(--text-muted, #888);
   font-size: 0.875rem;
 }
+
+.dashboard-container {
+  grid-template-columns: 240px 1fr 280px;
+  grid-template-areas: 'left center right';
+
+  &.panel-open {
+    grid-template-columns: 240px 1fr 280px 300px;
+    grid-template-areas: 'left center right panel';
+  }
+}
+
+.action-panel-column {
+  grid-area: panel;
+  width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    width 0.25s ease,
+    opacity 0.2s ease;
+
+  &.visible {
+    width: 300px;
+    opacity: 1;
+  }
+
+  app-book-action-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+}
+
+.current-book-layout.active-progress {
+  background: #f3f4f6;
+
+  .register-hint {
+    color: var(--text-primary);
+  }
+}

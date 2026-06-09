@@ -14,6 +14,7 @@ import { LoginComponent } from '../login/login.component';
 
 import { Activity, BookSuggestion, UserProgress } from './interfaces/dashboard.interface';
 import { BOOK_CATEGORIES } from '../../constants/book-categories';
+import { BookActionEvent, BookActionPanelComponent } from './book-action-panel/book-action-panel.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -23,6 +24,7 @@ import { BOOK_CATEGORIES } from '../../constants/book-categories';
     FormsModule,
     StreakChallengeComponent,
     LoginComponent,
+    BookActionPanelComponent,
     RouterLink,
     RouterLinkActive,
   ],
@@ -56,72 +58,115 @@ export class DashboardComponent implements OnDestroy {
   newTotalPages = 100;
   newCategory = 'Literatura';
 
-  pagesRead = 0;
-  userComment = '';
-  showProgressForm = false;
   selectedBook = signal<any | null>(null);
-  readingStartTime: number | null = null;
-  readingElapsedSeconds = signal(0);
-  timerInterval: any = null;
-  isReading = false;
 
   constructor() {
     console.log('DASHBOARD CRIADO');
     this.loadSuggestions();
   }
 
-  ngOnDestroy() {
-    clearInterval(this.timerInterval);
+  ngOnDestroy() {}
+
+  selectBookForModal(book: any): void {
+    this.selectedBook.set({ ...book });
   }
 
-  toggleReadingTimer() {
-    if (!this.isReading) {
-      this.isReading = true;
-      this.readingStartTime = Date.now() - this.readingElapsedSeconds() * 1000;
-      this.timerInterval = setInterval(() => {
-        this.readingElapsedSeconds.set(Math.floor((Date.now() - this.readingStartTime!) / 1000));
-      }, 1000);
-    } else {
-      this.isReading = false;
-      clearInterval(this.timerInterval);
-    }
-  }
-
-  resetTimer() {
-    this.isReading = false;
-    clearInterval(this.timerInterval);
-    this.readingElapsedSeconds.set(0);
-    this.readingStartTime = null;
-  }
-
-  get formattedTime(): string {
-    const m = Math.floor(this.readingElapsedSeconds() / 60)
-      .toString()
-      .padStart(2, '0');
-    const s = (this.readingElapsedSeconds() % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
-  }
-
-  selectBookForProgress(book: any) {
-    if (this.selectedBook()?.id === book.id && this.showProgressForm) {
-      this.closeProgressForm();
-      return;
-    }
-
-    this.selectedBook.set(book);
-    this.showProgressForm = true;
-    this.resetTimer();
-    this.pagesRead = 0;
-    this.userComment = '';
-  }
-
-  closeProgressForm() {
-    this.showProgressForm = false;
+  closeModal(): void {
     this.selectedBook.set(null);
-    this.resetTimer();
   }
 
-  loadSuggestions() {
+  handlePanelAction(event: BookActionEvent): void {
+    switch (event.type) {
+      case 'post-progress':
+        this.onPostProgress(event);
+        break;
+      case 'save-edit':
+        this.onSaveEdit(event);
+        break;
+      case 'move-to-library':
+        this.onMoveToLibrary(event);
+        break;
+      case 'mark-completed':
+        this.onMarkCompleted(event);
+        break;
+      case 'delete':
+        this.onDeleteBook(event);
+        break;
+    }
+  }
+
+  private onPostProgress(event: BookActionEvent): void {
+    const { pages, comment, minutesRead } = event.payload;
+    this.bookService.registerProgress(event.bookId, pages, comment, minutesRead);
+
+    this.userProgress.update((p) => ({
+      ...p,
+      dailyMinutesRead: p.dailyMinutesRead + minutesRead,
+    }));
+
+    this.streakComponent?.markTodayRead();
+
+    const updated = this.bookService.myCurrentBook().find((b) => b.id === event.bookId);
+    if (updated) this.selectedBook.set({ ...updated });
+  }
+
+  private onSaveEdit(event: BookActionEvent): void {
+    this.bookService.updateBook(event.bookId, event.payload);
+    const updated = this.bookService.myCurrentBook().find((b) => b.id === event.bookId);
+    if (updated) this.selectedBook.set({ ...updated });
+    this.loadSuggestions();
+  }
+
+  private onMoveToLibrary(event: BookActionEvent): void {
+    this.bookService.moveToLibrary(event.bookId);
+    this.closeModal();
+    this.loadSuggestions();
+  }
+
+  private onMarkCompleted(event: BookActionEvent): void {
+    this.bookService.markCompleted(event.bookId);
+    this.closeModal();
+    this.loadSuggestions();
+  }
+
+  private onDeleteBook(event: BookActionEvent): void {
+    this.bookService.deleteBook(event.bookId);
+    this.closeModal();
+    this.loadSuggestions();
+  }
+
+  onLikeTriggered(activityId: string): void {
+    this.bookService.myActivities.update((items: Activity[]) =>
+      items.map((item: Activity) =>
+        item.id === activityId
+          ? {
+              ...item,
+              hasLiked: !item.hasLiked,
+              likes: item.hasLiked ? item.likes - 1 : item.likes + 1,
+            }
+          : item,
+      ),
+    );
+  }
+
+  handleStartBook(): void {
+    if (!this.newTitle.trim() || !this.newAuthor.trim()) return;
+    this.bookService.startNewBook(
+      this.newTitle,
+      this.newAuthor,
+      this.newTotalPages,
+      this.newCategory,
+    );
+    this.loadSuggestions();
+    this.newTitle = '';
+    this.newAuthor = '';
+  }
+
+  handleLogout(): void {
+    this.authService.logout();
+  }
+
+  loadSuggestions(): void {
     this.catalogService.getBooks().subscribe((catalog: any[]) => {
       const activities = this.bookService.myActivities?.() ?? [];
       const hasHistory = activities.length > 0;
@@ -149,17 +194,13 @@ export class DashboardComponent implements OnDestroy {
         return sb - sa;
       });
 
-      if (!hasHistory) {
-        orderedCategories = orderedCategories.sort(() => Math.random() - 0.5);
-      }
+      if (!hasHistory) orderedCategories = orderedCategories.sort(() => Math.random() - 0.5);
 
       const recommendations: any[] = [];
       for (const cat of orderedCategories) {
         if (recommendations.length >= 3) break;
-
         const pick = byCategory[cat][Math.floor(Math.random() * byCategory[cat].length)];
         const score = profile.categoryScore[cat] ?? 0;
-
         recommendations.push({
           ...pick,
           score,
@@ -169,64 +210,5 @@ export class DashboardComponent implements OnDestroy {
 
       this.suggestions.set(recommendations);
     });
-  }
-
-  handleLogout() {
-    this.authService.logout();
-  }
-
-  onLikeTriggered(activityId: string) {
-    this.bookService.myActivities.update((items: Activity[]) =>
-      items.map((item: Activity) =>
-        item.id === activityId
-          ? {
-              ...item,
-              hasLiked: !item.hasLiked,
-              likes: item.hasLiked ? item.likes - 1 : item.likes + 1,
-            }
-          : item,
-      ),
-    );
-  }
-
-  handleStartBook() {
-    if (!this.newTitle.trim() || !this.newAuthor.trim()) return;
-
-    this.bookService.startNewBook(
-      this.newTitle,
-      this.newAuthor,
-      this.newTotalPages,
-      this.newCategory,
-    );
-
-    this.loadSuggestions();
-
-    this.newTitle = '';
-    this.newAuthor = '';
-  }
-
-  handlePostProgress() {
-    const book = this.selectedBook();
-    if (!book) return;
-
-    const pages = Number(this.pagesRead);
-    if (isNaN(pages) || pages <= 0) return;
-
-    const minutesRead = Math.floor((this.readingElapsedSeconds() || 0) / 60);
-
-    this.bookService.registerProgress(book.id, pages, this.userComment, minutesRead);
-
-    this.userProgress.update((p) => ({
-      ...p,
-      dailyMinutesRead: p.dailyMinutesRead + minutesRead,
-    }));
-
-    this.streakComponent?.markTodayRead();
-
-    this.pagesRead = 0;
-    this.userComment = '';
-    this.showProgressForm = false;
-    this.selectedBook.set(null);
-    this.resetTimer();
   }
 }

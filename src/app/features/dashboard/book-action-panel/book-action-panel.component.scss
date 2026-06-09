@@ -1,0 +1,483 @@
+// ── Overlay ───────────────────────────────────────────────
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+  animation: fadeIn 0.18s ease;
+
+  &.closing {
+    animation: fadeOut 0.18s ease forwards;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+// ── Modal ─────────────────────────────────────────────────
+.book-modal {
+  position: relative;
+  width: 640px;
+  max-width: 100%;
+  max-height: 90vh;
+  background: var(--surface, #ffffff);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: popIn 0.2s ease;
+
+  &.closing {
+    animation: popOut 0.18s ease forwards;
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes popOut {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+}
+
+// ── Lombada ───────────────────────────────────────────────
+.book-spine {
+  height: 5px;
+  background: var(--btn-primary, #534ab7);
+  flex-shrink: 0;
+}
+
+// ── Layout interno ────────────────────────────────────────
+.modal-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+// ── Coluna esquerda ───────────────────────────────────────
+.book-left {
+  width: 196px;
+  flex-shrink: 0;
+  padding: 20px 16px;
+  border-right: 1px solid var(--border);
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+}
+
+.cover-art {
+  width: 120px;
+  height: 170px;
+  border-radius: 6px;
+  margin: 0 auto;
+  background: #e5e7eb;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+
+  .cover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+
+  .cover-fallback {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(145deg, var(--btn-primary, #534ab7) 0%, #3c3489 100%);
+    display: flex;
+    align-items: flex-end;
+    padding: 10px;
+
+    span {
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 1.3;
+    }
+  }
+}
+
+.book-meta {
+  h3 {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.3;
+  }
+
+  .author {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 3px;
+  }
+}
+
+.cat-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 500;
+  background: #eeedfe;
+  color: #3c3489;
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-top: 6px;
+}
+
+.prog-block {
+  margin-top: auto;
+}
+
+.prog-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  margin-bottom: 5px;
+}
+
+.prog-bar {
+  height: 4px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.prog-fill {
+  height: 100%;
+  background: var(--btn-primary, #534ab7);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.prog-pages {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+// ── Coluna direita ────────────────────────────────────────
+.book-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+// ── Tabs ─────────────────────────────────────────────────
+.modal-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px;
+  flex-shrink: 0;
+}
+
+.mtab {
+  padding: 13px 12px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+
+  &:hover {
+    color: var(--text-primary);
+  }
+
+  &.active {
+    color: var(--text-primary);
+    border-bottom-color: var(--btn-primary, #534ab7);
+    font-weight: 600;
+  }
+}
+
+// ── Tab body ──────────────────────────────────────────────
+.tab-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+// ── Campos ────────────────────────────────────────────────
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.flabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.req {
+  color: #c77c7b;
+  font-weight: 300;
+}
+
+.opt {
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.finput {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  background: #ffffff;
+  color: var(--text-primary);
+  transition: border-color 0.15s ease;
+
+  &::placeholder {
+    color: #9ca3af;
+  }
+
+  &:focus {
+    outline: none;
+    border-color: #9ca3af;
+  }
+}
+
+.row2 {
+  display: flex;
+  gap: 10px;
+
+  .field {
+    flex: 1;
+  }
+}
+
+// ── Timer ─────────────────────────────────────────────────
+.timer-block {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #f9fafb;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.timer-display {
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+}
+
+.timer-actions {
+  display: flex;
+  gap: 8px;
+}
+
+// ── Botões ────────────────────────────────────────────────
+.btn {
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-primary);
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  &:hover {
+    background: #f3f4f6;
+  }
+
+  &.ghost {
+    border-color: var(--border);
+    color: var(--text-secondary);
+
+    &:hover {
+      background: #f3f4f6;
+      color: var(--text-primary);
+    }
+  }
+
+  &.primary {
+    background: var(--btn-primary, #534ab7);
+    border-color: var(--btn-primary, #534ab7);
+    color: #ffffff;
+
+    &:hover:not(:disabled) {
+      opacity: 0.88;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  &.success {
+    border-color: #86efac;
+    color: #166534;
+
+    &:hover {
+      background: #f0fdf4;
+    }
+  }
+
+  &.danger {
+    border-color: #fca5a5;
+    color: #dc2626;
+
+    &:hover {
+      background: #fef2f2;
+    }
+  }
+}
+
+// ── Gerenciar ─────────────────────────────────────────────
+.manage-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: #fafafa;
+  }
+
+  &.danger {
+    border-color: #fca5a5;
+  }
+}
+
+.manage-text {
+  h4 {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  p {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+}
+
+.manage-divider {
+  font-size: 0.7rem;
+  text-align: center;
+  color: var(--text-secondary);
+  opacity: 0.55;
+  letter-spacing: 0.04em;
+}
+
+.confirm-delete {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  padding: 14px;
+  animation: fadeIn 0.15s ease;
+
+  p {
+    font-size: 0.83rem;
+    color: #991b1b;
+    margin-bottom: 12px;
+  }
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+// ── Footer ────────────────────────────────────────────────
+.modal-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+// ── Botão X ───────────────────────────────────────────────
+.close-x {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px 7px;
+  border-radius: 5px;
+  line-height: 1;
+  z-index: 1;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: var(--text-primary);
+  }
+}

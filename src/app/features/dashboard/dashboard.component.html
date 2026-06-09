@@ -77,58 +77,6 @@
           </div>
         </div>
 
-        @if (showProgressForm && selectedBook()) {
-          <div class="premium-activity-card post-box progress-box">
-            <div class="progress-box-header">
-              <h3>Registrar progresso de leitura</h3>
-              <button class="close-progress-btn" (click)="closeProgressForm()">✕</button>
-            </div>
-            <p class="reading-now-label">
-              Lendo atualmente: <strong>{{ selectedBook()?.title }}</strong>
-            </p>
-
-            <div class="timer-block">
-              <span class="timer-display">{{ formattedTime }}</span>
-              <div class="timer-actions">
-                <button class="timer-btn" (click)="toggleReadingTimer()">
-                  {{
-                    isReading
-                      ? '⏸ Pausar'
-                      : readingElapsedSeconds() > 0
-                        ? '▶ Continuar'
-                        : '▶ Iniciar leitura'
-                  }}
-                </button>
-                @if (readingElapsedSeconds() > 0) {
-                  <button class="timer-btn reset" (click)="resetTimer()">Cancelar</button>
-                }
-              </div>
-            </div>
-
-            <div class="form-grid">
-              <div class="field-wrapper">
-                <label class="field-label">Páginas lidas <span class="required">*</span></label>
-                <input
-                  type="number"
-                  [(ngModel)]="pagesRead"
-                  placeholder="Quantas páginas você leu hoje?"
-                  class="premium-input"
-                />
-              </div>
-
-              <input
-                [(ngModel)]="userComment"
-                placeholder="O que está achando da leitura? (Pensamento do momento)"
-                class="premium-input"
-              />
-
-              <button (click)="handlePostProgress()" class="premium-btn success">
-                Publicar atividade
-              </button>
-            </div>
-          </div>
-        }
-
         <div class="feed-header">
           <h2>Seu feed de leituras</h2>
         </div>
@@ -185,9 +133,9 @@
               @for (book of bookService.myCurrentBook(); track book.id) {
                 <div
                   class="current-book-layout clickable-book"
-                  [class.active-progress]="selectedBook()?.id === book.id && showProgressForm"
-                  (click)="selectBookForProgress(book)"
-                  title="Clique para registrar progresso"
+                  [class.active-progress]="selectedBook()?.id === book.id"
+                  (click)="selectBookForModal(book)"
+                  title="Clique para gerenciar"
                 >
                   <img [src]="book.coverUrl" class="book-cover" />
                   <div class="book-details">
@@ -205,13 +153,7 @@
                         ></div>
                       </div>
                     </div>
-                    <span class="register-hint">
-                      {{
-                        selectedBook()?.id === book.id && showProgressForm
-                          ? '▲ Fechar registro'
-                          : '✏️ Registrar progresso'
-                      }}
-                    </span>
+                    <span class="register-hint">✏️ Gerenciar livro</span>
                   </div>
                 </div>
               }
@@ -248,4 +190,10 @@
       </aside>
     </div>
   </div>
+
+  <app-book-action-panel
+    [book]="selectedBook()"
+    (action)="handlePanelAction($event)"
+    (closed)="closeModal()"
+  ></app-book-action-panel>
 }
