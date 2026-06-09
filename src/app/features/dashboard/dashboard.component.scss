@@ -531,3 +531,13 @@
     color: var(--text-primary);
   }
 }
+.register-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edit-icon {
+  width: 14px;
+  height: 14px;
+}
