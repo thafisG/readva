@@ -31,7 +31,6 @@ export class StreakChallengeComponent implements OnInit, OnDestroy, AfterViewChe
   showConfetti = signal(false);
   weekDays = signal<{ label: string; read: boolean; isToday: boolean }[]>([]);
 
-  // computed garante reatividade automática quando o input muda
   goalReached = computed(
     () => this.progress().dailyMinutesRead >= this.progress().dailyGoalMinutes,
   );
