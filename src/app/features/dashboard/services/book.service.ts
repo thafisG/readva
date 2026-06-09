@@ -1,5 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { AuthService } from './auth.service';
+import { BookCatalogService } from './book-catalog.service';
 
 @Injectable({
   providedIn: 'root',
@@ -12,6 +13,7 @@ export class BookService {
   public myBooks = signal<any[]>([]);
 
   private authService = inject(AuthService);
+  private catalogService = inject(BookCatalogService);
 
   private get userEmail() {
     return this.authService.currentUser()?.email || 'guest';
@@ -44,7 +46,15 @@ export class BookService {
     if (savedHistory) this.myBooks.set(JSON.parse(savedHistory));
   }
 
-  startNewBook(title: string, author: string, totalPages: number, category: string) {
+  async startNewBook(
+    title: string,
+    author: string,
+    totalPages: number,
+    category: string,
+    coverUrl?: string,
+  ) {
+    const cover = coverUrl || (await this.catalogService.fetchBookCover(title, author));
+
     const newBook = {
       id: Math.random().toString(36).substr(2, 9),
       title,
@@ -52,7 +62,7 @@ export class BookService {
       totalPages,
       category,
       currentPage: 0,
-      coverUrl: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f',
+      coverUrl: cover,
     };
 
     this.myCurrentBook.update((books) => {
