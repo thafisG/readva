@@ -77,6 +77,10 @@ export class DashboardComponent implements OnDestroy {
     return `@readva:daily-progress:${this.authService.currentUser()?.email || 'guest'}`;
   }
 
+  private get FIRST_POST_KEY() {
+    return `@readva:first-post-date:${this.authService.currentUser()?.email || 'guest'}`;
+  }
+
   private loadDailyProgress(): UserProgress {
     const today = new Date().toDateString();
     const saved = localStorage.getItem(this.PROGRESS_KEY);
@@ -106,6 +110,16 @@ export class DashboardComponent implements OnDestroy {
   private saveDailyProgress(progress: UserProgress): void {
     const today = new Date().toDateString();
     localStorage.setItem(this.PROGRESS_KEY, JSON.stringify({ ...progress, date: today }));
+  }
+
+  private maybeFireStreakAndConfetti(): void {
+    const today = new Date().toDateString();
+    const lastPostDate = localStorage.getItem(this.FIRST_POST_KEY);
+
+    if (lastPostDate === today) return;
+
+    localStorage.setItem(this.FIRST_POST_KEY, today);
+    this.streakComponent?.markTodayRead();
   }
 
   selectBookForModal(book: any): void {
@@ -159,7 +173,7 @@ export class DashboardComponent implements OnDestroy {
       return updated;
     });
 
-    this.streakComponent?.markTodayRead();
+    this.maybeFireStreakAndConfetti();
 
     const updated = this.bookService.myCurrentBook().find((b) => b.id === event.bookId);
     if (updated) this.selectedBook.set({ ...updated });

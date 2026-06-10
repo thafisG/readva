@@ -44,6 +44,7 @@ export class StreakChallengeComponent implements OnInit, OnDestroy, AfterViewChe
   private confettiTimeout: any = null;
   private animTimeout: any = null;
   private confettiRunning = false;
+  private readonly CONFETTI_DURATION = 3500;
 
   get todayIndex(): number {
     return new Date().getDay();
@@ -124,7 +125,7 @@ export class StreakChallengeComponent implements OnInit, OnDestroy, AfterViewChe
         this.showConfetti.set(false);
         this.confettiRunning = false;
         this.cdr.markForCheck();
-      }, 3500);
+      }, this.CONFETTI_DURATION);
     } else {
       this.streakCount.update((v) => Math.max(0, v - 1));
       this.showConfetti.set(false);
@@ -161,19 +162,29 @@ export class StreakChallengeComponent implements OnInit, OnDestroy, AfterViewChe
       opacity: 1,
     }));
 
+    const start = performance.now();
     let rafId: number;
+
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const elapsed = performance.now() - start;
+
+      const fadeStart = this.CONFETTI_DURATION * 0.65;
+      const globalOpacity =
+        elapsed > fadeStart
+          ? Math.max(0, 1 - (elapsed - fadeStart) / (this.CONFETTI_DURATION - fadeStart))
+          : 1;
+
       let anyAlive = false;
       pieces.forEach((p) => {
         p.x += p.vx;
         p.y += p.vy;
         p.rot += p.vrot;
-        if (p.y > canvas.height * 0.55) p.opacity -= 0.025;
-        if (p.opacity > 0) {
+        const opacity = p.opacity * globalOpacity;
+        if (opacity > 0.01) {
           anyAlive = true;
           ctx.save();
-          ctx.globalAlpha = Math.max(0, p.opacity);
+          ctx.globalAlpha = opacity;
           ctx.translate(p.x, p.y);
           ctx.rotate((p.rot * Math.PI) / 180);
           ctx.fillStyle = p.color;
@@ -181,10 +192,15 @@ export class StreakChallengeComponent implements OnInit, OnDestroy, AfterViewChe
           ctx.restore();
         }
       });
-      if (anyAlive) rafId = requestAnimationFrame(draw);
-      else ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (anyAlive && elapsed < this.CONFETTI_DURATION + 200) {
+        rafId = requestAnimationFrame(draw);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
     };
+
     rafId = requestAnimationFrame(draw);
-    setTimeout(() => cancelAnimationFrame(rafId), 3500);
+    setTimeout(() => cancelAnimationFrame(rafId), this.CONFETTI_DURATION + 300);
   }
 }
