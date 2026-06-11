@@ -77,70 +77,147 @@
           </div>
         </div>
 
-        <div class="feed-header">
-          <h2>Seu feed de leituras</h2>
+        <div class="feed-tabs">
+          <button
+            class="feed-tab"
+            [class.active]="activeTab() === 'meu-feed'"
+            (click)="activeTab.set('meu-feed')"
+          >
+            Meu feed
+          </button>
+          <button
+            class="feed-tab"
+            [class.active]="activeTab() === 'global'"
+            (click)="activeTab.set('global'); loadGlobalFeed()"
+          >
+            Feed global
+            @if (userService.following().length > 0) {
+              <span class="tab-badge">{{ userService.following().length }}</span>
+            }
+          </button>
         </div>
 
-        <div class="feed-list">
-          @for (activity of bookService.myActivities(); track activity.id) {
-            <article class="premium-activity-card">
-              <div class="card-header">
-                <img [src]="activity.userAvatar" class="user-avatar" />
-                <div class="user-meta">
-                  <span class="username">{{ activity.userName }}</span>
-                  <span class="timestamp">{{ activity.timestamp }}</span>
+        @if (activeTab() === 'meu-feed') {
+          <div class="feed-list">
+            @for (activity of bookService.myActivities(); track activity.id) {
+              <article class="premium-activity-card">
+                <div class="card-header">
+                  <img [src]="activity.userAvatar" class="user-avatar" />
+                  <div class="user-meta">
+                    <span class="username">{{ activity.userName }}</span>
+                    <span class="timestamp">{{ activity.timestamp }}</span>
+                  </div>
                 </div>
-              </div>
 
-              <div class="card-content">
-                <p class="activity-detail">
-                  Compartilhou pensamentos em
-                  <strong class="book-title">{{ activity.bookTitle }}</strong> de
-                  {{ activity.bookAuthor }}
-                </p>
-                <span class="activity-subtext">{{ activity.detail }}</span>
-                @if (activity.comment) {
-                  <span class="activity-comment">"{{ activity.comment }}"</span>
-                }
-              </div>
+                <div class="card-content">
+                  <p class="activity-detail">
+                    Compartilhou pensamentos em
+                    <strong class="book-title">{{ activity.bookTitle }}</strong> de
+                    {{ activity.bookAuthor }}
+                  </p>
+                  <span class="activity-subtext">{{ activity.detail }}</span>
+                  @if (activity.comment) {
+                    <span class="activity-comment">"{{ activity.comment }}"</span>
+                  }
+                </div>
 
-              <div class="card-actions">
-                <button
-                  class="action-trigger"
-                  [class.has-liked]="activity.hasLiked"
-                  (click)="onLikeTriggered(activity.id)"
-                >
-                  <span class="heart-icon">❤️</span> {{ activity.likes }}
-                </button>
-
-                @if (activity.isOwner) {
-                  <button class="action-trigger edit-btn" (click)="openEditActivityModal(activity)">
-                    <span class="edit-icon">
-                      <img src="assets/icon_edit.png" alt="Editar" class="edit-icon" />
-                    </span>
-                    Editar
-                  </button>
-
+                <div class="card-actions">
                   <button
-                    class="action-trigger delete-btn"
-                    (click)="confirmDeleteActivity(activity)"
+                    class="action-trigger"
+                    [class.has-liked]="activity.hasLiked"
+                    (click)="onLikeTriggered(activity.id)"
                   >
-                    <span class="delete-icon">
-                      <img src="assets/icon_lixo.png" alt="lixeira" class="lixo-icon" />
-                    </span>
-                    Excluir
+                    <span class="heart-icon">❤️</span> {{ activity.likes }}
                   </button>
-                }
+
+                  @if (activity.isOwner) {
+                    <button
+                      class="action-trigger edit-btn"
+                      (click)="openEditActivityModal(activity)"
+                    >
+                      <span class="edit-icon">
+                        <img src="assets/icon_edit.png" alt="Editar" class="edit-icon" />
+                      </span>
+                      Editar
+                    </button>
+
+                    <button
+                      class="action-trigger delete-btn"
+                      (click)="confirmDeleteActivity(activity)"
+                    >
+                      <span class="delete-icon">
+                        <img src="assets/icon_lixo.png" alt="lixeira" class="lixo-icon" />
+                      </span>
+                      Excluir
+                    </button>
+                  }
+                </div>
+              </article>
+            } @empty {
+              <div class="empty-feed">
+                <p>
+                  📭 Seu feed está em branco. Use a caixa acima para registrar seu primeiro
+                  progresso!
+                </p>
               </div>
-            </article>
-          } @empty {
+            }
+          </div>
+        }
+
+        @if (activeTab() === 'global') {
+          @if (userService.following().length === 0) {
+            <div class="empty-feed follow-prompt">
+              <p>Você ainda não segue ninguém.</p>
+            </div>
+          } @else if (globalFeed().length === 0) {
             <div class="empty-feed">
-              <p>
-                📭 Seu feed está em branco. Use a caixa acima para registrar seu primeiro progresso!
-              </p>
+              <p>📭 Nenhuma atividade recente de quem você segue.</p>
+            </div>
+          } @else {
+            <div class="feed-list">
+              @for (activity of globalFeed(); track activity.id) {
+                <article class="premium-activity-card">
+                  <div class="card-header">
+                    <img [src]="activity.userAvatar" class="user-avatar" />
+                    <div class="user-meta">
+                      <span class="username">{{ activity.userName }}</span>
+                      <span class="timestamp">{{ activity.timestamp }}</span>
+                    </div>
+                    <button
+                      class="follow-toggle"
+                      [class.following]="userService.isFollowing(activity.userId)"
+                      (click)="toggleFollow(activity.userId)"
+                    >
+                      {{ userService.isFollowing(activity.userId) ? 'Seguindo' : '+ Seguir' }}
+                    </button>
+                  </div>
+
+                  <div class="card-content">
+                    <p class="activity-detail">
+                      Compartilhou pensamentos em
+                      <strong class="book-title">{{ activity.bookTitle }}</strong> de
+                      {{ activity.bookAuthor }}
+                    </p>
+                    <span class="activity-subtext">{{ activity.detail }}</span>
+                    @if (activity.comment) {
+                      <span class="activity-comment">"{{ activity.comment }}"</span>
+                    }
+                  </div>
+
+                  <div class="card-actions">
+                    <button
+                      class="action-trigger"
+                      [class.has-liked]="activity.hasLiked"
+                      (click)="onLikeGlobalActivity(activity)"
+                    >
+                      <span class="heart-icon">❤️</span> {{ activity.likes }}
+                    </button>
+                  </div>
+                </article>
+              }
             </div>
           }
-        </div>
+        }
 
         @if (editingActivity()) {
           <div class="modal-overlay" (click)="closeEditModal()">
@@ -294,6 +371,43 @@
           } @else {
             <div class="empty-suggestions">
               <p>Buscando recomendações para você...</p>
+            </div>
+          }
+        </section>
+
+        <section class="premium-sidebar-card">
+          <h3 class="sidebar-title">Leitores para seguir</h3>
+
+          @if (userService.suggestions().length > 0) {
+            <div class="follow-suggestions">
+              @for (user of userService.suggestions(); track user.email) {
+                <div class="follow-row">
+                  <img [src]="user.avatar" [alt]="user.name" class="follow-avatar" />
+                  <span class="follow-name">{{ user.name }}</span>
+                  <button class="follow-btn" (click)="followUser(user.email)">+ Seguir</button>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="no-book-text">Você já segue todos os leitores disponíveis.</p>
+          }
+
+          @if (userService.following().length > 0) {
+            <div class="following-list">
+              <p class="following-label">Seguindo ({{ userService.following().length }})</p>
+              @for (email of userService.following(); track email) {
+                <div class="following-row">
+                  <img
+                    [src]="'https://i.pravatar.cc/24?u=' + email.split('@')[0]"
+                    [alt]="getUserName(email)"
+                    class="following-avatar"
+                  />
+                  <span class="following-name">{{ getUserName(email) }}</span>
+                  <button class="unfollow-btn" (click)="unfollowUser(email)">
+                    Deixar de seguir
+                  </button>
+                </div>
+              }
             </div>
           }
         </section>

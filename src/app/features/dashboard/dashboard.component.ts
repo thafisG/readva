@@ -8,6 +8,7 @@ import { AuthService } from './services/auth.service';
 import { UtilsService } from './services/utils.service';
 import { RecommendationService } from './services/recommendation.service';
 import { BookCatalogService } from './services/book-catalog.service';
+import { UserService } from './services/user.service';
 
 import { StreakChallengeComponent } from './components/streak-challenge/streak-challenge.component';
 import { LoginComponent } from '../login/login.component';
@@ -40,6 +41,7 @@ export class DashboardComponent implements OnDestroy {
   public utilsService = inject(UtilsService);
   public bookService = inject(BookService);
   public authService = inject(AuthService);
+  public userService = inject(UserService);
   private catalogService = inject(BookCatalogService);
   private recommendationService = inject(RecommendationService);
 
@@ -47,6 +49,8 @@ export class DashboardComponent implements OnDestroy {
   public editingActivity = signal<Activity | null>(null);
   public suggestions = signal<BookSuggestion[]>([]);
   public selectedBook = signal<any | null>(null);
+  public globalFeed = signal<any[]>([]);
+  public activeTab = signal<'meu-feed' | 'global'>('meu-feed');
   public userProgress = signal<UserProgress>({
     name: 'Leitor',
     avatar: '',
@@ -69,6 +73,10 @@ export class DashboardComponent implements OnDestroy {
   constructor() {
     this.userProgress.set(this.loadDailyProgress());
     this.loadSuggestions();
+
+    const email = this.authService.currentUser()?.email || 'guest';
+    this.userService.init(email);
+    this.loadGlobalFeed();
   }
 
   ngOnDestroy() {}
@@ -115,9 +123,7 @@ export class DashboardComponent implements OnDestroy {
   private maybeFireStreakAndConfetti(): void {
     const today = new Date().toDateString();
     const lastPostDate = localStorage.getItem(this.FIRST_POST_KEY);
-
     if (lastPostDate === today) return;
-
     localStorage.setItem(this.FIRST_POST_KEY, today);
     this.streakComponent?.markTodayRead();
   }
@@ -139,6 +145,7 @@ export class DashboardComponent implements OnDestroy {
       this.newCategory,
     );
     this.loadSuggestions();
+    this.loadGlobalFeed();
     this.newTitle = '';
     this.newAuthor = '';
   }
@@ -174,6 +181,7 @@ export class DashboardComponent implements OnDestroy {
     });
 
     this.maybeFireStreakAndConfetti();
+    this.loadGlobalFeed();
 
     const updated = this.bookService.myCurrentBook().find((b) => b.id === event.bookId);
     if (updated) this.selectedBook.set({ ...updated });
@@ -254,6 +262,7 @@ export class DashboardComponent implements OnDestroy {
       if (updated) this.selectedBook.set({ ...updated });
     }
 
+    this.loadGlobalFeed();
     this.closeEditModal();
   }
 
@@ -289,6 +298,48 @@ export class DashboardComponent implements OnDestroy {
       JSON.stringify(this.bookService.myActivities()),
     );
   }
+
+  loadGlobalFeed(): void {
+    this.globalFeed.set(this.userService.getFollowingActivities());
+  }
+
+  followUser(email: string): void {
+    this.userService.follow(email);
+    this.loadGlobalFeed();
+  }
+
+  unfollowUser(email: string): void {
+    this.userService.unfollow(email);
+    this.loadGlobalFeed();
+  }
+
+  toggleFollow(userId: string): void {
+    if (this.userService.isFollowing(userId)) {
+      this.userService.unfollow(userId);
+    } else {
+      this.userService.follow(userId);
+    }
+    this.loadGlobalFeed();
+  }
+
+  getUserName(email: string): string {
+    return this.userService.getUserName(email);
+  }
+
+  onLikeGlobalActivity(activity: any): void {
+    this.globalFeed.update((items) =>
+      items.map((item) =>
+        item.id === activity.id
+          ? {
+              ...item,
+              hasLiked: !item.hasLiked,
+              likes: item.hasLiked ? item.likes - 1 : item.likes + 1,
+            }
+          : item,
+      ),
+    );
+  }
+
 
   handleLogout(): void {
     this.authService.logout();
