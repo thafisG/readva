@@ -1,0 +1,62 @@
+<div class="book-search-wrapper">
+  <div class="search-field-wrapper">
+    <span class="search-icon">
+      <img src="assets/icon_busca2.png" alt="Buscar" class="busca-icon"
+    /></span>
+    <input
+      class="search-input"
+      type="text"
+      [ngModel]="query()"
+      (ngModelChange)="onQueryChange($event)"
+      placeholder="Buscar livro por título ou autor..."
+      autocomplete="off"
+      (keydown.escape)="clear()"
+    />
+    @if (query()) {
+      <button class="clear-btn" (click)="clear()" title="Limpar">✕</button>
+    }
+  </div>
+
+  @if (isLoading()) {
+    <div class="search-dropdown">
+      <div class="search-loading"><span class="spinner"></span> Buscando livros...</div>
+    </div>
+  }
+
+  @if (!isLoading() && results().length > 0) {
+    <ul class="search-dropdown" role="listbox">
+      @for (book of results(); track book.title + book.author) {
+        <li
+          class="search-result-item"
+          role="option"
+          (click)="selectBook(book)"
+          (keydown.enter)="selectBook(book)"
+          tabindex="0"
+        >
+          <img
+            [src]="book.coverUrl"
+            [alt]="book.title"
+            class="result-cover"
+            (error)="onImgError($event)"
+          />
+          <div class="result-meta">
+            <span class="result-title">{{ book.title }}</span>
+            <span class="result-author">{{ book.author }}</span>
+            <span class="result-details">
+              @if (book.totalPages) {
+                {{ book.totalPages }} págs. ·
+              }
+              <span class="result-category">{{ book.category }}</span>
+            </span>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+
+  @if (!isLoading() && noResults()) {
+    <div class="search-dropdown">
+      <div class="search-empty">Nenhum resultado. Preencha os campos manualmente.</div>
+    </div>
+  }
+</div>
