@@ -53,7 +53,7 @@ export class BookService {
     category: string,
     coverUrl?: string,
   ) {
-    const cover = coverUrl || (await this.catalogService.fetchBookCover(title, author));
+    const fallback = this.catalogService.generateCoverFallback(title, author);
 
     const newBook = {
       id: Math.random().toString(36).substr(2, 9),
@@ -62,7 +62,7 @@ export class BookService {
       totalPages,
       category,
       currentPage: 0,
-      coverUrl: cover,
+      coverUrl: coverUrl || fallback,
     };
 
     this.myCurrentBook.update((books) => {
@@ -76,6 +76,24 @@ export class BookService {
       localStorage.setItem(this.HISTORY_KEY, JSON.stringify(updated));
       return updated;
     });
+
+    if (!coverUrl) {
+      this.catalogService.fetchBookCover(title, author).then((cover) => {
+        if (!cover || cover.startsWith('data:image/svg+xml')) return;
+
+        this.myCurrentBook.update((books) => {
+          const updated = books.map((b) => (b.id === newBook.id ? { ...b, coverUrl: cover } : b));
+          localStorage.setItem(this.BOOKS_KEY, JSON.stringify(updated));
+          return updated;
+        });
+
+        this.myBooks.update((books) => {
+          const updated = books.map((b) => (b.id === newBook.id ? { ...b, coverUrl: cover } : b));
+          localStorage.setItem(this.HISTORY_KEY, JSON.stringify(updated));
+          return updated;
+        });
+      });
+    }
   }
 
   private getCurrentTimestamp(): string {

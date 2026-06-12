@@ -19,7 +19,10 @@ import {
   BookActionEvent,
   BookActionPanelComponent,
 } from './book-action-panel/book-action-panel.component';
-import { BookSearchComponent, BookSearchResult } from './components/book-search/book-search.component';
+import {
+  BookSearchComponent,
+  BookSearchResult,
+} from './components/book-search/book-search.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -32,7 +35,7 @@ import { BookSearchComponent, BookSearchResult } from './components/book-search/
     BookActionPanelComponent,
     RouterLink,
     RouterLinkActive,
-    BookSearchComponent
+    BookSearchComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
@@ -142,7 +145,6 @@ export class DashboardComponent implements OnDestroy {
   closeModal(): void {
     this.selectedBook.set(null);
   }
-
   handleStartBook(): void {
     if (!this.newTitle.trim() || !this.newAuthor.trim()) return;
     this.bookService.startNewBook(
@@ -151,10 +153,11 @@ export class DashboardComponent implements OnDestroy {
       this.newTotalPages,
       this.newCategory,
     );
-    this.loadSuggestions();
-    this.loadGlobalFeed();
     this.newTitle = '';
     this.newAuthor = '';
+    this.loadGlobalFeed();
+
+    setTimeout(() => this.loadSuggestions(), 0);
   }
 
   handlePanelAction(event: BookActionEvent): void {
