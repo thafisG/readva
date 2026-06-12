@@ -19,6 +19,7 @@ import {
   BookActionEvent,
   BookActionPanelComponent,
 } from './book-action-panel/book-action-panel.component';
+import { BookSearchComponent, BookSearchResult } from './components/book-search/book-search.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -31,6 +32,7 @@ import {
     BookActionPanelComponent,
     RouterLink,
     RouterLinkActive,
+    BookSearchComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
@@ -80,7 +82,12 @@ export class DashboardComponent implements OnDestroy {
   }
 
   ngOnDestroy() {}
-
+  onBookSelected(book: BookSearchResult): void {
+    this.newTitle = book.title;
+    this.newAuthor = book.author;
+    this.newTotalPages = book.totalPages || 100;
+    this.newCategory = book.category;
+  }
   private get PROGRESS_KEY() {
     return `@readva:daily-progress:${this.authService.currentUser()?.email || 'guest'}`;
   }
@@ -339,7 +346,6 @@ export class DashboardComponent implements OnDestroy {
       ),
     );
   }
-
 
   handleLogout(): void {
     this.authService.logout();

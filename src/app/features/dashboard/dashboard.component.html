@@ -38,6 +38,11 @@
           <h3>Qual livro você vai ler agora?</h3>
           <div class="form-grid">
             <div class="field-wrapper">
+              <label class="field-label">Buscar e preencher automaticamente</label>
+              <app-book-search (bookSelected)="onBookSelected($event)"></app-book-search>
+            </div>
+
+            <div class="field-wrapper">
               <label class="field-label">Título do Livro <span class="required">*</span></label>
               <input [(ngModel)]="newTitle" placeholder="Ex: Dom Casmurro" class="premium-input" />
             </div>
