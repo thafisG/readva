@@ -73,30 +73,39 @@ export class BookCatalogService {
 
   async fetchBookCover(title: string, author: string): Promise<string> {
     try {
-      let cover = await this.tryGoogleBooks(`intitle:${title} inauthor:${author}`);
-      if (cover) return cover;
-
-      cover = await this.tryGoogleBooks(`intitle:${title}`);
-      if (cover) return cover;
-
-      cover = await this.tryGoogleBooks(title);
-      if (cover) return cover;
-
-      cover = await this.tryOpenLibrary(title, author);
-      if (cover) return cover;
+      const result = await Promise.race([
+        this._fetchCoverInternal(title, author),
+        new Promise<null>((res) => setTimeout(() => res(null), 8000)),
+      ]);
+      if (result) return result;
     } catch {}
-
     return this.generateCoverFallback(title, author);
+  }
+
+  private async _fetchCoverInternal(title: string, author: string): Promise<string | null> {
+    let cover = await this.tryGoogleBooks(`intitle:${title} inauthor:${author}`);
+    if (cover) return cover;
+    cover = await this.tryGoogleBooks(`intitle:${title}`);
+    if (cover) return cover;
+    cover = await this.tryGoogleBooks(title);
+    if (cover) return cover;
+    cover = await this.tryOpenLibrary(title, author);
+    return cover;
+  }
+
+  private fetchWithTimeout(url: string, ms = 4000): Promise<Response> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), ms);
+    return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timer));
   }
 
   private async tryGoogleBooks(query: string): Promise<string | null> {
     try {
       const q = encodeURIComponent(query);
-      const res = await fetch(
+      const res = await this.fetchWithTimeout(
         `https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=3&langRestrict=pt`,
       );
       const data = await res.json();
-
       for (const item of data.items ?? []) {
         const links = item.volumeInfo?.imageLinks;
         const thumb = links?.extraLarge || links?.large || links?.medium || links?.thumbnail;
@@ -111,7 +120,9 @@ export class BookCatalogService {
   private async tryOpenLibrary(title: string, author: string): Promise<string | null> {
     try {
       const q = encodeURIComponent(`${title} ${author}`);
-      const res = await fetch(`https://openlibrary.org/search.json?q=${q}&limit=1&fields=cover_i`);
+      const res = await this.fetchWithTimeout(
+        `https://openlibrary.org/search.json?q=${q}&limit=1&fields=cover_i`,
+      );
       const data = await res.json();
       const coverId = data.docs?.[0]?.cover_i;
       return coverId ? `https://covers.openlibrary.org/b/id/${coverId}-M.jpg` : null;
