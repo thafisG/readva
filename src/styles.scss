@@ -1,19 +1,65 @@
+// Include theming for Angular Material with `mat.theme()`.
+// This Sass mixin will define CSS variables that are used for styling Angular Material
+// components according to the Material 3 design spec.
+// Learn more about theming and how to use it for your application's
+// custom components at https://material.angular.dev/guide/theming
+@use '@angular/material' as mat;
+
+html {
+  height: 100%;
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}
+
+body {
+  // Default the application to a light color theme. This can be changed to
+  // `dark` to enable the dark color theme, or to `light dark` to defer to the
+  // user's system settings.
+  color-scheme: light;
+
+  // Set a default background, font and text colors for the application using
+  // Angular Material's system-level CSS variables. Learn more about these
+  // variables at https://material.angular.dev/guide/system-variables
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+
+  // Reset the user agent margin.
+  margin: 0;
+  height: 100%;
+}
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;1,500&display=swap');
 :root {
-  --background: #FFFFFF;
-  --surface: #FFFFFF;
-  --primary: #420044;
-  --accent: #2563EB;
-  --text-primary: #111827;
-  --text-secondary: #6B7280;
-  --border: #F3F4F6;
-  --border-focus: #E5E7EB;
-  --btn-primary: #7289ee;
-  --radius: 10px;
-  --shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.03);
-}
+  --background: #faf7f4;
+  --surface: #fffdfb;
 
+  --primary: #7c5c45;
+  --primary-light: #e7d8cb;
+
+  --text-primary: #2f2a26;
+  --text-secondary: #8a7e74;
+
+  --border: #efe7df;
+
+  --success: #7ca982;
+  --danger: #c77c7b;
+  --accent: #2563eb;
+  --border-focus: #e5e7eb;
+  --btn-primary: #7289ee;
+  --shadow-sm: 0 4px 16px rgba(110, 90, 70, 0.05);
+  --shadow-md: 0 10px 30px rgba(110, 90, 70, 0.08);
+
+  --radius: 24px;
+}
 * {
   box-sizing: border-box;
   margin: 0;
@@ -23,6 +69,10 @@
 body {
   background-color: var(--background);
   color: var(--text-primary);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    sans-serif;
   -webkit-font-smoothing: antialiased;
 }

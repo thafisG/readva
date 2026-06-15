@@ -21,21 +21,30 @@
             [routerLinkActiveOptions]="{ exact: true }"
             class="nav-button"
           >
-            <span class="icon">🏠</span> Dashboard
+            <mat-icon>home</mat-icon>
+            <span>Início</span>
           </button>
+
           <button routerLink="/biblioteca" routerLinkActive="active" class="nav-button">
-            <span class="icon">📚</span> Minha Biblioteca
+            <mat-icon>menu_book</mat-icon>
+            <span>Biblioteca</span>
           </button>
-          <button class="nav-button"><span class="icon">🏆</span> Desafios e Metas</button>
+
+          <button class="nav-button">
+            <mat-icon>track_changes</mat-icon>
+            <span>Desafios e Metas</span>
+          </button>
+
           <button (click)="handleLogout()" class="nav-button logout-btn">
-            <span class="icon">🚪</span> Sair da Conta
+            <mat-icon>logout</mat-icon>
+            <span>Sair</span>
           </button>
         </nav>
       </aside>
 
       <main class="center-column">
         <div class="premium-activity-card post-box">
-          <h3>Qual livro você vai ler agora?</h3>
+          <h3>O que vamos ler hoje?</h3>
           <div class="form-grid">
             <div class="field-wrapper">
               <label class="field-label">Buscar e preencher automaticamente</label>
@@ -344,7 +353,7 @@
                     </div>
                     <span class="register-hint">
                       <img src="assets/icon_edit.png" alt="Editar" class="edit-icon" />
-                      Gerenciar livro
+                      Gerenciar
                     </span>
                   </div>
                 </div>
