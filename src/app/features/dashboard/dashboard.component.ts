@@ -2,14 +2,13 @@ import { Component, inject, signal, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-
+import { MatIconModule } from '@angular/material/icon';
 import { BookService } from './services/book.service';
 import { AuthService } from './services/auth.service';
 import { UtilsService } from './services/utils.service';
 import { RecommendationService } from './services/recommendation.service';
 import { BookCatalogService } from './services/book-catalog.service';
 import { UserService } from './services/user.service';
-
 import { StreakChallengeComponent } from './components/streak-challenge/streak-challenge.component';
 import { LoginComponent } from '../login/login.component';
 
@@ -36,6 +35,7 @@ import {
     RouterLink,
     RouterLinkActive,
     BookSearchComponent,
+    MatIconModule
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],

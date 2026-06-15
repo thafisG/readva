@@ -1,7 +1,7 @@
 .streak-card {
   background: #fffdfb;
-  border: 1px solid #f0e6de;
-  border-radius: 24px;
+  border: 1px solid #efe7df;
+  border-radius: 28px;
   box-shadow: 0 4px 12px rgba(180, 150, 120, 0.05);
   padding: 20px;
   display: flex;
@@ -58,8 +58,8 @@
   }
 
   &.marked {
-    background: #fff8dc;
-    border-color: #f5d76e;
+    background: #fff7e7;
+    border-color: #f4d99c;
     box-shadow: 0 4px 12px rgba(245, 215, 110, 0.15);
   }
 }
@@ -192,7 +192,7 @@
   }
 
   .progress-bar {
-    background: #111827;
+    background: #7c5c45;
     height: 100%;
     border-radius: 999px;
     transition:
@@ -200,7 +200,7 @@
       background 0.3s ease;
 
     &.reached {
-      background: #16a34a;
+      background: #7ca982;
     }
   }
 }
