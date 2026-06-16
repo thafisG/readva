@@ -56,6 +56,7 @@ export class DashboardComponent implements OnDestroy {
   public selectedBook = signal<any | null>(null);
   public globalFeed = signal<any[]>([]);
   public activeTab = signal<'meu-feed' | 'global'>('meu-feed');
+  public showSummaryModal = signal(false);
   public userProgress = signal<UserProgress>({
     name: 'Leitor',
     avatar: '',
@@ -85,12 +86,14 @@ export class DashboardComponent implements OnDestroy {
   }
 
   ngOnDestroy() {}
+
   onBookSelected(book: BookSearchResult): void {
     this.newTitle = book.title;
     this.newAuthor = book.author;
     this.newTotalPages = book.totalPages || 100;
     this.newCategory = book.category;
   }
+
   private get PROGRESS_KEY() {
     return `@readva:daily-progress:${this.authService.currentUser()?.email || 'guest'}`;
   }
@@ -138,6 +141,53 @@ export class DashboardComponent implements OnDestroy {
     this.streakComponent?.markTodayRead();
   }
 
+  openSummaryModal(): void {
+    this.showSummaryModal.set(true);
+  }
+
+  closeSummaryModal(): void {
+    this.showSummaryModal.set(false);
+  }
+
+  todayLabel(): string {
+    return new Date().toLocaleDateString('pt-BR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    });
+  }
+
+  coffeeCount(): number {
+    if (this.userProgress().dailyMinutesRead <= 0) {
+      return 0;
+    }
+
+    return Math.max(1, Math.round(this.userProgress().dailyMinutesRead / 30));
+  }
+
+  streakDays(): number {
+    return this.streakComponent?.streakCount() ?? this.userProgress().currentStreak;
+  }
+
+  progressPercentage(): number {
+    const p = this.userProgress();
+    if (!p.dailyGoalMinutes) return 0;
+    return Math.min((p.dailyMinutesRead / p.dailyGoalMinutes) * 100, 100);
+  }
+
+  exportSummaryCard(): void {
+    import('html2canvas').then(({ default: html2canvas }) => {
+      const el = document.getElementById('share-card');
+      if (!el) return;
+      html2canvas(el, { backgroundColor: '#fdf8f4', scale: 2 }).then((canvas) => {
+        const link = document.createElement('a');
+        link.download = 'meu-dia-readva.png';
+        link.href = canvas.toDataURL();
+        link.click();
+      });
+    });
+  }
+
   selectBookForModal(book: any): void {
     this.selectedBook.set({ ...book });
   }
@@ -145,6 +195,7 @@ export class DashboardComponent implements OnDestroy {
   closeModal(): void {
     this.selectedBook.set(null);
   }
+
   handleStartBook(): void {
     if (!this.newTitle.trim() || !this.newAuthor.trim()) return;
     this.bookService.startNewBook(
@@ -156,7 +207,6 @@ export class DashboardComponent implements OnDestroy {
     this.newTitle = '';
     this.newAuthor = '';
     this.loadGlobalFeed();
-
     setTimeout(() => this.loadSuggestions(), 0);
   }
 
@@ -352,6 +402,8 @@ export class DashboardComponent implements OnDestroy {
   handleLogout(): void {
     this.authService.logout();
   }
+
+  // — Recomendações —
 
   loadSuggestions(): void {
     this.catalogService.getBooks().subscribe((catalog: any[]) => {

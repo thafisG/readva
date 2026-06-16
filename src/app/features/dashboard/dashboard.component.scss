@@ -1136,3 +1136,114 @@ mat-icon {
     opacity: 1;
   }
 }
+.share-modal {
+  max-width: 380px;
+}
+
+.share-card-export {
+  background: #fdf8f4;
+  border-radius: 20px 20px 0 0;
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid #efe7df;
+}
+
+.share-card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.share-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #e8d5c8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #7c5c45;
+  flex-shrink: 0;
+}
+
+.share-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1c1917;
+}
+
+.share-date {
+  font-size: 11px;
+  color: #9c8880;
+  margin-top: 1px;
+  text-transform: capitalize;
+}
+
+.share-logo {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 700;
+  color: #b8a89e;
+  letter-spacing: 0.04em;
+}
+
+.share-metrics {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: #fffdfb;
+  border: 1px solid #efe7df;
+  border-radius: 14px;
+  padding: 14px 0;
+  margin-bottom: 16px;
+}
+
+.share-metric {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.share-metric-val {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1c1917;
+  line-height: 1;
+}
+
+.share-metric-label {
+  font-size: 12px;
+  color: #9c8880;
+}
+
+.share-metric-divider {
+  width: 1px;
+  height: 32px;
+  background: #efe7df;
+  flex-shrink: 0;
+}
+
+.share-bar-wrap {
+  height: 5px;
+  background: #f0ebe6;
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.share-bar-fill {
+  height: 100%;
+  background: #2d6a4a;
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.share-bar-label {
+  font-size: 10px;
+  color: #9c8880;
+  text-align: right;
+}
