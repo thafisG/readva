@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnDestroy, ViewChild } from '@angular/core';
+import { Component, inject, signal, OnDestroy, ViewChild, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, RouterLinkActive } from '@angular/router';
@@ -11,7 +11,6 @@ import { BookCatalogService } from './services/book-catalog.service';
 import { UserService } from './services/user.service';
 import { StreakChallengeComponent } from './components/streak-challenge/streak-challenge.component';
 import { LoginComponent } from '../login/login.component';
-
 import { Activity, BookSuggestion, UserProgress } from './interfaces/dashboard.interface';
 import { BOOK_CATEGORIES } from '../../constants/book-categories';
 import {
@@ -22,6 +21,7 @@ import {
   BookSearchComponent,
   BookSearchResult,
 } from './components/book-search/book-search.component';
+import { MokaComponent, MokaMood } from '../moka/moka.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -36,6 +36,7 @@ import {
     RouterLinkActive,
     BookSearchComponent,
     MatIconModule,
+    MokaComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
@@ -65,6 +66,13 @@ export class DashboardComponent implements OnDestroy {
     dailyMinutesRead: 0,
   });
 
+  public showWelcomeMoka = signal(false);
+  public mokaFeedback = signal<MokaMood | null>(null);
+  public mokaToast = signal<MokaMood | null>(null);
+
+  private mokaFeedbackTimer: any = null;
+  private mokaToastTimer: any = null;
+
   public editComment = '';
   public editDetail = '';
   public editPagesRead = 0;
@@ -76,6 +84,14 @@ export class DashboardComponent implements OnDestroy {
   newTotalPages = 100;
   newCategory = 'Literatura';
 
+  private get WELCOME_MOKA_KEY() {
+    return `@readva:moka-welcome:${this.authService.currentUser()?.email || 'guest'}`;
+  }
+
+  private get LAST_LOGIN_KEY() {
+    return `@readva:last-login:${this.authService.currentUser()?.email || 'guest'}`;
+  }
+
   constructor() {
     this.userProgress.set(this.loadDailyProgress());
     this.loadSuggestions();
@@ -83,9 +99,57 @@ export class DashboardComponent implements OnDestroy {
     const email = this.authService.currentUser()?.email || 'guest';
     this.userService.init(email);
     this.loadGlobalFeed();
+
+    this.initMoka();
   }
 
-  ngOnDestroy() {}
+  ngOnDestroy() {
+    if (this.mokaFeedbackTimer) clearTimeout(this.mokaFeedbackTimer);
+    if (this.mokaToastTimer) clearTimeout(this.mokaToastTimer);
+  }
+
+  private initMoka(): void {
+    const today = new Date().toDateString();
+
+    const lastWelcome = localStorage.getItem(this.WELCOME_MOKA_KEY);
+    if (lastWelcome !== today) {
+      this.showWelcomeMoka.set(true);
+      localStorage.setItem(this.WELCOME_MOKA_KEY, today);
+    }
+
+    const lastLogin = localStorage.getItem(this.LAST_LOGIN_KEY);
+    if (lastLogin) {
+      const diff = Math.floor(
+        (new Date().getTime() - new Date(lastLogin).getTime()) / (1000 * 60 * 60 * 24),
+      );
+      if (diff >= 3) {
+        setTimeout(() => this.showToast('sleepy'), 1500);
+      }
+    }
+    localStorage.setItem(this.LAST_LOGIN_KEY, new Date().toISOString());
+  }
+
+  showToast(mood: MokaMood): void {
+    if (this.mokaToastTimer) clearTimeout(this.mokaToastTimer);
+    this.mokaToast.set(mood);
+    this.mokaToastTimer = setTimeout(() => this.mokaToast.set(null), 5000);
+  }
+
+  dismissToast(): void {
+    if (this.mokaToastTimer) clearTimeout(this.mokaToastTimer);
+    this.mokaToast.set(null);
+  }
+
+  private showFeedback(mood: MokaMood): void {
+    if (this.mokaFeedbackTimer) clearTimeout(this.mokaFeedbackTimer);
+    this.mokaFeedback.set(mood);
+    this.mokaFeedbackTimer = setTimeout(() => this.mokaFeedback.set(null), 5000);
+  }
+
+  get showStreakMoka(): boolean {
+    const streak = this.userProgress().currentStreak;
+    return streak > 0 && streak % 7 === 0;
+  }
 
   onBookSelected(book: BookSearchResult): void {
     this.newTitle = book.title;
@@ -158,10 +222,7 @@ export class DashboardComponent implements OnDestroy {
   }
 
   coffeeCount(): number {
-    if (this.userProgress().dailyMinutesRead <= 0) {
-      return 0;
-    }
-
+    if (this.userProgress().dailyMinutesRead <= 0) return 0;
     return Math.max(1, Math.round(this.userProgress().dailyMinutesRead / 30));
   }
 
@@ -245,6 +306,8 @@ export class DashboardComponent implements OnDestroy {
 
     const updated = this.bookService.myCurrentBook().find((b) => b.id === event.bookId);
     if (updated) this.selectedBook.set({ ...updated });
+
+    setTimeout(() => this.showToast('coffee'), 800);
   }
 
   private onSaveEdit(event: BookActionEvent): void {
@@ -264,6 +327,7 @@ export class DashboardComponent implements OnDestroy {
     this.bookService.markCompleted(event.bookId);
     this.closeModal();
     this.loadSuggestions();
+    this.showFeedback('completed-book');
   }
 
   private onDeleteBook(event: BookActionEvent): void {
@@ -403,8 +467,6 @@ export class DashboardComponent implements OnDestroy {
     this.authService.logout();
   }
 
-  // — Recomendações —
-
   loadSuggestions(): void {
     this.catalogService.getBooks().subscribe((catalog: any[]) => {
       const activities = this.bookService.myActivities?.() ?? [];
@@ -450,4 +512,23 @@ export class DashboardComponent implements OnDestroy {
       this.suggestions.set(recommendations);
     });
   }
+  currentMokaMood = computed<MokaMood>(() => {
+    if (this.progressPercentage() >= 100) {
+      return 'goal';
+    }
+
+    if (this.bookService.myCurrentBook().length === 0) {
+      return 'empty-library';
+    }
+
+    if (this.activeTab() === 'global' && this.userService.following().length === 0) {
+      return 'love';
+    }
+
+    if (this.activeTab() === 'meu-feed' && this.bookService.myActivities().length === 0) {
+      return 'coffee';
+    }
+
+    return 'welcome';
+  });
 }

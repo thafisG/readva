@@ -14,7 +14,6 @@
           }"
           (shareRequested)="openSummaryModal()"
         ></app-streak-challenge>
-
         <nav class="navigation-card">
           <button
             routerLink="/"
@@ -58,7 +57,6 @@
             </div>
           </div>
         </div>
-
         <div class="premium-activity-card post-box">
           <div class="form-grid">
             <div class="field-wrapper">
@@ -452,6 +450,7 @@
     (action)="handlePanelAction($event)"
     (closed)="closeModal()"
   ></app-book-action-panel>
+  <app-moka [mood]="currentMokaMood()"></app-moka>
 
   @if (showSummaryModal()) {
     <div class="modal-overlay" (click)="closeSummaryModal()">

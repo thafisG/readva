@@ -1,0 +1,17 @@
+<div class="moka-floating">
+  @if (showBubble()) {
+    <div class="moka-bubble" [ngClass]="'theme-' + config().theme">
+      <h4 class="moka-title">
+        {{ config().title }}
+      </h4>
+
+      <p class="moka-message">
+        {{ config().message }}
+      </p>
+    </div>
+  }
+
+  <button class="moka-button" (click)="toggleBubble()">
+    <img [src]="config().image" [alt]="config().title" class="moka-img" />
+  </button>
+</div>

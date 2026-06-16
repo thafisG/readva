@@ -1,0 +1,148 @@
+$themes: (
+  cream: (
+    bg: #fdf8f2,
+    border: #ede2d4,
+    title: #5c3d2e,
+    message: #7a6055,
+  ),
+  amber: (
+    bg: #fef6eb,
+    border: #f0dfc0,
+    title: #7c4a10,
+    message: #9a6535,
+  ),
+  peach: (
+    bg: #fff3ee,
+    border: #f5d9cc,
+    title: #8c3a26,
+    message: #a05840,
+  ),
+  rose: (
+    bg: #fff0f2,
+    border: #f5d0d8,
+    title: #8c2d40,
+    message: #9e5060,
+  ),
+  mint: (
+    bg: #f0faf5,
+    border: #c8e8d8,
+    title: #1e6644,
+    message: #3d8060,
+  ),
+);
+
+.moka-floating {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+}
+
+.moka-button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+
+.moka-img {
+  width: 85px;
+  height: 85px;
+  object-fit: contain;
+
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.12));
+
+  transition: 0.3s;
+  animation: float 3s ease-in-out infinite;
+}
+
+.moka-button:hover .moka-img {
+  transform: scale(1.08);
+}
+
+.moka-bubble {
+  position: absolute;
+  right: 25px;
+  bottom: 90px;
+
+  width: 260px;
+
+  padding: 16px;
+
+  border-radius: 24px;
+
+  border: 1px solid transparent;
+
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+
+  animation: appear 0.25s ease;
+}
+
+.moka-bubble::after {
+  content: '';
+
+  position: absolute;
+
+  right: 24px;
+  bottom: -8px;
+
+  width: 18px;
+  height: 18px;
+
+  transform: rotate(45deg);
+
+  background: inherit;
+
+  border-right: inherit;
+  border-bottom: inherit;
+}
+
+@each $name, $vars in $themes {
+  .theme-#{$name} {
+    background: map-get($vars, bg);
+    border-color: map-get($vars, border);
+
+    .moka-title {
+      color: map-get($vars, title);
+    }
+
+    .moka-message {
+      color: map-get($vars, message);
+    }
+  }
+}
+
+.moka-title {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.moka-message {
+  margin: 0;
+  line-height: 1.6;
+  font-size: 0.82rem;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
