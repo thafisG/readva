@@ -1,17 +1,73 @@
 <div class="moka-floating">
-  @if (showBubble()) {
+  <div class="moka-bubble-wrap" [class.visible]="showBubble()">
     <div class="moka-bubble" [ngClass]="'theme-' + config().theme">
-      <h4 class="moka-title">
-        {{ config().title }}
-      </h4>
+      <button
+        class="bubble-close"
+        (click)="showBubble.set(false)"
+        aria-label="Fechar mensagem do Moka"
+      >
+        ✕
+      </button>
 
-      <p class="moka-message">
-        {{ config().message }}
-      </p>
+      @if (isCoffeeMood()) {
+        <span class="bubble-emoji">{{ coffeeReaction().emoji }}</span>
+        <h4 class="moka-title">{{ coffeeReaction().title }}</h4>
+
+        <div class="coffee-counter">
+          <button
+            class="counter-btn minus"
+            (click)="decrementCoffee()"
+            [disabled]="coffeeCount() === 0"
+            aria-label="Remover café"
+          >
+            −
+          </button>
+
+          <div class="counter-display">
+            <span class="counter-cups">
+              @for (_ of [].constructor(coffeeCount()); track $index) {
+                <span class="cup-icon">☕</span>
+              }
+              @if (coffeeCount() === 0) {
+                <span class="counter-zero">nenhum ainda</span>
+              }
+            </span>
+            <span class="counter-number">{{ coffeeCount() }}</span>
+          </div>
+
+          <button class="counter-btn plus" (click)="incrementCoffee()" aria-label="Adicionar café">
+            +
+          </button>
+        </div>
+
+        @if (coffeeCount() > 0) {
+          <button class="confirm-coffee-btn" (click)="confirmCoffee()">Confirmar ☕</button>
+        }
+
+      } @else {
+        <span class="bubble-emoji">{{ config().emoji }}</span>
+        <h4 class="moka-title">{{ config().title }}</h4>
+        <p class="moka-message">{{ config().message }}</p>
+      }
     </div>
-  }
+  </div>
 
-  <button class="moka-button" (click)="toggleBubble()">
-    <img [src]="config().image" [alt]="config().title" class="moka-img" />
+  <button
+    class="moka-btn"
+    [class.wiggle]="isWiggling()"
+    (click)="toggleBubble()"
+    [attr.aria-label]="'Moka diz: ' + config().title"
+    [attr.aria-expanded]="showBubble()"
+  >
+    <div class="moka-avatar">
+      <img [src]="config().image" [alt]="config().title" class="moka-img" />
+      <span class="xp-badge" [ngClass]="'badge-' + config().theme">
+        @if (isCoffeeMood() && coffeeCount() > 0) {
+          {{ coffeeCount() }}☕
+        } @else {
+          {{ config().badge }}
+        }
+      </span>
+    </div>
   </button>
 </div>

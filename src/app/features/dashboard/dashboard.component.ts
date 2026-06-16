@@ -69,6 +69,7 @@ export class DashboardComponent implements OnDestroy {
   public showWelcomeMoka = signal(false);
   public mokaFeedback = signal<MokaMood | null>(null);
   public mokaToast = signal<MokaMood | null>(null);
+  private coffeeToast = signal(false);
 
   private mokaFeedbackTimer: any = null;
   private mokaToastTimer: any = null;
@@ -92,6 +93,20 @@ export class DashboardComponent implements OnDestroy {
     return `@readva:last-login:${this.authService.currentUser()?.email || 'guest'}`;
   }
 
+  private get PROGRESS_KEY() {
+    return `@readva:daily-progress:${this.authService.currentUser()?.email || 'guest'}`;
+  }
+
+  private get FIRST_POST_KEY() {
+    return `@readva:first-post-date:${this.authService.currentUser()?.email || 'guest'}`;
+  }
+
+  private get COFFEE_KEY() {
+    return `@readva:coffee:${new Date().toDateString()}:${this.authService.currentUser()?.email || 'guest'}`;
+  }
+
+  public manualCoffeeCount = signal(0);
+
   constructor() {
     this.userProgress.set(this.loadDailyProgress());
     this.loadSuggestions();
@@ -101,6 +116,8 @@ export class DashboardComponent implements OnDestroy {
     this.loadGlobalFeed();
 
     this.initMoka();
+    const savedCoffee = Number(localStorage.getItem(this.COFFEE_KEY) || '0');
+    this.manualCoffeeCount.set(savedCoffee);
   }
 
   ngOnDestroy() {
@@ -146,24 +163,24 @@ export class DashboardComponent implements OnDestroy {
     this.mokaFeedbackTimer = setTimeout(() => this.mokaFeedback.set(null), 5000);
   }
 
+  private triggerCoffeeToast(): void {
+    this.coffeeToast.set(true);
+  }
+
   get showStreakMoka(): boolean {
     const streak = this.userProgress().currentStreak;
     return streak > 0 && streak % 7 === 0;
   }
 
-  onBookSelected(book: BookSearchResult): void {
-    this.newTitle = book.title;
-    this.newAuthor = book.author;
-    this.newTotalPages = book.totalPages || 100;
-    this.newCategory = book.category;
+  onCoffeeChanged(count: number): void {
   }
 
-  private get PROGRESS_KEY() {
-    return `@readva:daily-progress:${this.authService.currentUser()?.email || 'guest'}`;
-  }
-
-  private get FIRST_POST_KEY() {
-    return `@readva:first-post-date:${this.authService.currentUser()?.email || 'guest'}`;
+  onCoffeeConfirmed(count: number): void {
+    const saved = Number(localStorage.getItem(this.COFFEE_KEY) || '0');
+    const total = saved + count;
+    localStorage.setItem(this.COFFEE_KEY, String(total));
+    this.manualCoffeeCount.set(total);
+    this.coffeeToast.set(false);
   }
 
   private loadDailyProgress(): UserProgress {
@@ -221,11 +238,6 @@ export class DashboardComponent implements OnDestroy {
     });
   }
 
-  coffeeCount(): number {
-    if (this.userProgress().dailyMinutesRead <= 0) return 0;
-    return Math.max(1, Math.round(this.userProgress().dailyMinutesRead / 30));
-  }
-
   streakDays(): number {
     return this.streakComponent?.streakCount() ?? this.userProgress().currentStreak;
   }
@@ -249,6 +261,13 @@ export class DashboardComponent implements OnDestroy {
     });
   }
 
+  onBookSelected(book: BookSearchResult): void {
+    this.newTitle = book.title;
+    this.newAuthor = book.author;
+    this.newTotalPages = book.totalPages || 100;
+    this.newCategory = book.category;
+  }
+
   selectBookForModal(book: any): void {
     this.selectedBook.set({ ...book });
   }
@@ -269,6 +288,7 @@ export class DashboardComponent implements OnDestroy {
     this.newAuthor = '';
     this.loadGlobalFeed();
     setTimeout(() => this.loadSuggestions(), 0);
+    setTimeout(() => this.triggerCoffeeToast(), 600);
   }
 
   handlePanelAction(event: BookActionEvent): void {
@@ -307,7 +327,7 @@ export class DashboardComponent implements OnDestroy {
     const updated = this.bookService.myCurrentBook().find((b) => b.id === event.bookId);
     if (updated) this.selectedBook.set({ ...updated });
 
-    setTimeout(() => this.showToast('coffee'), 800);
+    setTimeout(() => this.triggerCoffeeToast(), 800);
   }
 
   private onSaveEdit(event: BookActionEvent): void {
@@ -328,6 +348,7 @@ export class DashboardComponent implements OnDestroy {
     this.closeModal();
     this.loadSuggestions();
     this.showFeedback('completed-book');
+    setTimeout(() => this.showToast('completed-book'), 100);
   }
 
   private onDeleteBook(event: BookActionEvent): void {
@@ -385,8 +406,10 @@ export class DashboardComponent implements OnDestroy {
       const updated = this.bookService.myCurrentBook().find((b) => b.id === activity['bookId']);
       if (updated) this.selectedBook.set({ ...updated });
     }
+
     this.closeEditModal();
     this.loadGlobalFeed();
+    setTimeout(() => this.triggerCoffeeToast(), 400);
   }
 
   confirmDeleteActivity(activity: Activity): void {
@@ -512,22 +535,17 @@ export class DashboardComponent implements OnDestroy {
       this.suggestions.set(recommendations);
     });
   }
+
   currentMokaMood = computed<MokaMood>(() => {
-    if (this.progressPercentage() >= 100) {
-      return 'goal';
-    }
+    if (this.mokaToast()) return this.mokaToast()!;
+    if (this.mokaFeedback()) return this.mokaFeedback()!;
+    if (this.coffeeToast()) return 'coffee';
 
-    if (this.bookService.myCurrentBook().length === 0) {
+    if (this.progressPercentage() >= 100) return 'goal';
+    if (this.bookService.myCurrentBook().length === 0) return 'empty-library';
+    if (this.activeTab() === 'global' && this.userService.following().length === 0) return 'love';
+    if (this.activeTab() === 'meu-feed' && this.bookService.myActivities().length === 0)
       return 'empty-library';
-    }
-
-    if (this.activeTab() === 'global' && this.userService.following().length === 0) {
-      return 'love';
-    }
-
-    if (this.activeTab() === 'meu-feed' && this.bookService.myActivities().length === 0) {
-      return 'coffee';
-    }
 
     return 'welcome';
   });

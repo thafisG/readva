@@ -1,3 +1,4 @@
+@use 'sass:map';
 .dashboard-wrapper {
   min-height: 100vh;
   padding: 50px 0;
@@ -1292,15 +1293,15 @@ $themes: (
 
 @each $name, $vars in $themes {
   .moka-card.theme-#{$name} {
-    background: map-get($vars, bg);
-    border-color: map-get($vars, border);
+    background: map.get($vars, bg);
+    border-color: map.get($vars, border);
 
     .moka-title {
-      color: map-get($vars, title);
+      color: map.get($vars, title);
     }
 
     .moka-message {
-      color: map-get($vars, message);
+      color: map.get($vars, message);
     }
   }
 }
