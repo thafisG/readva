@@ -12,6 +12,7 @@
             dailyMinutesRead: userProgress().dailyMinutesRead,
             dailyGoalMinutes: userProgress().dailyGoalMinutes,
           }"
+          (shareRequested)="openSummaryModal()"
         ></app-streak-challenge>
 
         <nav class="navigation-card">
@@ -451,4 +452,62 @@
     (action)="handlePanelAction($event)"
     (closed)="closeModal()"
   ></app-book-action-panel>
+
+  @if (showSummaryModal()) {
+    <div class="modal-overlay" (click)="closeSummaryModal()">
+      <div class="modal-content share-modal" (click)="$event.stopPropagation()">
+        <div id="share-card" class="share-card-export">
+          <div class="share-card-top">
+            <div class="share-avatar">
+              {{ (authService.currentUser()?.name || 'L').split(' ')[0][0]
+              }}{{ (authService.currentUser()?.name || '').split(' ')[1]?.[0] ?? '' }}
+            </div>
+            <div>
+              <div class="share-name">
+                {{ (authService.currentUser()?.name || 'Leitor').split(' ')[0] }}
+              </div>
+              <div class="share-date">{{ todayLabel() }}</div>
+            </div>
+            <div class="share-logo">readva</div>
+          </div>
+
+          <div class="share-metrics">
+            <div class="share-metric">
+              <span class="share-metric-val">{{ userProgress().dailyMinutesRead }}</span>
+              <span class="share-metric-label">minutos lidos</span>
+            </div>
+            <div class="share-metric-divider"></div>
+            <div class="share-metric">
+              <span class="share-metric-val">{{ coffeeCount() }}</span>
+              <span class="share-metric-label">☕</span>
+            </div>
+            <div class="share-metric-divider"></div>
+            <div class="share-metric">
+              <span class="share-metric-val">{{ streakDays() }}</span>
+              <span class="share-metric-label">dias seguidos</span>
+            </div>
+          </div>
+
+          <div class="share-bar-wrap">
+            <div class="share-bar-fill" [style.width.%]="progressPercentage()"></div>
+          </div>
+          <div class="share-bar-label">
+            Meta diária: {{ userProgress().dailyMinutesRead }}/{{ userProgress().dailyGoalMinutes }}
+            min
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="premium-btn-secondary" (click)="closeSummaryModal()">Fechar</button>
+          <button
+            class="premium-btn"
+            (click)="exportSummaryCard()"
+            style="margin: 0; max-width: none; display: inline-block"
+          >
+            Baixar imagem
+          </button>
+        </div>
+      </div>
+    </div>
+  }
 }

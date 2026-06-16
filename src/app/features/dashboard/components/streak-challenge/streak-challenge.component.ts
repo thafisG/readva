@@ -1,6 +1,7 @@
 import {
   Component,
   input,
+  output,
   signal,
   computed,
   OnInit,
@@ -19,6 +20,7 @@ import { UserProgress } from '../../interfaces/dashboard.interface';
 })
 export class StreakChallengeComponent implements OnInit, OnDestroy, AfterViewChecked {
   progress = input.required<UserProgress>();
+  shareRequested = output<void>();
 
   private cdr = inject(ChangeDetectorRef);
 
@@ -138,6 +140,10 @@ export class StreakChallengeComponent implements OnInit, OnDestroy, AfterViewChe
 
   markTodayRead() {
     if (!this.todayMarked()) this.toggleToday();
+  }
+
+  openShareCard() {
+    this.shareRequested.emit();
   }
 
   private runConfetti() {
