@@ -35,7 +35,7 @@ import {
     RouterLink,
     RouterLinkActive,
     BookSearchComponent,
-    MatIconModule
+    MatIconModule,
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
@@ -271,9 +271,8 @@ export class DashboardComponent implements OnDestroy {
       const updated = this.bookService.myCurrentBook().find((b) => b.id === activity['bookId']);
       if (updated) this.selectedBook.set({ ...updated });
     }
-
-    this.loadGlobalFeed();
     this.closeEditModal();
+    this.loadGlobalFeed();
   }
 
   confirmDeleteActivity(activity: Activity): void {
