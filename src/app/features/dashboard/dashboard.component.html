@@ -450,7 +450,11 @@
     (action)="handlePanelAction($event)"
     (closed)="closeModal()"
   ></app-book-action-panel>
-  <app-moka [mood]="currentMokaMood()"></app-moka>
+  <app-moka
+    [mood]="currentMokaMood()"
+    (coffeeChanged)="onCoffeeChanged($event)"
+    (coffeeConfirmed)="onCoffeeConfirmed($event)"
+  ></app-moka>
 
   @if (showSummaryModal()) {
     <div class="modal-overlay" (click)="closeSummaryModal()">
@@ -477,7 +481,7 @@
             </div>
             <div class="share-metric-divider"></div>
             <div class="share-metric">
-              <span class="share-metric-val">{{ coffeeCount() }}</span>
+              <span class="share-metric-val">{{ manualCoffeeCount() }}</span>
               <span class="share-metric-label">☕</span>
             </div>
             <div class="share-metric-divider"></div>
