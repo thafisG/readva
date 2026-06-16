@@ -35,6 +35,8 @@
             <span>Desafios e Metas</span>
           </button>
 
+          <div class="nav-separator"></div>
+
           <button (click)="handleLogout()" class="nav-button logout-btn">
             <mat-icon>logout</mat-icon>
             <span>Sair</span>
@@ -43,8 +45,20 @@
       </aside>
 
       <main class="center-column">
+        <div class="center-banner">
+          <img src="assets/ilustra2.jpg" alt="" aria-hidden="true" class="center-banner-img" />
+          <div class="center-banner-overlay">
+            <div class="banner-icon-box">
+              <mat-icon>auto_stories</mat-icon>
+            </div>
+            <div>
+              <h3 class="banner-title">O que vamos ler hoje?</h3>
+              <p class="banner-sub">Registre seu progresso de leitura</p>
+            </div>
+          </div>
+        </div>
+
         <div class="premium-activity-card post-box">
-          <h3>O que vamos ler hoje?</h3>
           <div class="form-grid">
             <div class="field-wrapper">
               <label class="field-label">Buscar e preencher automaticamente</label>
@@ -169,10 +183,8 @@
               </article>
             } @empty {
               <div class="empty-feed">
-                <p>
-                  📭 Seu feed está em branco. Use a caixa acima para registrar seu primeiro
-                  progresso!
-                </p>
+                <img src="assets/ilustra5.jpg" alt="" class="empty-illustration" />
+                <p>Seu feed está vazio. Use a caixa acima para registrar seu primeiro progresso!</p>
               </div>
             }
           </div>
@@ -366,6 +378,11 @@
 
         <section class="premium-sidebar-card text-suggestions">
           <h3 class="sidebar-title">Recomendado para você</h3>
+
+          <div class="rec-banner">
+            <img src="assets/ilustra4.jpg" alt="" aria-hidden="true" />
+            <span class="rec-banner-label">✨ Para você</span>
+          </div>
 
           @if (suggestions().length > 0) {
             <div class="suggestions-grid">
