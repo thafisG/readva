@@ -1,34 +1,57 @@
 <div class="login-wrapper">
-  <div class="login-card">
-    <div class="login-header">
-      <img [src]="utilsService.logoReadva" alt="Logo Readva" class="logo-icon" />
-      <h1>Entrar no Readva</h1>
-      <p>Acesse seu painel exclusivo</p>
+  <div class="login-split">
+    <div class="login-left">
+      <img src="assets/ilustra1.jpg" alt="Ambiente de leitura" class="login-bg" />
+      <div class="login-left-overlay">
+        <h2>Sua jornada de<br />leitura começa aqui.</h2>
+        <p>Registre, acompanhe e compartilhe<br />cada livro que você lê.</p>
+      </div>
     </div>
 
-    <div class="form-grid">
-      <input
-        [(ngModel)]="loginEmail"
-        placeholder="Seu e-mail"
-        class="premium-input"
-        type="email"
-        [disabled]="showNameField"
-      />
+    <div class="login-right">
+      <div class="login-logo">
+        <img [src]="utilsService.logoReadva" alt="Logo Readva" class="logo-icon" />
+      </div>
 
-      @if (showNameField) {
-        <p class="register-notice">Percebemos que é seu primeiro acesso! Como quer ser chamado?</p>
+      <div class="login-header">
+        <h1>{{ showNameField ? 'Criar sua conta' : 'Bem-vindo de volta' }}</h1>
+        <p>
+          {{ showNameField ? 'Primeiro acesso detectado' : 'Digite seu e-mail para continuar' }}
+        </p>
+      </div>
+
+      <div class="form-grid">
         <input
-          [(ngModel)]="loginName"
-          placeholder="Seu nome completo"
+          [(ngModel)]="loginEmail"
+          placeholder="Seu e-mail"
           class="premium-input"
-          type="text"
-          (keyup.enter)="handleLogin()"
+          type="email"
+          [disabled]="showNameField"
         />
-      }
 
-      <button (click)="handleLogin()" class="premium-btn">
-        {{ showNameField ? 'Criar Conta e Entrar' : 'Continuar' }}
-      </button>
+        @if (showNameField) {
+          <div class="register-notice">
+            <span class="notice-emoji">👋</span>
+            Percebemos que é seu primeiro acesso! Como quer ser chamado?
+          </div>
+          <input
+            [(ngModel)]="loginName"
+            placeholder="Seu nome completo"
+            class="premium-input"
+            type="text"
+            (keyup.enter)="handleLogin()"
+          />
+        }
+
+        <button (click)="handleLogin()" class="premium-btn">
+          {{ showNameField ? 'Criar conta e entrar' : 'Continuar' }}
+        </button>
+      </div>
+
+      <p class="footer-terms">
+        Ao continuar, você concorda com os
+        <a href="#">Termos de uso</a> e <a href="#">Política de privacidade</a>.
+      </p>
     </div>
   </div>
 </div>

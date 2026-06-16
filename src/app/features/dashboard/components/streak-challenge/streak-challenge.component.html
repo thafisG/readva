@@ -1,57 +1,50 @@
 <div class="streak-card">
-  <div class="user-info">
-    <img [src]="progress().avatar" [alt]="progress().name" class="avatar" />
-    <div class="user-text">
-      <h2>Oi, {{ progress().name.split(' ')[0] }}!</h2>
-      <p class="subtitle">Um novo capítulo te espera hoje</p>
-    </div>
+  <div class="streak-banner">
+    <img src="assets/ilustra6.jpg" alt="" aria-hidden="true" class="streak-banner-img" />
+    <div class="streak-banner-fade"></div>
   </div>
 
-  <div
-    class="streak-badge"
-    (click)="toggleToday()"
-    [class.marked]="todayMarked()"
-    title="{{ todayMarked() ? 'Clique para desmarcar' : 'Marcar hoje como lido' }}"
-  >
-    <div class="fire-col">
-      <span class="fire-icon" [class.fire-pop]="animating()">🔥</span>
-    </div>
-    <div class="streak-details">
-      <span class="count">
-        {{ streakCount() }} {{ streakCount() === 1 ? 'dia de leitura' : 'dias de leitura' }}
-      </span>
-
-      <span class="fire-hint">
-        {{ todayMarked() ? '' : 'clique para registrar' }}
-      </span>
-    </div>
-  </div>
-
-  <div class="week-days">
-    @for (day of weekDays(); track $index) {
-      <div class="day-dot" [class.read]="day.read" [class.today]="day.isToday">
-        {{ day.label }}
+  <div class="streak-body">
+    <div class="streak-user">
+      <div class="streak-avatar">
+        {{ progress().name.split(' ')[0][0] }}{{ progress().name.split(' ')[1]?.[0] ?? '' }}
       </div>
-    }
-  </div>
+      <div>
+        <div class="streak-name">{{ progress().name.split(' ')[0] }}</div>
+        <div class="streak-sub">Boa leitura hoje!</div>
+      </div>
+    </div>
 
-  <div class="goal-section">
+    <div
+      class="fire-row"
+      (click)="toggleToday()"
+      [class.marked]="todayMarked()"
+      title="{{ todayMarked() ? 'Clique para desmarcar' : 'Marcar hoje como lido' }}"
+    >
+      <div>
+        <div class="fire-num">{{ streakCount() }}</div>
+        <div class="fire-label">{{ streakCount() === 1 ? 'dia seguido' : 'dias seguidos' }}</div>
+      </div>
+      <span class="fire-emoji" [class.fire-pop]="animating()">🔥</span>
+    </div>
+
+    <div class="week-row">
+      @for (day of weekDays(); track $index) {
+        <div class="wd" [class.read]="day.read" [class.today]="day.isToday">{{ day.label }}</div>
+      }
+    </div>
+
     <div class="goal-header">
-      <span class="goal-title">Meta Diária</span>
-      <span class="goal-ratio" [class.reached]="goalReached()">
-        {{ progress().dailyMinutesRead }}/{{ progress().dailyGoalMinutes }} min
+      <span class="goal-label">Meta diária</span>
+      <span class="goal-val" [class.reached]="goalReached()">
+        {{ progress().dailyMinutesRead }} / {{ progress().dailyGoalMinutes }} min
         @if (goalReached()) {
           🎯
         }
       </span>
     </div>
-
-    <div class="progress-bar-container">
-      <div
-        class="progress-bar"
-        [style.width.%]="percentage()"
-        [class.reached]="goalReached()"
-      ></div>
+    <div class="bar-bg">
+      <div class="bar-fill" [style.width.%]="percentage()" [class.reached]="goalReached()"></div>
     </div>
   </div>
 </div>
