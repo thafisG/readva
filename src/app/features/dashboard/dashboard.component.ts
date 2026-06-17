@@ -222,7 +222,6 @@ export class DashboardComponent implements OnDestroy {
     localStorage.setItem(this.FIRST_POST_KEY, today);
     this.streakComponent?.markTodayRead();
 
-    // Dispara conquistas de streak
     const streak = this.streakComponent?.streakCount() ?? this.userProgress().currentStreak;
     this.challengesService.onStreakDay(streak);
   }
@@ -289,6 +288,7 @@ export class DashboardComponent implements OnDestroy {
       this.newTotalPages,
       this.newCategory,
     );
+
     this.newTitle = '';
     this.newAuthor = '';
     this.loadGlobalFeed();
@@ -350,6 +350,7 @@ export class DashboardComponent implements OnDestroy {
 
   private onMarkCompleted(event: BookActionEvent): void {
     this.bookService.markCompleted(event.bookId);
+
     this.closeModal();
     this.loadSuggestions();
     this.showFeedback('completed-book');
@@ -382,7 +383,9 @@ export class DashboardComponent implements OnDestroy {
     const activity = this.editingActivity();
     if (!activity) return;
 
+    const oldPages: number = activity['pagesRead'] ?? 0;
     const oldMinutes: number = activity['minutesRead'] ?? 0;
+    const diffPages = this.editPagesRead - oldPages;
     const diffMinutes = this.editMinutesRead - oldMinutes;
 
     const minutesLabel =
@@ -395,6 +398,12 @@ export class DashboardComponent implements OnDestroy {
       pagesRead: this.editPagesRead,
       minutesRead: this.editMinutesRead,
     });
+    if (diffPages !== 0) {
+      this.challengesService.onPagesRead(diffPages);
+    }
+    if (diffMinutes !== 0) {
+      this.challengesService.onMinutesRead(diffMinutes);
+    }
 
     if (diffMinutes !== 0) {
       this.userProgress.update((p) => {

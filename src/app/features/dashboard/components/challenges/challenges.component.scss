@@ -13,9 +13,9 @@
   gap: 12px;
 
   h2 {
-    font-size: 1.4rem;
+    font-size: 1.1rem;
     font-weight: 700;
-    color: var(--text-primary, #1a1a2e);
+    color: #1c1917;
     margin: 0;
   }
 }
@@ -26,13 +26,27 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  border: none;
+  border: 1px solid #efe7df;
   border-radius: 50%;
-  background: var(--surface-2, #f3f4f6);
-  color: var(--text-primary, #1a1a2e);
+  background: #fffdfb;
+  color: #7b7168;
   cursor: pointer;
   flex-shrink: 0;
-  transition: background 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: inherit;
+  }
+
+  &:hover {
+    background: #f5ede8;
+    color: #463b34;
+  }
 }
 
 .level-card {
@@ -40,10 +54,10 @@
   align-items: center;
   gap: 20px;
   background: #f1bf63;
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 20px 24px;
   color: #fff;
-  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 4px 20px rgba(196, 122, 32, 0.25);
 }
 
 .level-badge {
@@ -51,20 +65,20 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.22);
   border-radius: 12px;
-  width: 64px;
-  height: 64px;
+  width: 62px;
+  height: 62px;
   flex-shrink: 0;
 
   .level-number {
-    font-size: 1.8rem;
+    font-size: 1.7rem;
     font-weight: 800;
     line-height: 1;
   }
 
   .level-label {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     opacity: 0.85;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -84,18 +98,18 @@
   align-items: center;
 
   .level-progress-text {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 600;
   }
 
   .level-progress-next {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     opacity: 0.8;
   }
 }
 
 .level-bar-background {
-  height: 8px;
+  height: 7px;
   border-radius: 99px;
   background: rgba(255, 255, 255, 0.25);
   overflow: hidden;
@@ -112,21 +126,23 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .section-title {
-  font-size: 1rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  color: var(--text-primary, #1a1a2e);
-  margin: 0 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #b8a89e;
+  margin: 0 0 14px;
 }
 
 .achievements-count {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: var(--text-secondary, #6b7280);
-  background: var(--surface-2, #f3f4f6);
+  color: #9c8880;
+  background: #f5ede8;
   padding: 2px 10px;
   border-radius: 99px;
 }
@@ -139,48 +155,41 @@
 .missions-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .mission-card {
   display: flex;
   align-items: flex-start;
   gap: 14px;
-  background: var(--surface-1, #fff);
-  border: 1.5px solid var(--border, #e5e7eb);
-  border-radius: 14px;
+  background: #fffdfb;
+  border: 1.5px solid #efe7df;
+  border-radius: 16px;
   padding: 14px 16px;
   transition:
     border-color 0.2s,
     box-shadow 0.2s;
 
   &.completed {
-    border-color: #10b981;
-    background: #f0fdf4;
+    border-color: #a3c9a8;
+    background: #f4fbf4;
 
     .mission-bar-fill {
-      background: #10b981;
+      background: #5da06a;
     }
 
     .mission-title {
       text-decoration: line-through;
-      color: var(--text-secondary, #6b7280);
+      color: #9c8880;
     }
   }
-}
-
-.mission-icon {
-  font-size: 1.5rem;
-  line-height: 1;
-  flex-shrink: 0;
-  margin-top: 2px;
 }
 
 .mission-info {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .mission-top {
@@ -191,51 +200,57 @@
 }
 
 .mission-title {
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-weight: 700;
-  color: var(--text-primary, #1a1a2e);
+  color: #1c1917;
 }
 
 .mission-xp {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  color: #6366f1;
-  background: #ede9fe;
+  color: #7c5c45;
+  background: #f5ede8;
   padding: 2px 8px;
   border-radius: 99px;
   white-space: nowrap;
 }
 
 .mission-description {
-  font-size: 0.8rem;
-  color: var(--text-secondary, #6b7280);
+  font-size: 0.78rem;
+  color: #9c8880;
 }
 
 .mission-bar-background {
-  height: 6px;
+  height: 5px;
   border-radius: 99px;
-  background: var(--surface-2, #f3f4f6);
+  background: #f0e8e2;
   overflow: hidden;
 }
 
 .mission-bar-fill {
   height: 100%;
   border-radius: 99px;
-  background: #6366f1;
+  background: #c47a20;
   transition: width 0.4s ease;
 }
 
 .mission-progress-text {
-  font-size: 0.75rem;
-  color: var(--text-secondary, #6b7280);
+  font-size: 0.72rem;
+  color: #9c8880;
 }
 
 .mission-check {
-  font-size: 1rem;
-  color: #10b981;
-  font-weight: 700;
-  flex-shrink: 0;
+  display: flex;
+  align-items: center;
   align-self: center;
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: #5da06a;
+  }
 }
 
 .achievements-section {
@@ -245,21 +260,21 @@
 
 .achievements-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
 }
 
 .achievement-badge {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 16px 12px;
-  background: var(--surface-1, #fff);
-  border: 1.5px solid var(--border, #e5e7eb);
+  gap: 6px;
+  padding: 14px 10px;
+  background: #fffdfb;
+  border: 1.5px solid #efe7df;
   border-radius: 14px;
   text-align: center;
-  opacity: 0.45;
+  opacity: 0.4;
   filter: grayscale(0.8);
   transition:
     opacity 0.3s,
@@ -270,35 +285,37 @@
   &.unlocked {
     opacity: 1;
     filter: none;
-    border-color: var(--badge-color, #6366f1);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--badge-color, #6366f1) 20%, transparent);
+    border-color: var(--badge-color, #c47a20);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--badge-color, #c47a20) 18%, transparent);
   }
 }
 
 .badge-circle {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--badge-color, #6366f1) 15%, #fff);
+  background: color-mix(in srgb, var(--badge-color, #c47a20) 14%, #fff);
   display: flex;
   align-items: center;
   justify-content: center;
-}
 
-.badge-icon {
-  font-size: 1.4rem;
-  line-height: 1;
+  mat-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+    color: var(--badge-color, #c47a20);
+  }
 }
 
 .badge-title {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  color: var(--text-primary, #1a1a2e);
+  color: #1c1917;
 }
 
 .badge-description {
-  font-size: 0.7rem;
-  color: var(--text-secondary, #6b7280);
+  font-size: 0.68rem;
+  color: #9c8880;
   line-height: 1.3;
 }
 
@@ -310,11 +327,11 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  background: #1a1a2e;
+  background: #1c1917;
   color: #fff;
-  border-radius: 16px;
+  border-radius: 18px;
   padding: 14px 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
   cursor: pointer;
   z-index: 9999;
   animation: slideUp 0.35s ease;
@@ -323,15 +340,21 @@
 }
 
 .unlock-toast-icon {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--badge-color, #f59e0b) 25%, #fff1);
+  background: color-mix(in srgb, var(--badge-color, #f1bf63) 28%, rgba(255, 255, 255, 0.06));
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
   flex-shrink: 0;
+
+  mat-icon {
+    font-size: 22px;
+    width: 22px;
+    height: 22px;
+    color: var(--badge-color, #f1bf63);
+  }
 }
 
 .unlock-toast-text {
@@ -341,14 +364,14 @@
 }
 
 .unlock-toast-label {
-  font-size: 0.72rem;
-  opacity: 0.75;
+  font-size: 0.68rem;
+  opacity: 0.7;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
 .unlock-toast-title {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 

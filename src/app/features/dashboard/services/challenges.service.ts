@@ -1,8 +1,9 @@
 import { Injectable, signal, computed } from '@angular/core';
+import { MokaMood } from '../../moka/moka.component';
 
 export interface Mission {
   id: string;
-  icon: string;
+  matIcon: string;
   title: string;
   description: string;
   xpReward: number;
@@ -13,11 +14,12 @@ export interface Mission {
 
 export interface Achievement {
   id: string;
-  icon: string;
+  matIcon: string;
   title: string;
   description: string;
   color: string;
   unlocked: boolean;
+  mokaMood: MokaMood;
 }
 
 export interface LevelInfo {
@@ -35,10 +37,12 @@ export class ChallengesService {
   private _missions = signal<Mission[]>(this.loadMissions());
   private _achievements = signal<Achievement[]>(this.loadAchievements());
   private _justUnlocked = signal<Achievement | null>(null);
+  private _justUnlockedMood = signal<MokaMood | null>(null);
 
   readonly missions = this._missions.asReadonly();
   readonly achievements = this._achievements.asReadonly();
   readonly justUnlocked = this._justUnlocked.asReadonly();
+  readonly justUnlockedMood = this._justUnlockedMood.asReadonly();
 
   readonly levelInfo = computed<LevelInfo>(() => {
     const xp = this._totalXp();
@@ -51,8 +55,21 @@ export class ChallengesService {
 
   readonly unlockedCount = computed(() => this._achievements().filter((a) => a.unlocked).length);
 
+  /**
+   * Atualiza o progresso da missão de páginas lidas.
+   * Aceita delta positivo (novo progresso ou aumento via edição)
+   * ou negativo (redução de páginas via edição de um post existente).
+   */
   onPagesRead(pages: number): void {
     this.updateMissionProgress('read-pages', pages);
+  }
+
+  /**
+   * Marca que uma sessão de leitura foi registrada (novo post).
+   * NÃO deve ser chamado ao editar um post existente, apenas ao criar um novo,
+   * senão a missão "Consistência" infla a cada edição.
+   */
+  onReadingSession(): void {
     this.updateMissionProgress('read-session', 1);
   }
 
@@ -80,6 +97,7 @@ export class ChallengesService {
 
   dismissJustUnlocked(): void {
     this._justUnlocked.set(null);
+    this._justUnlockedMood.set(null);
   }
 
   resetDailyMissions(): void {
@@ -88,29 +106,74 @@ export class ChallengesService {
     this.saveMissions(reset);
   }
 
+  /**
+   * Atualiza o progresso de uma missão por id, podendo subir ou descer.
+   * - delta positivo: aumenta o progresso (novo registro ou edição para mais)
+   * - delta negativo: reduz o progresso (edição para menos)
+   *
+   * Se a missão estava completa e cai abaixo da meta após o delta, ela é
+   * "descompletada": o XP concedido por ela é revogado.
+   * Se estava incompleta e o delta a leva a bater a meta, XP é concedido
+   * normalmente.
+   *
+   * Achievements desbloqueados (first-mission / all-missions) NÃO são
+   * revogados quando uma missão descompleta — eles ficam conquistados.
+   */
   private updateMissionProgress(id: string, delta: number): void {
     this._missions.update((missions) => {
+      let missionJustCompleted = false;
+      let xpDelta = 0;
+
       const updated = missions.map((m) => {
-        if (m.id !== id || m.completed) return m;
-        const progress = Math.min(m.progress + delta, m.target);
+        if (m.id !== id) return m;
+
+        const progress = Math.max(0, Math.min(m.progress + delta, m.target));
         const completed = progress >= m.target;
-        if (completed && !m.completed) this.grantXp(m.xpReward);
+
+        if (completed && !m.completed) {
+          xpDelta += m.xpReward;
+          missionJustCompleted = true;
+        } else if (!completed && m.completed) {
+          xpDelta -= m.xpReward;
+        }
+
         return { ...m, progress, completed };
       });
+
       this.saveMissions(updated);
+
+      if (xpDelta !== 0) {
+        this.adjustXp(xpDelta);
+      }
+
+      if (missionJustCompleted) {
+        const allDone = updated.every((m) => m.completed);
+        if (allDone) this.checkAchievement('all-missions');
+        else this.checkAchievement('first-mission');
+      }
+
       return updated;
     });
   }
 
-  private grantXp(amount: number): void {
+  /**
+   * Ajusta o XP total, podendo ser positivo (concessão) ou negativo
+   * (revogação por missão descompletada). O total nunca fica negativo.
+   * Achievements de nível só são checados em ganhos de XP (amount > 0),
+   * já que não temos lógica de "desconquistar" nível.
+   */
+  private adjustXp(amount: number): void {
     this._totalXp.update((xp) => {
-      const next = xp + amount;
+      const next = Math.max(0, xp + amount);
       localStorage.setItem('challenges_xp', String(next));
       return next;
     });
-    const { level } = this.levelInfo();
-    if (level >= 5) this.checkAchievement('level-5');
-    if (level >= 10) this.checkAchievement('level-10');
+
+    if (amount > 0) {
+      const { level } = this.levelInfo();
+      if (level >= 5) this.checkAchievement('level-5');
+      if (level >= 10) this.checkAchievement('level-10');
+    }
   }
 
   private checkAchievement(id: string): void {
@@ -118,9 +181,11 @@ export class ChallengesService {
       const idx = list.findIndex((a) => a.id === id);
       if (idx === -1 || list[idx].unlocked) return list;
       const updated = list.map((a, i) => (i === idx ? { ...a, unlocked: true } : a));
-      this._justUnlocked.set(updated[idx]);
+      const unlocked = updated[idx];
+      this._justUnlocked.set(unlocked);
+      this._justUnlockedMood.set(unlocked.mokaMood);
       this.saveAchievements(updated);
-      setTimeout(() => this._justUnlocked.set(null), 4000);
+      setTimeout(() => this._justUnlocked.set(null), 5000);
       return updated;
     });
   }
@@ -165,7 +230,7 @@ export class ChallengesService {
     return [
       {
         id: 'read-pages',
-        icon: '📖',
+        matIcon: 'menu_book',
         title: 'Leitor do dia',
         description: 'Leia 20 páginas hoje',
         xpReward: 50,
@@ -175,7 +240,7 @@ export class ChallengesService {
       },
       {
         id: 'read-minutes',
-        icon: '⏱️',
+        matIcon: 'timer',
         title: 'Maratona de leitura',
         description: 'Leia por 30 minutos',
         xpReward: 60,
@@ -185,7 +250,7 @@ export class ChallengesService {
       },
       {
         id: 'read-session',
-        icon: '🔥',
+        matIcon: 'local_fire_department',
         title: 'Consistência',
         description: 'Registre uma sessão de leitura',
         xpReward: 30,
@@ -195,7 +260,7 @@ export class ChallengesService {
       },
       {
         id: 'start-book',
-        icon: '📚',
+        matIcon: 'auto_stories',
         title: 'Novo começo',
         description: 'Adicione um novo livro à sua lista',
         xpReward: 40,
@@ -210,51 +275,75 @@ export class ChallengesService {
     return [
       {
         id: 'first-book',
-        icon: '🏆',
+        matIcon: 'emoji_events',
         title: 'Primeiro livro',
         description: 'Termine seu primeiro livro',
-        color: '#f59e0b',
+        color: '#c47a20',
         unlocked: false,
+        mokaMood: 'completed-book',
       },
       {
         id: 'streak-7',
-        icon: '🔥',
+        matIcon: 'local_fire_department',
         title: '7 dias seguidos',
         description: 'Mantenha uma sequência de 7 dias',
-        color: '#ef4444',
+        color: '#e07b54',
         unlocked: false,
+        mokaMood: 'streak',
       },
       {
         id: 'streak-30',
-        icon: '💎',
+        matIcon: 'diamond',
         title: 'Leitor do mês',
         description: 'Leia por 30 dias consecutivos',
-        color: '#3b82f6',
+        color: '#7c5c45',
         unlocked: false,
+        mokaMood: 'streak',
       },
       {
         id: 'level-5',
-        icon: '⭐',
+        matIcon: 'star',
         title: 'Nível 5',
         description: 'Alcance o nível 5',
-        color: '#8b5cf6',
+        color: '#c47a20',
         unlocked: false,
+        mokaMood: 'goal',
       },
       {
         id: 'level-10',
-        icon: '🌟',
+        matIcon: 'grade',
         title: 'Nível 10',
         description: 'Alcance o nível 10',
-        color: '#10b981',
+        color: '#5da06a',
         unlocked: false,
+        mokaMood: 'goal',
       },
       {
         id: 'night-owl',
-        icon: '🦉',
+        matIcon: 'bedtime',
         title: 'Coruja noturna',
         description: 'Leia após as 22h',
-        color: '#6366f1',
+        color: '#7c5c45',
         unlocked: false,
+        mokaMood: 'sleepy',
+      },
+      {
+        id: 'first-mission',
+        matIcon: 'track_changes',
+        title: 'Primeira missão',
+        description: 'Complete sua primeira missão diária',
+        color: '#c47a20',
+        unlocked: false,
+        mokaMood: 'mission',
+      },
+      {
+        id: 'all-missions',
+        matIcon: 'verified',
+        title: 'Dia perfeito',
+        description: 'Complete todas as missões do dia',
+        color: '#5da06a',
+        unlocked: false,
+        mokaMood: 'perfect-day',
       },
     ];
   }

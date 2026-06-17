@@ -9,7 +9,9 @@ export type MokaMood =
   | 'empty-library'
   | 'completed-book'
   | 'sleepy'
-  | 'love';
+  | 'love'
+  | 'mission'
+  | 'perfect-day';
 
 export interface MokaConfig {
   image: string;
@@ -23,9 +25,9 @@ export interface MokaConfig {
 export const MOKA_CONFIG: Record<MokaMood, MokaConfig> = {
   welcome: {
     image: 'assets/moka/moka-welcome.png',
-    emoji: '👋',
+    emoji: '',
     badge: 'Oi!',
-    title: 'Bem-vindo ao Readva!',
+    title: 'Oii!',
     message: 'Moka acabou de preparar um café fresquinho para a próxima leitura.',
     theme: 'cream',
   },
@@ -85,6 +87,22 @@ export const MOKA_CONFIG: Record<MokaMood, MokaConfig> = {
     message: 'Moka encontrou alguns livros que combinam com você!',
     theme: 'peach',
   },
+  mission: {
+    image: 'assets/moka/moka-mission.png',
+    emoji: '🎯',
+    badge: 'Missão!',
+    title: 'Missão completa!',
+    message: 'Você concluiu mais uma missão hoje. Moka tá orgulhoso!',
+    theme: 'amber',
+  },
+  'perfect-day': {
+    image: 'assets/moka/moka-perfeito.png',
+    emoji: '✨',
+    badge: 'Perfeito!',
+    title: 'Dia perfeito!',
+    message: 'Todas as missões do dia concluídas! Moka não consegue parar de dançar.',
+    theme: 'mint',
+  },
 };
 
 const COFFEE_REACTIONS: Record<number, { title: string; emoji: string }> = {
@@ -93,7 +111,7 @@ const COFFEE_REACTIONS: Record<number, { title: string; emoji: string }> = {
   2: { title: 'Dois! Boa energia!', emoji: '☕☕' },
   3: { title: 'Três? Você tá voando!', emoji: '🚀' },
   4: { title: 'Quatro... tá bom, tá bom.', emoji: '😅' },
-  5: { title: 'Cinco! Moka tá preocupado.', emoji: '😰' },
+  5: { title: 'Moka tá preocupado.', emoji: '😰' },
 };
 
 function getCoffeeReaction(count: number) {
@@ -124,7 +142,6 @@ export class MokaComponent {
 
   private wiggleTimer: any = null;
   private autoCloseTimer: any = null;
-
   private previousMood: MokaMood | null = null;
 
   constructor() {

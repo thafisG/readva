@@ -152,6 +152,7 @@ export class BookService {
     });
 
     this.challengesService.onPagesRead(safePages);
+    this.challengesService.onReadingSession();
     if (minutesRead > 0) this.challengesService.onMinutesRead(minutesRead);
 
     const hour = new Date().getHours();
