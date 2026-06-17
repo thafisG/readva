@@ -1,8 +1,9 @@
 import { Injectable, signal, computed } from '@angular/core';
+import { MokaMood } from '../../moka/moka.component';
 
 export interface Mission {
   id: string;
-  icon: string;
+  matIcon: string;
   title: string;
   description: string;
   xpReward: number;
@@ -13,11 +14,12 @@ export interface Mission {
 
 export interface Achievement {
   id: string;
-  icon: string;
+  matIcon: string;
   title: string;
   description: string;
   color: string;
   unlocked: boolean;
+  mokaMood: MokaMood;
 }
 
 export interface LevelInfo {
@@ -35,10 +37,12 @@ export class ChallengesService {
   private _missions = signal<Mission[]>(this.loadMissions());
   private _achievements = signal<Achievement[]>(this.loadAchievements());
   private _justUnlocked = signal<Achievement | null>(null);
+  private _justUnlockedMood = signal<MokaMood | null>(null);
 
   readonly missions = this._missions.asReadonly();
   readonly achievements = this._achievements.asReadonly();
   readonly justUnlocked = this._justUnlocked.asReadonly();
+  readonly justUnlockedMood = this._justUnlockedMood.asReadonly();
 
   readonly levelInfo = computed<LevelInfo>(() => {
     const xp = this._totalXp();
@@ -80,6 +84,7 @@ export class ChallengesService {
 
   dismissJustUnlocked(): void {
     this._justUnlocked.set(null);
+    this._justUnlockedMood.set(null);
   }
 
   resetDailyMissions(): void {
@@ -90,14 +95,23 @@ export class ChallengesService {
 
   private updateMissionProgress(id: string, delta: number): void {
     this._missions.update((missions) => {
+      let missionJustCompleted = false;
       const updated = missions.map((m) => {
         if (m.id !== id || m.completed) return m;
         const progress = Math.min(m.progress + delta, m.target);
         const completed = progress >= m.target;
-        if (completed && !m.completed) this.grantXp(m.xpReward);
+        if (completed && !m.completed) {
+          this.grantXp(m.xpReward);
+          missionJustCompleted = true;
+        }
         return { ...m, progress, completed };
       });
       this.saveMissions(updated);
+      if (missionJustCompleted) {
+        const allDone = updated.every((m) => m.completed);
+        if (allDone) this.checkAchievement('all-missions');
+        else this.checkAchievement('first-mission');
+      }
       return updated;
     });
   }
@@ -118,9 +132,11 @@ export class ChallengesService {
       const idx = list.findIndex((a) => a.id === id);
       if (idx === -1 || list[idx].unlocked) return list;
       const updated = list.map((a, i) => (i === idx ? { ...a, unlocked: true } : a));
-      this._justUnlocked.set(updated[idx]);
+      const unlocked = updated[idx];
+      this._justUnlocked.set(unlocked);
+      this._justUnlockedMood.set(unlocked.mokaMood);
       this.saveAchievements(updated);
-      setTimeout(() => this._justUnlocked.set(null), 4000);
+      setTimeout(() => this._justUnlocked.set(null), 5000);
       return updated;
     });
   }
@@ -165,7 +181,7 @@ export class ChallengesService {
     return [
       {
         id: 'read-pages',
-        icon: '📖',
+        matIcon: 'menu_book',
         title: 'Leitor do dia',
         description: 'Leia 20 páginas hoje',
         xpReward: 50,
@@ -175,7 +191,7 @@ export class ChallengesService {
       },
       {
         id: 'read-minutes',
-        icon: '⏱️',
+        matIcon: 'timer',
         title: 'Maratona de leitura',
         description: 'Leia por 30 minutos',
         xpReward: 60,
@@ -185,7 +201,7 @@ export class ChallengesService {
       },
       {
         id: 'read-session',
-        icon: '🔥',
+        matIcon: 'local_fire_department',
         title: 'Consistência',
         description: 'Registre uma sessão de leitura',
         xpReward: 30,
@@ -195,7 +211,7 @@ export class ChallengesService {
       },
       {
         id: 'start-book',
-        icon: '📚',
+        matIcon: 'auto_stories',
         title: 'Novo começo',
         description: 'Adicione um novo livro à sua lista',
         xpReward: 40,
@@ -210,51 +226,75 @@ export class ChallengesService {
     return [
       {
         id: 'first-book',
-        icon: '🏆',
+        matIcon: 'emoji_events',
         title: 'Primeiro livro',
         description: 'Termine seu primeiro livro',
-        color: '#f59e0b',
+        color: '#c47a20',
         unlocked: false,
+        mokaMood: 'completed-book',
       },
       {
         id: 'streak-7',
-        icon: '🔥',
+        matIcon: 'local_fire_department',
         title: '7 dias seguidos',
         description: 'Mantenha uma sequência de 7 dias',
-        color: '#ef4444',
+        color: '#e07b54',
         unlocked: false,
+        mokaMood: 'streak',
       },
       {
         id: 'streak-30',
-        icon: '💎',
+        matIcon: 'diamond',
         title: 'Leitor do mês',
         description: 'Leia por 30 dias consecutivos',
-        color: '#3b82f6',
+        color: '#7c5c45',
         unlocked: false,
+        mokaMood: 'streak',
       },
       {
         id: 'level-5',
-        icon: '⭐',
+        matIcon: 'star',
         title: 'Nível 5',
         description: 'Alcance o nível 5',
-        color: '#8b5cf6',
+        color: '#c47a20',
         unlocked: false,
+        mokaMood: 'goal',
       },
       {
         id: 'level-10',
-        icon: '🌟',
+        matIcon: 'grade',
         title: 'Nível 10',
         description: 'Alcance o nível 10',
-        color: '#10b981',
+        color: '#5da06a',
         unlocked: false,
+        mokaMood: 'goal',
       },
       {
         id: 'night-owl',
-        icon: '🦉',
+        matIcon: 'bedtime',
         title: 'Coruja noturna',
         description: 'Leia após as 22h',
-        color: '#6366f1',
+        color: '#7c5c45',
         unlocked: false,
+        mokaMood: 'sleepy',
+      },
+      {
+        id: 'first-mission',
+        matIcon: 'track_changes',
+        title: 'Primeira missão',
+        description: 'Complete sua primeira missão diária',
+        color: '#c47a20',
+        unlocked: false,
+        mokaMood: 'mission',
+      },
+      {
+        id: 'all-missions',
+        matIcon: 'verified',
+        title: 'Dia perfeito',
+        description: 'Complete todas as missões do dia',
+        color: '#5da06a',
+        unlocked: false,
+        mokaMood: 'perfect-day',
       },
     ];
   }

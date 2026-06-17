@@ -9,7 +9,9 @@ export type MokaMood =
   | 'empty-library'
   | 'completed-book'
   | 'sleepy'
-  | 'love';
+  | 'love'
+  | 'mission'
+  | 'perfect-day';
 
 export interface MokaConfig {
   image: string;
@@ -85,6 +87,22 @@ export const MOKA_CONFIG: Record<MokaMood, MokaConfig> = {
     message: 'Moka encontrou alguns livros que combinam com você!',
     theme: 'peach',
   },
+  mission: {
+    image: 'assets/moka/moka-mission.png',
+    emoji: '🎯',
+    badge: 'Missão!',
+    title: 'Missão completa!',
+    message: 'Você concluiu mais uma missão hoje. Moka tá orgulhoso!',
+    theme: 'amber',
+  },
+  'perfect-day': {
+    image: 'assets/moka/moka-perfeito.png',
+    emoji: '✨',
+    badge: 'Perfeito!',
+    title: 'Dia perfeito!',
+    message: 'Todas as missões do dia concluídas! Moka não consegue parar de dançar.',
+    theme: 'mint',
+  },
 };
 
 const COFFEE_REACTIONS: Record<number, { title: string; emoji: string }> = {
@@ -124,7 +142,6 @@ export class MokaComponent {
 
   private wiggleTimer: any = null;
   private autoCloseTimer: any = null;
-
   private previousMood: MokaMood | null = null;
 
   constructor() {

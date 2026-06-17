@@ -1,21 +1,7 @@
 <div class="challenges-wrapper">
   <div class="challenges-header">
     <button class="back-btn" (click)="goBack()" aria-label="Voltar">
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 16 16"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M10 3L5 8L10 13"
-          stroke="currentColor"
-          stroke-width="1.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
-      </svg>
+      <mat-icon>arrow_back</mat-icon>
     </button>
     <h2>Desafios e Metas</h2>
   </div>
@@ -47,7 +33,6 @@
     <div class="missions-list">
       @for (mission of challengesService.missions(); track mission.id) {
         <div class="mission-card" [class.completed]="mission.completed">
-          <div class="mission-icon">{{ mission.icon }}</div>
           <div class="mission-info">
             <div class="mission-top">
               <span class="mission-title">{{ mission.title }}</span>
@@ -65,7 +50,9 @@
             </span>
           </div>
           @if (mission.completed) {
-            <span class="mission-check">✓</span>
+            <div class="mission-check">
+              <mat-icon>check_circle</mat-icon>
+            </div>
           }
         </div>
       }
@@ -86,10 +73,10 @@
           class="achievement-badge"
           [class.unlocked]="achievement.unlocked"
           [style.--badge-color]="achievement.color"
-          title="{{ achievement.title }}"
+          [title]="achievement.title"
         >
           <div class="badge-circle">
-            <span class="badge-icon">{{ achievement.icon }}</span>
+            <mat-icon>{{ achievement.matIcon }}</mat-icon>
           </div>
           <span class="badge-title">{{ achievement.title }}</span>
           <span class="badge-description">{{ achievement.description }}</span>
@@ -102,7 +89,7 @@
 @if (challengesService.justUnlocked()) {
   <div class="unlock-toast" (click)="dismissUnlockToast()">
     <div class="unlock-toast-icon" [style.--badge-color]="challengesService.justUnlocked()!.color">
-      {{ challengesService.justUnlocked()!.icon }}
+      <mat-icon>{{ challengesService.justUnlocked()!.matIcon }}</mat-icon>
     </div>
     <div class="unlock-toast-text">
       <span class="unlock-toast-label">Conquista desbloqueada!</span>
@@ -110,3 +97,9 @@
     </div>
   </div>
 }
+
+<app-moka
+  [mood]="mokaMood()"
+  (coffeeChanged)="onCoffeeChanged($event)"
+  (coffeeConfirmed)="onCoffeeConfirmed($event)"
+></app-moka>
