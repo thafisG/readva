@@ -7,8 +7,6 @@
   gap: 24px;
 }
 
-// ─── Header ───────────────────────────────────────────────────────────────────
-
 .challenges-header {
   display: flex;
   align-items: center;
@@ -50,8 +48,6 @@
     color: #463b34;
   }
 }
-
-// ─── Level card ───────────────────────────────────────────────────────────────
 
 .level-card {
   display: flex;
@@ -126,8 +122,6 @@
   transition: width 0.5s ease;
 }
 
-// ─── Section titles ────────────────────────────────────────────────────────────
-
 .section-title-row {
   display: flex;
   align-items: center;
@@ -152,8 +146,6 @@
   padding: 2px 10px;
   border-radius: 99px;
 }
-
-// ─── Missions ─────────────────────────────────────────────────────────────────
 
 .missions-section {
   display: flex;
@@ -261,8 +253,6 @@
   }
 }
 
-// ─── Achievements ─────────────────────────────────────────────────────────────
-
 .achievements-section {
   display: flex;
   flex-direction: column;
@@ -329,8 +319,6 @@
   line-height: 1.3;
 }
 
-// ─── Unlock toast ─────────────────────────────────────────────────────────────
-
 .unlock-toast {
   position: fixed;
   bottom: 28px;
@@ -387,8 +375,6 @@
   font-weight: 700;
 }
 
-// ─── Animations ───────────────────────────────────────────────────────────────
-
 @keyframes slideUp {
   from {
     opacity: 0;
@@ -399,8 +385,6 @@
     transform: translateX(-50%) translateY(0);
   }
 }
-
-// ─── Responsive ───────────────────────────────────────────────────────────────
 
 @media (max-width: 480px) {
   .challenges-wrapper {

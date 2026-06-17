@@ -226,14 +226,6 @@ export class DashboardComponent implements OnDestroy {
     this.challengesService.onStreakDay(streak);
   }
 
-  // ─── leitura noturna ────────────────────────────────────────────────────────
-  private maybeFireNightReading(): void {
-    const hour = new Date().getHours();
-    if (hour >= 22 || hour < 4) {
-      this.challengesService.onNightReading();
-    }
-  }
-
   openSummaryModal(): void {
     this.showSummaryModal.set(true);
   }
@@ -297,9 +289,6 @@ export class DashboardComponent implements OnDestroy {
       this.newCategory,
     );
 
-    // ✅ contabiliza missão de novo livro
-    this.challengesService.onBookStarted();
-
     this.newTitle = '';
     this.newAuthor = '';
     this.loadGlobalFeed();
@@ -331,12 +320,6 @@ export class DashboardComponent implements OnDestroy {
     const { pages, comment, minutesRead } = event.payload;
     this.bookService.registerProgress(event.bookId, pages, comment, minutesRead);
 
-    // ✅ contabiliza páginas e minutos nos desafios
-    this.challengesService.onPagesRead(pages);
-    if (minutesRead > 0) {
-      this.challengesService.onMinutesRead(minutesRead);
-    }
-
     this.userProgress.update((p) => {
       const updated = { ...p, dailyMinutesRead: p.dailyMinutesRead + minutesRead };
       this.saveDailyProgress(updated);
@@ -344,7 +327,6 @@ export class DashboardComponent implements OnDestroy {
     });
 
     this.maybeFireStreakAndConfetti();
-    this.maybeFireNightReading();
     this.loadGlobalFeed();
 
     const updated = this.bookService.myCurrentBook().find((b) => b.id === event.bookId);
@@ -368,9 +350,6 @@ export class DashboardComponent implements OnDestroy {
 
   private onMarkCompleted(event: BookActionEvent): void {
     this.bookService.markCompleted(event.bookId);
-
-    // ✅ contabiliza livro concluído nos desafios
-    this.challengesService.onBookFinished();
 
     this.closeModal();
     this.loadSuggestions();
@@ -419,12 +398,10 @@ export class DashboardComponent implements OnDestroy {
       pagesRead: this.editPagesRead,
       minutesRead: this.editMinutesRead,
     });
-
-    // ✅ contabiliza a diferença de páginas e minutos nos desafios
-    if (diffPages > 0) {
+    if (diffPages !== 0) {
       this.challengesService.onPagesRead(diffPages);
     }
-    if (diffMinutes > 0) {
+    if (diffMinutes !== 0) {
       this.challengesService.onMinutesRead(diffMinutes);
     }
 

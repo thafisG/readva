@@ -25,9 +25,9 @@ export interface MokaConfig {
 export const MOKA_CONFIG: Record<MokaMood, MokaConfig> = {
   welcome: {
     image: 'assets/moka/moka-welcome.png',
-    emoji: '👋',
+    emoji: '',
     badge: 'Oi!',
-    title: 'Bem-vindo ao Readva!',
+    title: 'Oii!',
     message: 'Moka acabou de preparar um café fresquinho para a próxima leitura.',
     theme: 'cream',
   },
@@ -111,7 +111,7 @@ const COFFEE_REACTIONS: Record<number, { title: string; emoji: string }> = {
   2: { title: 'Dois! Boa energia!', emoji: '☕☕' },
   3: { title: 'Três? Você tá voando!', emoji: '🚀' },
   4: { title: 'Quatro... tá bom, tá bom.', emoji: '😅' },
-  5: { title: 'Cinco! Moka tá preocupado.', emoji: '😰' },
+  5: { title: 'Moka tá preocupado.', emoji: '😰' },
 };
 
 function getCoffeeReaction(count: number) {

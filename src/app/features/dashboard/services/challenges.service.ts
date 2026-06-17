@@ -55,8 +55,21 @@ export class ChallengesService {
 
   readonly unlockedCount = computed(() => this._achievements().filter((a) => a.unlocked).length);
 
+  /**
+   * Atualiza o progresso da missão de páginas lidas.
+   * Aceita delta positivo (novo progresso ou aumento via edição)
+   * ou negativo (redução de páginas via edição de um post existente).
+   */
   onPagesRead(pages: number): void {
     this.updateMissionProgress('read-pages', pages);
+  }
+
+  /**
+   * Marca que uma sessão de leitura foi registrada (novo post).
+   * NÃO deve ser chamado ao editar um post existente, apenas ao criar um novo,
+   * senão a missão "Consistência" infla a cada edição.
+   */
+  onReadingSession(): void {
     this.updateMissionProgress('read-session', 1);
   }
 
@@ -93,38 +106,74 @@ export class ChallengesService {
     this.saveMissions(reset);
   }
 
+  /**
+   * Atualiza o progresso de uma missão por id, podendo subir ou descer.
+   * - delta positivo: aumenta o progresso (novo registro ou edição para mais)
+   * - delta negativo: reduz o progresso (edição para menos)
+   *
+   * Se a missão estava completa e cai abaixo da meta após o delta, ela é
+   * "descompletada": o XP concedido por ela é revogado.
+   * Se estava incompleta e o delta a leva a bater a meta, XP é concedido
+   * normalmente.
+   *
+   * Achievements desbloqueados (first-mission / all-missions) NÃO são
+   * revogados quando uma missão descompleta — eles ficam conquistados.
+   */
   private updateMissionProgress(id: string, delta: number): void {
     this._missions.update((missions) => {
       let missionJustCompleted = false;
+      let xpDelta = 0;
+
       const updated = missions.map((m) => {
-        if (m.id !== id || m.completed) return m;
-        const progress = Math.min(m.progress + delta, m.target);
+        if (m.id !== id) return m;
+
+        const progress = Math.max(0, Math.min(m.progress + delta, m.target));
         const completed = progress >= m.target;
+
         if (completed && !m.completed) {
-          this.grantXp(m.xpReward);
+          xpDelta += m.xpReward;
           missionJustCompleted = true;
+        } else if (!completed && m.completed) {
+          xpDelta -= m.xpReward;
         }
+
         return { ...m, progress, completed };
       });
+
       this.saveMissions(updated);
+
+      if (xpDelta !== 0) {
+        this.adjustXp(xpDelta);
+      }
+
       if (missionJustCompleted) {
         const allDone = updated.every((m) => m.completed);
         if (allDone) this.checkAchievement('all-missions');
         else this.checkAchievement('first-mission');
       }
+
       return updated;
     });
   }
 
-  private grantXp(amount: number): void {
+  /**
+   * Ajusta o XP total, podendo ser positivo (concessão) ou negativo
+   * (revogação por missão descompletada). O total nunca fica negativo.
+   * Achievements de nível só são checados em ganhos de XP (amount > 0),
+   * já que não temos lógica de "desconquistar" nível.
+   */
+  private adjustXp(amount: number): void {
     this._totalXp.update((xp) => {
-      const next = xp + amount;
+      const next = Math.max(0, xp + amount);
       localStorage.setItem('challenges_xp', String(next));
       return next;
     });
-    const { level } = this.levelInfo();
-    if (level >= 5) this.checkAchievement('level-5');
-    if (level >= 10) this.checkAchievement('level-10');
+
+    if (amount > 0) {
+      const { level } = this.levelInfo();
+      if (level >= 5) this.checkAchievement('level-5');
+      if (level >= 10) this.checkAchievement('level-10');
+    }
   }
 
   private checkAchievement(id: string): void {
