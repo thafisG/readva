@@ -1,0 +1,112 @@
+<div class="challenges-wrapper">
+  <div class="challenges-header">
+    <button class="back-btn" (click)="goBack()" aria-label="Voltar">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 16 16"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M10 3L5 8L10 13"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </button>
+    <h2>Desafios e Metas</h2>
+  </div>
+
+  <section class="level-card">
+    <div class="level-badge">
+      <span class="level-number">{{ challengesService.levelInfo().level }}</span>
+      <span class="level-label">nível</span>
+    </div>
+    <div class="level-progress-area">
+      <div class="level-progress-info">
+        <span class="level-progress-text">
+          {{ challengesService.levelInfo().currentLevelXp }} /
+          {{ challengesService.levelInfo().xpForNextLevel }} XP
+        </span>
+        <span class="level-progress-next">próximo nível</span>
+      </div>
+      <div class="level-bar-background">
+        <div
+          class="level-bar-fill"
+          [style.width.%]="challengesService.levelInfo().progressPercent"
+        ></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="missions-section">
+    <h3 class="section-title">Missões de hoje</h3>
+    <div class="missions-list">
+      @for (mission of challengesService.missions(); track mission.id) {
+        <div class="mission-card" [class.completed]="mission.completed">
+          <div class="mission-icon">{{ mission.icon }}</div>
+          <div class="mission-info">
+            <div class="mission-top">
+              <span class="mission-title">{{ mission.title }}</span>
+              <span class="mission-xp">+{{ mission.xpReward }} XP</span>
+            </div>
+            <span class="mission-description">{{ mission.description }}</span>
+            <div class="mission-bar-background">
+              <div
+                class="mission-bar-fill"
+                [style.width.%]="(mission.progress / mission.target) * 100"
+              ></div>
+            </div>
+            <span class="mission-progress-text">
+              {{ mission.progress }} / {{ mission.target }}
+            </span>
+          </div>
+          @if (mission.completed) {
+            <span class="mission-check">✓</span>
+          }
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="achievements-section">
+    <div class="section-title-row">
+      <h3 class="section-title">Conquistas</h3>
+      <span class="achievements-count">
+        {{ challengesService.unlockedCount() }} / {{ challengesService.achievements().length }}
+      </span>
+    </div>
+
+    <div class="achievements-grid">
+      @for (achievement of challengesService.achievements(); track achievement.id) {
+        <div
+          class="achievement-badge"
+          [class.unlocked]="achievement.unlocked"
+          [style.--badge-color]="achievement.color"
+          title="{{ achievement.title }}"
+        >
+          <div class="badge-circle">
+            <span class="badge-icon">{{ achievement.icon }}</span>
+          </div>
+          <span class="badge-title">{{ achievement.title }}</span>
+          <span class="badge-description">{{ achievement.description }}</span>
+        </div>
+      }
+    </div>
+  </section>
+</div>
+
+@if (challengesService.justUnlocked()) {
+  <div class="unlock-toast" (click)="dismissUnlockToast()">
+    <div class="unlock-toast-icon" [style.--badge-color]="challengesService.justUnlocked()!.color">
+      {{ challengesService.justUnlocked()!.icon }}
+    </div>
+    <div class="unlock-toast-text">
+      <span class="unlock-toast-label">Conquista desbloqueada!</span>
+      <span class="unlock-toast-title">{{ challengesService.justUnlocked()!.title }}</span>
+    </div>
+  </div>
+}

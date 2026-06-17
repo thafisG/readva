@@ -9,6 +9,7 @@ import { UtilsService } from './services/utils.service';
 import { RecommendationService } from './services/recommendation.service';
 import { BookCatalogService } from './services/book-catalog.service';
 import { UserService } from './services/user.service';
+import { ChallengesService } from './services/challenges.service';
 import { StreakChallengeComponent } from './components/streak-challenge/streak-challenge.component';
 import { LoginComponent } from '../login/login.component';
 import { Activity, BookSuggestion, UserProgress } from './interfaces/dashboard.interface';
@@ -50,6 +51,7 @@ export class DashboardComponent implements OnDestroy {
   public userService = inject(UserService);
   private catalogService = inject(BookCatalogService);
   private recommendationService = inject(RecommendationService);
+  private challengesService = inject(ChallengesService);
 
   public deletingActivity = signal<Activity | null>(null);
   public editingActivity = signal<Activity | null>(null);
@@ -172,8 +174,7 @@ export class DashboardComponent implements OnDestroy {
     return streak > 0 && streak % 7 === 0;
   }
 
-  onCoffeeChanged(count: number): void {
-  }
+  onCoffeeChanged(count: number): void {}
 
   onCoffeeConfirmed(count: number): void {
     const saved = Number(localStorage.getItem(this.COFFEE_KEY) || '0');
@@ -220,6 +221,10 @@ export class DashboardComponent implements OnDestroy {
     if (lastPostDate === today) return;
     localStorage.setItem(this.FIRST_POST_KEY, today);
     this.streakComponent?.markTodayRead();
+
+    // Dispara conquistas de streak
+    const streak = this.streakComponent?.streakCount() ?? this.userProgress().currentStreak;
+    this.challengesService.onStreakDay(streak);
   }
 
   openSummaryModal(): void {

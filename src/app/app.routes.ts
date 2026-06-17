@@ -14,9 +14,13 @@ export const routes: Routes = [
       ),
   },
   {
-    path: 'login',
+    path: 'desafios',
     loadComponent: () =>
-      import('./features/login/login.component').then((m) => m.LoginComponent),
+      import('./features/dashboard/components/challenges/challenges.component').then((m) => m.ChallengesComponent),
+  },
+  {
+    path: 'login',
+    loadComponent: () => import('./features/login/login.component').then((m) => m.LoginComponent),
   },
   {
     path: '**',

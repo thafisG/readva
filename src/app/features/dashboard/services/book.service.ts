@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { AuthService } from './auth.service';
 import { BookCatalogService } from './book-catalog.service';
+import { ChallengesService } from './challenges.service';
 
 @Injectable({
   providedIn: 'root',
@@ -14,6 +15,7 @@ export class BookService {
 
   private authService = inject(AuthService);
   private catalogService = inject(BookCatalogService);
+  private challengesService = inject(ChallengesService);
 
   private get userEmail() {
     return this.authService.currentUser()?.email || 'guest';
@@ -76,6 +78,8 @@ export class BookService {
       localStorage.setItem(this.HISTORY_KEY, JSON.stringify(updated));
       return updated;
     });
+
+    this.challengesService.onBookStarted();
 
     if (!coverUrl) {
       this.catalogService.fetchBookCover(title, author).then((cover) => {
@@ -146,6 +150,12 @@ export class BookService {
       localStorage.setItem(this.ACTIVITIES_KEY, JSON.stringify(newList));
       return newList;
     });
+
+    this.challengesService.onPagesRead(safePages);
+    if (minutesRead > 0) this.challengesService.onMinutesRead(minutesRead);
+
+    const hour = new Date().getHours();
+    if (hour >= 22) this.challengesService.onNightReading();
   }
 
   updateBook(
@@ -211,6 +221,8 @@ export class BookService {
       localStorage.setItem(this.BOOKS_KEY, JSON.stringify(updated));
       return updated;
     });
+
+    this.challengesService.onBookFinished();
   }
 
   deleteBook(id: string) {
