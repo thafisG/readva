@@ -29,7 +29,9 @@ export interface LevelInfo {
   progressPercent: number;
 }
 
-const XP_PER_LEVEL = 500;
+function xpRequiredForLevel(level: number): number {
+  return 100 + (level - 1) * 50;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ChallengesService {
@@ -45,30 +47,30 @@ export class ChallengesService {
   readonly justUnlockedMood = this._justUnlockedMood.asReadonly();
 
   readonly levelInfo = computed<LevelInfo>(() => {
-    const xp = this._totalXp();
-    const level = Math.floor(xp / XP_PER_LEVEL) + 1;
-    const currentLevelXp = xp % XP_PER_LEVEL;
-    const xpForNextLevel = XP_PER_LEVEL;
-    const progressPercent = (currentLevelXp / xpForNextLevel) * 100;
-    return { level, currentLevelXp, xpForNextLevel, progressPercent };
+    let remaining = this._totalXp();
+    let level = 1;
+
+    while (true) {
+      const needed = xpRequiredForLevel(level);
+      if (remaining < needed) {
+        return {
+          level,
+          currentLevelXp: remaining,
+          xpForNextLevel: needed,
+          progressPercent: (remaining / needed) * 100,
+        };
+      }
+      remaining -= needed;
+      level++;
+    }
   });
 
   readonly unlockedCount = computed(() => this._achievements().filter((a) => a.unlocked).length);
 
-  /**
-   * Atualiza o progresso da missão de páginas lidas.
-   * Aceita delta positivo (novo progresso ou aumento via edição)
-   * ou negativo (redução de páginas via edição de um post existente).
-   */
   onPagesRead(pages: number): void {
     this.updateMissionProgress('read-pages', pages);
   }
 
-  /**
-   * Marca que uma sessão de leitura foi registrada (novo post).
-   * NÃO deve ser chamado ao editar um post existente, apenas ao criar um novo,
-   * senão a missão "Consistência" infla a cada edição.
-   */
   onReadingSession(): void {
     this.updateMissionProgress('read-session', 1);
   }
@@ -106,19 +108,6 @@ export class ChallengesService {
     this.saveMissions(reset);
   }
 
-  /**
-   * Atualiza o progresso de uma missão por id, podendo subir ou descer.
-   * - delta positivo: aumenta o progresso (novo registro ou edição para mais)
-   * - delta negativo: reduz o progresso (edição para menos)
-   *
-   * Se a missão estava completa e cai abaixo da meta após o delta, ela é
-   * "descompletada": o XP concedido por ela é revogado.
-   * Se estava incompleta e o delta a leva a bater a meta, XP é concedido
-   * normalmente.
-   *
-   * Achievements desbloqueados (first-mission / all-missions) NÃO são
-   * revogados quando uma missão descompleta — eles ficam conquistados.
-   */
   private updateMissionProgress(id: string, delta: number): void {
     this._missions.update((missions) => {
       let missionJustCompleted = false;
@@ -156,12 +145,6 @@ export class ChallengesService {
     });
   }
 
-  /**
-   * Ajusta o XP total, podendo ser positivo (concessão) ou negativo
-   * (revogação por missão descompletada). O total nunca fica negativo.
-   * Achievements de nível só são checados em ganhos de XP (amount > 0),
-   * já que não temos lógica de "desconquistar" nível.
-   */
   private adjustXp(amount: number): void {
     this._totalXp.update((xp) => {
       const next = Math.max(0, xp + amount);
