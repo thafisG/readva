@@ -1,132 +1,173 @@
-# 📚 Readva
+# <p align="center">📚 Readva</p>
 
-Readva é uma plataforma web de acompanhamento de leitura desenvolvida em Angular. O projeto busca unir organização pessoal e experiência social, permitindo que leitores registrem seu progresso, compartilhem atividades e descubram novos livros de forma inteligente.
+<p align="center">
+  <img src="./public/favicon.png" width="120" alt="Readva Logo">
+</p>
 
-> ⚠️ O projeto ainda está em desenvolvimento. Este README representa o estado atual da aplicação e será atualizado conforme novas funcionalidades forem implementadas.
+<p align="center">
+  Uma plataforma web para acompanhar leituras, criar hábitos e tornar a experiência de leitura mais inteligente e divertida.
+</p>
 
-## ✨ Funcionalidades atuais
-
-### 🏠 Dashboard
-- Cadastro de novos livros;
-- Busca automática de informações do livro;
-- Registro de progresso da leitura;
-- Controle de páginas lidas;
-- Controle de tempo de leitura;
-- Sistema de sequência de leitura (streak);
-- Metas diárias de leitura;
-- Edição e exclusão de atividades.
-
-### 📰 Feed de atividades
-
-#### Meu Feed
-- Visualização das próprias atividades;
-- Curtidas em publicações;
-- Comentários sobre a leitura;
-- Edição e exclusão das publicações.
-
-#### Feed Global
-- Visualização das atividades de outros leitores;
-- Sistema de seguir e deixar de seguir usuários;
-- Curtidas nas atividades compartilhadas.
-
-### 📚 Minha Biblioteca
-- Visualização dos livros adicionados;
-- Indicador de progresso de leitura;
-- Histórico de sessões de leitura;
-- Total de tempo dedicado a cada livro;
-- Comentários registrados durante a leitura;
-- Marcação de livros concluídos.
-
-### 🤖 Recomendações Inteligentes
-
-O Readva possui um sistema próprio de recomendação inspirado em técnicas de **Content-Based Recommendation**, utilizando informações do comportamento do leitor.
-
-O algoritmo considera:
-
-- Categorias mais lidas;
-- Livros concluídos;
-- Progresso acumulado;
-- Engajamento nas atividades (curtidas).
-
-Com base nesses fatores, é criado um perfil do leitor e os livros mais compatíveis são sugeridos.
+<p align="center">
+  <img src="https://img.shields.io/badge/Angular-22-DD0031?logo=angular" />
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript" />
+  <img src="https://img.shields.io/badge/SCSS-CC6699?logo=sass" />
+  <img src="https://img.shields.io/badge/Status-Em%20Desenvolvimento-orange" />
+</p>
 
 ---
 
-## 🌐 Integrações com APIs
+# 🎥 Demonstração
 
-### Google Books API
+### 🔎 Busca Inteligente
 
-Responsável por:
+Busca automática de livros utilizando a **Google Books API** e **Open Library API**.
 
-- Buscar livros pelo título;
-- Obter capa do livro;
-- Autor;
-- Número de páginas;
-- Categorias.
-
-Isso permite preencher automaticamente as informações durante o cadastro.
-
-### Open Library API
-
-Utilizada como fonte complementar para obtenção de:
-
-- Capas de livros;
-- Metadados;
-- Informações adicionais.
-
-A combinação dessas APIs permite oferecer uma experiência mais inteligente na busca e registro de livros.
+<p align="center">
+  <img src="./public/search-book.gif" width="900">
+</p>
 
 ---
 
-## 🛠 Tecnologias utilizadas
+### 📚 Biblioteca Interativa
+
+Visualização do livro com estatísticas e animação de abertura inspirada em um livro físico.
+
+<p align="center">
+  <img src="./public/library.gif" width="900">
+</p>
+
+---
+
+# ✨ Funcionalidades
+
+- 📚 Biblioteca pessoal
+- 🔎 Busca inteligente de livros
+- 📖 Registro de sessões de leitura
+- ⏱ Controle de tempo e páginas lidas
+- 🔥 Sistema de Streak
+- 🎯 Missões diárias e XP
+- 🏆 Sistema de conquistas
+- 📊 Estatísticas de leitura
+- 👥 Feed social
+- ❤️ Curtidas e comentários
+- 🤖 Recomendações inteligentes
+- 📖 Animação de virar páginas
+
+---
+
+# 🛠 Tecnologias
 
 - Angular 22
 - TypeScript
-- HTML5
 - SCSS
-- Angular Signals
 - Angular Material
+- Angular Signals
 - RxJS
 - Local Storage
 
 ---
 
-## 💾 Persistência dos dados
+# 🌐 APIs
 
-Atualmente, todas as informações são armazenadas em **Local Storage**, permitindo que a aplicação funcione sem backend.
-
-Nas próximas versões, está prevista a migração para um banco de dados, possibilitando:
-
-- Sincronização entre dispositivos;
-- Armazenamento permanente;
-- Melhor escalabilidade;
-- Recursos sociais mais avançados.
+- Google Books API
+- Open Library API
 
 ---
 
-## 🚧 Próximas funcionalidades
+# 🏗 Arquitetura
 
-- Sistema de desafios e metas;
-- Perfil do usuário;
-- Estatísticas avançadas;
-- Ranking de leitores;
-- Busca de usuários;
-- Sistema de conquistas;
-- Backend e banco de dados;
-- Melhorias no sistema de recomendação;
-- Responsividade para dispositivos móveis;
-- Novos recursos sociais.
+O projeto utiliza uma arquitetura baseada em **Features**, separando cada funcionalidade em módulos independentes para facilitar manutenção e escalabilidade.
 
----
-
-## 📌 Status do projeto
-
-🚧 Em desenvolvimento.
-
-Este projeto está sendo construído de forma incremental e novas funcionalidades serão adicionadas nas próximas versões.
+```
+src
+├── features
+├── core
+├── shared
+├── constants
+└── app
+```
 
 ---
 
-## 👩‍💻 Desenvolvido por
+# 💾 Persistência
+
+Atualmente o projeto utiliza **Local Storage**.
+
+O backend será desenvolvido nas próximas versões, permitindo:
+
+- Autenticação
+- Banco de dados
+- Sincronização entre dispositivos
+- Recursos sociais completos
+
+---
+
+# 🚀 Executando o projeto
+
+Clone o repositório
+
+```bash
+git clone https://github.com/thafisG/readva.git
+```
+
+Entre na pasta
+
+```bash
+cd readva
+```
+
+Instale as dependências
+
+```bash
+npm install
+```
+
+Execute a aplicação
+
+```bash
+ng serve
+```
+
+Acesse
+
+```text
+http://localhost:4200
+```
+
+---
+
+# 🚧 Roadmap
+
+- ✅ Biblioteca
+- ✅ Feed Social
+- ✅ Estatísticas
+- ✅ Gamificação
+- ✅ Sistema de Recomendações
+- ✅ Animação de abertura dos livros
+- 🚧 Backend
+- 🚧 Banco de Dados
+- 🚧 Perfil do usuário
+- 🚧 Responsividade
+- 🚧 Clubes de leitura
+
+---
+
+# 🌟 Diferenciais
+
+O Readva vai além de um simples catálogo de livros.
+
+- 📖 Diário de leitura
+- 📊 Dashboard analítico
+- 🎯 Gamificação
+- 🤖 Recomendações inteligentes
+- 👥 Rede social para leitores
+- 📚 Biblioteca interativa
+
+---
+
+# 👩‍💻 Desenvolvido por
 
 **Thais Guedes**
+
+⭐ Se gostou do projeto, deixe uma estrela no repositório!
