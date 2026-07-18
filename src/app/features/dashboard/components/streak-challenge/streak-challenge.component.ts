@@ -75,14 +75,16 @@ export class StreakChallengeComponent implements OnInit, OnDestroy, AfterViewChe
 
   private loadFromStorage() {
     const raw = localStorage.getItem(this.STORAGE_KEY);
-    const data = raw ? JSON.parse(raw) : { streak: this.progress().currentStreak, markedDays: [] };
-    this.streakCount.set(data.streak ?? this.progress().currentStreak);
-    this.todayMarked.set(data.markedDays?.includes(this.todayKey) ?? false);
+    const data = raw ? JSON.parse(raw) : { markedDays: [] };
+    const markedDays: string[] = data.markedDays ?? [];
+
+    this.todayMarked.set(markedDays.includes(this.todayKey));
+    this.streakCount.set(this.calculateStreak(markedDays));
   }
 
   private saveToStorage(marked: boolean) {
     const raw = localStorage.getItem(this.STORAGE_KEY);
-    const data = raw ? JSON.parse(raw) : { streak: this.streakCount(), markedDays: [] };
+    const data = raw ? JSON.parse(raw) : { markedDays: [] };
 
     if (marked) {
       if (!data.markedDays.includes(this.todayKey)) data.markedDays.push(this.todayKey);
@@ -90,8 +92,27 @@ export class StreakChallengeComponent implements OnInit, OnDestroy, AfterViewChe
       data.markedDays = data.markedDays.filter((d: string) => d !== this.todayKey);
     }
 
-    data.streak = this.streakCount();
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+  }
+
+  private dateKey(d: Date): string {
+    return d.toISOString().split('T')[0];
+  }
+  private calculateStreak(markedDays: string[]): number {
+    const marked = new Set(markedDays);
+    const cursor = new Date();
+
+    if (!marked.has(this.dateKey(cursor))) {
+      cursor.setDate(cursor.getDate() - 1);
+    }
+
+    let streak = 0;
+    while (marked.has(this.dateKey(cursor))) {
+      streak++;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+
+    return streak;
   }
 
   private buildWeekDays() {
@@ -118,8 +139,13 @@ export class StreakChallengeComponent implements OnInit, OnDestroy, AfterViewChe
     clearTimeout(this.animTimeout);
     this.animTimeout = setTimeout(() => this.animating.set(false), 400);
 
+    this.saveToStorage(nowMarked);
+
+    const raw = localStorage.getItem(this.STORAGE_KEY);
+    const data = raw ? JSON.parse(raw) : { markedDays: [] };
+    this.streakCount.set(this.calculateStreak(data.markedDays ?? []));
+
     if (nowMarked) {
-      this.streakCount.update((v) => v + 1);
       this.showConfetti.set(true);
       this.confettiRunning = false;
       clearTimeout(this.confettiTimeout);
@@ -129,12 +155,10 @@ export class StreakChallengeComponent implements OnInit, OnDestroy, AfterViewChe
         this.cdr.markForCheck();
       }, this.CONFETTI_DURATION);
     } else {
-      this.streakCount.update((v) => Math.max(0, v - 1));
       this.showConfetti.set(false);
       this.confettiRunning = false;
     }
 
-    this.saveToStorage(nowMarked);
     this.buildWeekDays();
   }
 
