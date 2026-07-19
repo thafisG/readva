@@ -41,7 +41,6 @@ $themes: (
     badge-color: #fff,
   ),
 );
-
 .moka-floating {
   position: fixed;
   bottom: 24px;
@@ -51,6 +50,32 @@ $themes: (
   flex-direction: column;
   align-items: flex-end;
   gap: 8px;
+
+  opacity: 0;
+  transform: translateY(48px) scale(0.8);
+  pointer-events: none;
+  transition:
+    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.3s ease;
+
+  &.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .moka-avatar,
+  .moka-floating,
+  .moka-bubble-wrap,
+  .bubble-emoji,
+  .xp-badge,
+  .cup-icon,
+  .confirm-coffee-btn {
+    animation: none !important;
+    transition: opacity 0.15s ease !important;
+  }
 }
 
 .moka-bubble-wrap {

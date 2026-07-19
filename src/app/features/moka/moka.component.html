@@ -1,11 +1,7 @@
-<div class="moka-floating">
+<div class="moka-floating" [class.visible]="visible()" [attr.aria-hidden]="!visible()">
   <div class="moka-bubble-wrap" [class.visible]="showBubble()">
     <div class="moka-bubble" [ngClass]="'theme-' + config().theme">
-      <button
-        class="bubble-close"
-        (click)="showBubble.set(false)"
-        aria-label="Fechar mensagem do Moka"
-      >
+      <button class="bubble-close" (click)="dismiss()" aria-label="Fechar mensagem do Moka">
         ✕
       </button>
 
@@ -43,7 +39,6 @@
         @if (coffeeCount() > 0) {
           <button class="confirm-coffee-btn" (click)="confirmCoffee()">Confirmar ☕</button>
         }
-
       } @else {
         <span class="bubble-emoji">{{ config().emoji }}</span>
         <h4 class="moka-title">{{ config().title }}</h4>

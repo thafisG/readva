@@ -68,7 +68,6 @@ export class DashboardComponent implements OnDestroy {
     dailyMinutesRead: 0,
   });
 
-  public showWelcomeMoka = signal(false);
   public mokaFeedback = signal<MokaMood | null>(null);
   public mokaToast = signal<MokaMood | null>(null);
   private coffeeToast = signal(false);
@@ -127,25 +126,40 @@ export class DashboardComponent implements OnDestroy {
     if (this.mokaToastTimer) clearTimeout(this.mokaToastTimer);
   }
 
+  /**
+   * Welcome e sleepy agora são disparados como toasts explícitos e
+   * temporizados (igual completed-book, mission etc), e não mais como
+   * fallback do currentMokaMood(). Isso evita que eles "roubem" a cena
+   * de outro mood ativo (ex: o balão do café) quando esse mood termina.
+   * Só um dos dois dispara por sessão pra não colidir.
+   */
   private initMoka(): void {
-    const today = new Date().toDateString();
-
-    const lastWelcome = localStorage.getItem(this.WELCOME_MOKA_KEY);
-    if (lastWelcome !== today) {
-      this.showWelcomeMoka.set(true);
-      localStorage.setItem(this.WELCOME_MOKA_KEY, today);
-    }
-
     const lastLogin = localStorage.getItem(this.LAST_LOGIN_KEY);
+    let willShowSleepy = false;
+
     if (lastLogin) {
       const diff = Math.floor(
         (new Date().getTime() - new Date(lastLogin).getTime()) / (1000 * 60 * 60 * 24),
       );
       if (diff >= 3) {
+        willShowSleepy = true;
         setTimeout(() => this.showToast('sleepy'), 1500);
       }
     }
     localStorage.setItem(this.LAST_LOGIN_KEY, new Date().toISOString());
+
+    if (!willShowSleepy && !this.hasShownWelcomeToday()) {
+      this.markWelcomeShownToday();
+      setTimeout(() => this.showToast('welcome'), 900);
+    }
+  }
+
+  private hasShownWelcomeToday(): boolean {
+    return localStorage.getItem(this.WELCOME_MOKA_KEY) === new Date().toDateString();
+  }
+
+  private markWelcomeShownToday(): void {
+    localStorage.setItem(this.WELCOME_MOKA_KEY, new Date().toDateString());
   }
 
   showToast(mood: MokaMood): void {
@@ -550,7 +564,7 @@ export class DashboardComponent implements OnDestroy {
     });
   }
 
-  currentMokaMood = computed<MokaMood>(() => {
+  currentMokaMood = computed<MokaMood | null>(() => {
     if (this.mokaToast()) return this.mokaToast()!;
     if (this.mokaFeedback()) return this.mokaFeedback()!;
     if (this.coffeeToast()) return 'coffee';
@@ -561,6 +575,6 @@ export class DashboardComponent implements OnDestroy {
     if (this.activeTab() === 'meu-feed' && this.bookService.myActivities().length === 0)
       return 'empty-library';
 
-    return 'welcome';
+    return null;
   });
 }
