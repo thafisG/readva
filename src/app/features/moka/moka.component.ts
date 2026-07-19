@@ -1,5 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, effect, input, output, signal, untracked } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  computed,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+  untracked,
+} from '@angular/core';
 
 export type MokaMood =
   | 'welcome'
@@ -126,14 +136,15 @@ function getCoffeeReaction(count: number) {
   styleUrls: ['./moka.component.scss'],
 })
 export class MokaComponent {
-  mood = input<MokaMood>('welcome');
+  mood = input<MokaMood | null>(null);
 
   coffeeChanged = output<number>();
   coffeeConfirmed = output<number>();
 
-  config = computed(() => MOKA_CONFIG[this.mood()]);
+  config = computed(() => MOKA_CONFIG[this.mood() ?? 'welcome']);
   isCoffeeMood = computed(() => this.mood() === 'coffee');
 
+  visible = signal(false);
   showBubble = signal(false);
   isWiggling = signal(false);
   coffeeCount = signal(0);
@@ -142,27 +153,61 @@ export class MokaComponent {
 
   private wiggleTimer: any = null;
   private autoCloseTimer: any = null;
+  private autoHideTimer: any = null;
   private previousMood: MokaMood | null = null;
 
+  private readonly BUBBLE_DURATION = 4200;
+  private readonly HIDE_DELAY = 550;
+
   constructor() {
+    const destroyRef = inject(DestroyRef);
+    destroyRef.onDestroy(() => this.clearAllTimers());
+
     effect(() => {
       const mood = this.mood();
       untracked(() => {
+        if (mood === null) {
+          this.previousMood = null;
+          return;
+        }
+
         const moodChanged = mood !== this.previousMood;
         this.previousMood = mood;
-
         if (!moodChanged) return;
 
+        this.clearAllTimers();
         this.triggerWiggle();
-        if (mood !== 'coffee') this.coffeeCount.set(0);
+        this.coffeeCount.set(0);
 
-        if (mood !== 'coffee') {
-          this.showBubble.set(true);
-          if (this.autoCloseTimer) clearTimeout(this.autoCloseTimer);
-          this.autoCloseTimer = setTimeout(() => this.showBubble.set(false), 2000);
+        if (mood === 'coffee') {
+          this.visible.set(true);
+          return;
         }
+
+        this.visible.set(true);
+        this.showBubble.set(true);
+        this.scheduleAutoClose();
       });
     });
+  }
+
+  private clearAllTimers(): void {
+    if (this.wiggleTimer) clearTimeout(this.wiggleTimer);
+    if (this.autoCloseTimer) clearTimeout(this.autoCloseTimer);
+    if (this.autoHideTimer) clearTimeout(this.autoHideTimer);
+  }
+
+  private scheduleAutoClose(): void {
+    if (this.autoCloseTimer) clearTimeout(this.autoCloseTimer);
+    this.autoCloseTimer = setTimeout(() => {
+      this.showBubble.set(false);
+      this.scheduleAutoHide();
+    }, this.BUBBLE_DURATION);
+  }
+
+  private scheduleAutoHide(): void {
+    if (this.autoHideTimer) clearTimeout(this.autoHideTimer);
+    this.autoHideTimer = setTimeout(() => this.visible.set(false), this.HIDE_DELAY);
   }
 
   toggleBubble(): void {
@@ -175,9 +220,27 @@ export class MokaComponent {
     }
 
     if (this.autoCloseTimer) clearTimeout(this.autoCloseTimer);
+    if (this.autoHideTimer) clearTimeout(this.autoHideTimer);
+
     const next = !this.showBubble();
     this.showBubble.set(next);
-    if (next) this.triggerWiggle();
+
+    if (next) {
+      this.triggerWiggle();
+      this.scheduleAutoClose();
+    } else {
+      this.scheduleAutoHide();
+    }
+  }
+
+  dismiss(): void {
+    if (this.isCoffeeMood()) {
+      this.showBubble.set(false);
+      return;
+    }
+    if (this.autoCloseTimer) clearTimeout(this.autoCloseTimer);
+    this.showBubble.set(false);
+    this.scheduleAutoHide();
   }
 
   triggerWiggle(): void {
