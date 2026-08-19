@@ -59,150 +59,18 @@
         </div>
         <app-start-reading-form (submitted)="handleStartBook($event)" />
 
-        <div class="feed-tabs">
-          <button
-            class="feed-tab"
-            [class.active]="activeTab() === 'meu-feed'"
-            (click)="activeTab.set('meu-feed')"
-          >
-            Meu feed
-          </button>
-          <button
-            class="feed-tab"
-            [class.active]="activeTab() === 'global'"
-            (click)="activeTab.set('global'); loadGlobalFeed()"
-          >
-            Feed global
-            @if (userService.following().length > 0) {
-              <span class="tab-badge">{{ userService.following().length }}</span>
-            }
-          </button>
-        </div>
-
-        @if (activeTab() === 'meu-feed') {
-          <div class="feed-list">
-            @for (activity of bookService.myActivities(); track activity.id) {
-              <article class="premium-activity-card">
-                <div class="card-header">
-                  <img [src]="activity.userAvatar" [alt]="activity.userName" class="user-avatar" />
-                  <div class="user-meta">
-                    <span class="username">{{ activity.userName }}</span>
-                    <span class="timestamp">{{ activity.timestamp }}</span>
-                  </div>
-                </div>
-
-                <div class="card-content">
-                  <p class="activity-detail">
-                    Compartilhou pensamentos em
-                    <strong class="book-title">{{ activity.bookTitle }}</strong> de
-                    {{ activity.bookAuthor }}
-                  </p>
-                  <span class="activity-subtext">{{ activity.detail }}</span>
-                  @if (activity.comment) {
-                    <span class="activity-comment">"{{ activity.comment }}"</span>
-                  }
-                </div>
-
-                <div class="card-actions">
-                  <button
-                    class="action-trigger"
-                    [class.has-liked]="activity.hasLiked"
-                    (click)="onLikeTriggered(activity.id)"
-                  >
-                    <span class="heart-icon">❤️</span> {{ activity.likes }}
-                  </button>
-
-                  @if (activity.isOwner) {
-                    <button
-                      class="action-trigger edit-btn"
-                      (click)="openEditActivityModal(activity)"
-                    >
-                      <span class="edit-icon">
-                        <img src="assets/icon_edit.png" alt="Editar" class="edit-icon" />
-                      </span>
-                      Editar
-                    </button>
-
-                    <button
-                      class="action-trigger delete-btn"
-                      (click)="confirmDeleteActivity(activity)"
-                    >
-                      <span class="delete-icon">
-                        <img src="assets/icon_lixo.png" alt="lixeira" class="lixo-icon" />
-                      </span>
-                      Excluir
-                    </button>
-                  }
-                </div>
-              </article>
-            } @empty {
-              <div class="empty-feed">
-                <img src="assets/ilustra5.jpg" alt="" class="empty-illustration" />
-                <p>Seu feed está vazio. Use a caixa acima ou registre seu primeiro progresso!</p>
-              </div>
-            }
-          </div>
-        }
-
-        @if (activeTab() === 'global') {
-          @if (userService.following().length === 0) {
-            <div class="empty-feed follow-prompt">
-              <p>Você ainda não segue ninguém.</p>
-            </div>
-          } @else if (globalFeed().length === 0) {
-            <div class="empty-feed">
-              <p>📭 Nenhuma atividade recente de quem você segue.</p>
-            </div>
-          } @else {
-            <div class="feed-list">
-              @for (activity of globalFeed(); track activity.id) {
-                <article class="premium-activity-card">
-                  <div class="card-header">
-                    <img
-                      [src]="activity.userAvatar"
-                      [alt]="activity.userName"
-                      class="user-avatar"
-                    />
-                    <div class="user-meta">
-                      <span class="username">{{ activity.userName }}</span>
-                      <span class="timestamp">{{ activity.timestamp }}</span>
-                    </div>
-                    <button
-                      class="follow-toggle"
-                      [class.following]="userService.isFollowing(activity.userId)"
-                      (click)="toggleFollow(activity.userId)"
-                    >
-                      {{ userService.isFollowing(activity.userId) ? 'Seguindo' : '+ Seguir' }}
-                    </button>
-                  </div>
-
-                  <div class="card-content">
-                    <p class="activity-detail">
-                      Compartilhou pensamentos em
-                      <strong class="book-title">{{ activity.bookTitle }}</strong> de
-                      {{ activity.bookAuthor }}
-                    </p>
-                    <span class="activity-subtext">{{ activity.detail }}</span>
-                    @if (activity.comment) {
-                      <span class="activity-comment">"{{ activity.comment }}"</span>
-                    }
-                  </div>
-
-                  <div class="card-actions">
-                    <button
-                      class="action-trigger"
-                      [class.has-liked]="activity.hasLiked"
-                      (click)="onLikeGlobalActivity(activity)"
-                    >
-                      <span class="heart-icon">❤️</span> {{ activity.likes }}
-                    </button>
-                  </div>
-                </article>
-              }
-            </div>
-          }
-        }
-
+        <app-activity-feed
+          [activeTab]="activeTab()"
+          [ownActivities]="bookService.myActivities()"
+          [globalActivities]="globalFeed()"
+          [following]="userService.following()"
+          (tabChanged)="onFeedTabChanged($event)"
+          (ownActivityLiked)="onLikeTriggered($event)"
+          (editRequested)="openEditActivityModal($event)"
+          (deleteRequested)="confirmDeleteActivity($event)"
+          (followToggled)="toggleFollow($event)"
+          (globalActivityLiked)="onLikeGlobalActivity($event)"
+        />
         @if (editingActivity()) {
           <div class="modal-overlay" (click)="closeEditModal()" role="presentation">
             <div

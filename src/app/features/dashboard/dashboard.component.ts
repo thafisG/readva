@@ -29,6 +29,10 @@ import {
   StartReadingFormComponent,
   type StartReadingRequest,
 } from './components/start-reading-form/start-reading-form.component';
+import {
+  ActivityFeedComponent,
+  type FeedTab,
+} from './components/activity-feed/activity-feed.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -42,6 +46,7 @@ import {
     RouterLink,
     RouterLinkActive,
     StartReadingFormComponent,
+    ActivityFeedComponent,
     MatIconModule,
     MokaComponent,
     RecommendationsComponent,
@@ -410,6 +415,11 @@ export class DashboardComponent implements OnDestroy {
 
   onLikeTriggered(activityId: string): void {
     this.bookService.toggleActivityLike(activityId);
+  }
+
+  onFeedTabChanged(tab: FeedTab): void {
+    this.activeTab.set(tab);
+    if (tab === 'global') this.loadGlobalFeed();
   }
 
   loadGlobalFeed(): void {

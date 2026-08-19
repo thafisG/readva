@@ -1,0 +1,215 @@
+.feed-tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  border-bottom: 1px solid #efe7df;
+}
+
+.feed-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  margin-bottom: -1px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+
+  &:hover {
+    color: var(--text-primary);
+  }
+  &.active {
+    color: #463b34;
+    border-bottom-color: #7c5c45;
+    font-weight: 600;
+  }
+}
+
+.tab-badge {
+  padding: 1px 5px;
+  border-radius: 10px;
+  background: #463b34;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.feed-list {
+  margin-top: 14px;
+}
+
+.premium-activity-card {
+  padding: 20px;
+  margin-bottom: 12px;
+  border: 1px solid #efe7df;
+  border-radius: 24px;
+  background: #fffdfb;
+  box-shadow: 0 4px 18px rgba(145, 110, 80, 0.05);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.user-avatar {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border: 2px solid #fffdfb;
+  border-radius: 50%;
+  background: #e8d5c8;
+  object-fit: cover;
+}
+
+.user-meta {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.username {
+  color: #1c1917;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.timestamp {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+.card-content {
+  line-height: 1.8;
+}
+.activity-detail {
+  color: #6b5d55;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.book-title {
+  color: #1c1917;
+  font-weight: 600;
+}
+
+.activity-subtext {
+  display: block;
+  padding-left: 12px;
+  margin-top: 8px;
+  border-left: 2px solid #efe7df;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.activity-comment {
+  display: block;
+  margin-top: 6px;
+  color: #b8a89e;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+  padding-top: 12px;
+  margin-top: 14px;
+  border-top: 1px solid #f3ede8;
+}
+
+.action-trigger {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.78rem;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: #f5ede8;
+  }
+  &.has-liked {
+    color: #c47a7a;
+    font-weight: 500;
+  }
+  &.edit-btn:hover {
+    color: #3b82f6;
+    background: #eff6ff;
+  }
+  &.delete-btn:hover {
+    color: #ef4444;
+    background: #fef2f2;
+  }
+}
+
+.follow-toggle {
+  flex-shrink: 0;
+  padding: 3px 12px;
+  margin-left: auto;
+  border: 1px solid #e8e0d8;
+  border-radius: 20px;
+  background: transparent;
+  color: #7c5c45;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: #f5ede8;
+  }
+  &.following {
+    border-color: #7c5c45;
+    background: #7c5c45;
+    color: #fff;
+  }
+  &.following:hover {
+    opacity: 0.78;
+  }
+}
+
+.empty-feed {
+  padding: 40px 24px;
+  margin-top: 14px;
+  border: 1px dashed #e8ddd5;
+  border-radius: 20px;
+  background: #fffdfb;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.empty-illustration {
+  display: block;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 14px;
+  border-radius: 16px;
+  object-fit: contain;
+}
+
+.edit-icon,
+.lixo-icon {
+  width: 14px;
+  height: 14px;
+}
+.lixo-icon {
+  margin-top: 4px;
+}
+.heart-icon {
+  font-size: 0.9rem;
+}
