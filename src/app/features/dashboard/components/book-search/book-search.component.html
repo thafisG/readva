@@ -10,25 +10,38 @@
       (ngModelChange)="onQueryChange($event)"
       placeholder="Buscar livro por título ou autor..."
       autocomplete="off"
+      aria-label="Buscar livro por título ou autor"
+      aria-controls="book-search-results"
+      [attr.aria-expanded]="isLoading() || results().length > 0 || noResults() || hasError()"
       (keydown.escape)="clear()"
     />
     @if (query()) {
-      <button class="clear-btn" (click)="clear()" title="Limpar">✕</button>
+      <button class="clear-btn" (click)="clear()" title="Limpar" aria-label="Limpar busca">
+        ✕
+      </button>
     }
   </div>
 
   @if (isLoading()) {
-    <div class="search-dropdown">
-      <div class="search-loading"><span class="spinner"></span> Buscando livros...</div>
+    <div class="search-dropdown" id="book-search-results">
+      <div class="search-loading" role="status" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span> Buscando livros...
+      </div>
     </div>
   }
 
   @if (!isLoading() && results().length > 0) {
-    <ul class="search-dropdown" role="listbox">
+    <ul
+      class="search-dropdown"
+      id="book-search-results"
+      role="listbox"
+      aria-label="Resultados da busca"
+    >
       @for (book of results(); track book.title + book.author) {
         <li
           class="search-result-item"
           role="option"
+          aria-selected="false"
           (click)="selectBook(book)"
           (keydown.enter)="selectBook(book)"
           tabindex="0"
@@ -55,8 +68,19 @@
   }
 
   @if (!isLoading() && noResults()) {
-    <div class="search-dropdown">
-      <div class="search-empty">Nenhum resultado. Preencha os campos manualmente.</div>
+    <div class="search-dropdown" id="book-search-results">
+      <div class="search-empty" role="status">
+        Nenhum resultado. Preencha os campos manualmente.
+      </div>
+    </div>
+  }
+
+  @if (hasError()) {
+    <div class="search-dropdown" id="book-search-results">
+      <div class="search-empty" role="alert">
+        Não foi possível consultar os livros.
+        <button type="button" class="retry-btn" (click)="retry()">Tentar novamente</button>
+      </div>
     </div>
   }
 </div>

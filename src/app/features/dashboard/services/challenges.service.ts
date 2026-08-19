@@ -1,212 +1,160 @@
-import { Injectable, signal, computed } from '@angular/core';
-import { MokaMood } from '../../moka/moka.component';
+import { DestroyRef, Injectable, computed, effect, inject, signal } from '@angular/core';
+import { calculateLevel, localDateKey } from '../../../core/domain/gamification.rules';
+import type { Achievement, Mission } from '../../../core/models/gamification.model';
+import { STORAGE_KEYS } from '../../../core/storage/storage.keys';
+import { StorageService } from '../../../core/storage/storage.service';
+import type { MokaMood } from '../../moka/moka.component';
+import { AuthService } from './auth.service';
 
-export interface Mission {
-  id: string;
-  matIcon: string;
-  title: string;
-  description: string;
-  xpReward: number;
-  progress: number;
-  target: number;
-  completed: boolean;
-}
-
-export interface Achievement {
-  id: string;
-  matIcon: string;
-  title: string;
-  description: string;
-  color: string;
-  unlocked: boolean;
-  mokaMood: MokaMood;
-}
-
-export interface LevelInfo {
-  level: number;
-  currentLevelXp: number;
-  xpForNextLevel: number;
-  progressPercent: number;
-}
-
-function xpRequiredForLevel(level: number): number {
-  return 100 + (level - 1) * 50;
+interface ChallengesState {
+  totalXp: number;
+  missionsDay: string;
+  missions: Mission[];
+  achievements: Achievement[];
+  rewardedBookIds: string[];
 }
 
 @Injectable({ providedIn: 'root' })
 export class ChallengesService {
-  private _totalXp = signal<number>(this.loadXp());
-  private _missions = signal<Mission[]>(this.loadMissions());
-  private _achievements = signal<Achievement[]>(this.loadAchievements());
-  private _justUnlocked = signal<Achievement | null>(null);
-  private _justUnlockedMood = signal<MokaMood | null>(null);
+  private readonly auth = inject(AuthService);
+  private readonly storage = inject(StorageService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly totalXp = signal(0);
+  private readonly missionState = signal<Mission[]>([]);
+  private readonly achievementState = signal<Achievement[]>([]);
+  private rewardedBookIds = new Set<string>();
+  private unlockTimer: ReturnType<typeof setTimeout> | null = null;
 
-  readonly missions = this._missions.asReadonly();
-  readonly achievements = this._achievements.asReadonly();
-  readonly justUnlocked = this._justUnlocked.asReadonly();
-  readonly justUnlockedMood = this._justUnlockedMood.asReadonly();
+  private readonly justUnlockedState = signal<Achievement | null>(null);
+  private readonly justUnlockedMoodState = signal<MokaMood | null>(null);
+  readonly missions = this.missionState.asReadonly();
+  readonly achievements = this.achievementState.asReadonly();
+  readonly justUnlocked = this.justUnlockedState.asReadonly();
+  readonly justUnlockedMood = this.justUnlockedMoodState.asReadonly();
+  readonly levelInfo = computed(() => calculateLevel(this.totalXp()));
+  readonly unlockedCount = computed(
+    () => this.achievementState().filter((item) => item.unlocked).length,
+  );
 
-  readonly levelInfo = computed<LevelInfo>(() => {
-    let remaining = this._totalXp();
-    let level = 1;
-
-    while (true) {
-      const needed = xpRequiredForLevel(level);
-      if (remaining < needed) {
-        return {
-          level,
-          currentLevelXp: remaining,
-          xpForNextLevel: needed,
-          progressPercent: (remaining / needed) * 100,
-        };
-      }
-      remaining -= needed;
-      level++;
-    }
-  });
-
-  readonly unlockedCount = computed(() => this._achievements().filter((a) => a.unlocked).length);
+  constructor() {
+    effect(() => this.loadForUser(this.auth.currentUser()?.email ?? 'guest'));
+    this.destroyRef.onDestroy(() => {
+      if (this.unlockTimer) clearTimeout(this.unlockTimer);
+    });
+  }
 
   onPagesRead(pages: number): void {
-    this.updateMissionProgress('read-pages', pages);
+    this.updateMission('read-pages', pages);
   }
-
   onReadingSession(): void {
-    this.updateMissionProgress('read-session', 1);
+    this.updateMission('read-session', 1);
   }
-
   onMinutesRead(minutes: number): void {
-    this.updateMissionProgress('read-minutes', minutes);
+    this.updateMission('read-minutes', minutes);
   }
-
   onBookStarted(): void {
-    this.updateMissionProgress('start-book', 1);
+    this.updateMission('start-book', 1);
   }
-
-  onBookFinished(): void {
-    this.updateMissionProgress('finish-book', 1);
-    this.checkAchievement('first-book');
+  onBookFinished(bookId?: string): void {
+    if (bookId && this.rewardedBookIds.has(bookId)) return;
+    if (bookId) this.rewardedBookIds.add(bookId);
+    this.updateMission('finish-book', 1);
+    this.unlock('first-book');
+    this.persist();
   }
-
-  onStreakDay(streakDays: number): void {
-    if (streakDays >= 7) this.checkAchievement('streak-7');
-    if (streakDays >= 30) this.checkAchievement('streak-30');
+  onStreakDay(days: number): void {
+    if (days >= 7) this.unlock('streak-7');
+    if (days >= 30) this.unlock('streak-30');
   }
-
   onNightReading(): void {
-    this.checkAchievement('night-owl');
+    this.unlock('night-owl');
   }
-
   dismissJustUnlocked(): void {
-    this._justUnlocked.set(null);
-    this._justUnlockedMood.set(null);
+    this.justUnlockedState.set(null);
+    this.justUnlockedMoodState.set(null);
   }
-
   resetDailyMissions(): void {
-    const reset = this.defaultMissions().map((m) => ({ ...m, progress: 0, completed: false }));
-    this._missions.set(reset);
-    this.saveMissions(reset);
+    this.missionState.set(this.defaultMissions());
+    this.persist();
   }
 
-  private updateMissionProgress(id: string, delta: number): void {
-    this._missions.update((missions) => {
-      let missionJustCompleted = false;
-      let xpDelta = 0;
-
-      const updated = missions.map((m) => {
-        if (m.id !== id) return m;
-
-        const progress = Math.max(0, Math.min(m.progress + delta, m.target));
-        const completed = progress >= m.target;
-
-        if (completed && !m.completed) {
-          xpDelta += m.xpReward;
-          missionJustCompleted = true;
-        } else if (!completed && m.completed) {
-          xpDelta -= m.xpReward;
+  private updateMission(id: string, rawDelta: number): void {
+    const delta = Number.isFinite(rawDelta) ? Math.max(0, Math.trunc(rawDelta)) : 0;
+    if (delta === 0) return;
+    let earnedXp = 0;
+    let completed = false;
+    this.missionState.update((missions) =>
+      missions.map((mission) => {
+        if (mission.id !== id || mission.completed) return mission;
+        const progress = Math.min(mission.target, mission.progress + delta);
+        const isComplete = progress >= mission.target;
+        if (isComplete) {
+          earnedXp = mission.xpReward;
+          completed = true;
         }
-
-        return { ...m, progress, completed };
-      });
-
-      this.saveMissions(updated);
-
-      if (xpDelta !== 0) {
-        this.adjustXp(xpDelta);
-      }
-
-      if (missionJustCompleted) {
-        const allDone = updated.every((m) => m.completed);
-        if (allDone) this.checkAchievement('all-missions');
-        else this.checkAchievement('first-mission');
-      }
-
-      return updated;
-    });
+        return { ...mission, progress, completed: isComplete };
+      }),
+    );
+    if (earnedXp) this.totalXp.update((xp) => xp + earnedXp);
+    if (completed)
+      this.unlock(
+        this.missionState().every((mission) => mission.completed)
+          ? 'all-missions'
+          : 'first-mission',
+      );
+    this.persist();
   }
 
-  private adjustXp(amount: number): void {
-    this._totalXp.update((xp) => {
-      const next = Math.max(0, xp + amount);
-      localStorage.setItem('challenges_xp', String(next));
-      return next;
-    });
-
-    if (amount > 0) {
-      const { level } = this.levelInfo();
-      if (level >= 5) this.checkAchievement('level-5');
-      if (level >= 10) this.checkAchievement('level-10');
-    }
+  private unlock(id: string): void {
+    const achievement = this.achievementState().find((item) => item.id === id);
+    if (!achievement || achievement.unlocked) return;
+    const unlocked = { ...achievement, unlocked: true };
+    this.achievementState.update((items) =>
+      items.map((item) => (item.id === id ? unlocked : item)),
+    );
+    this.justUnlockedState.set(unlocked);
+    this.justUnlockedMoodState.set(unlocked.mokaMood);
+    if (this.unlockTimer) clearTimeout(this.unlockTimer);
+    this.unlockTimer = setTimeout(() => this.dismissJustUnlocked(), 5000);
   }
 
-  private checkAchievement(id: string): void {
-    this._achievements.update((list) => {
-      const idx = list.findIndex((a) => a.id === id);
-      if (idx === -1 || list[idx].unlocked) return list;
-      const updated = list.map((a, i) => (i === idx ? { ...a, unlocked: true } : a));
-      const unlocked = updated[idx];
-      this._justUnlocked.set(unlocked);
-      this._justUnlockedMood.set(unlocked.mokaMood);
-      this.saveAchievements(updated);
-      setTimeout(() => this._justUnlocked.set(null), 5000);
-      return updated;
-    });
+  private loadForUser(email: string): void {
+    const today = localDateKey(new Date());
+    const state = this.storage.readUser<ChallengesState>(
+      STORAGE_KEYS.challenges,
+      email,
+      {
+        totalXp: 0,
+        missionsDay: today,
+        missions: this.defaultMissions(),
+        achievements: this.defaultAchievements(),
+        rewardedBookIds: [],
+      },
+      ['challenges_state'],
+    );
+    this.totalXp.set(Number.isFinite(state.totalXp) ? Math.max(0, state.totalXp) : 0);
+    this.missionState.set(
+      state.missionsDay === today && Array.isArray(state.missions)
+        ? state.missions
+        : this.defaultMissions(),
+    );
+    this.achievementState.set(
+      Array.isArray(state.achievements) ? state.achievements : this.defaultAchievements(),
+    );
+    this.rewardedBookIds = new Set(
+      Array.isArray(state.rewardedBookIds) ? state.rewardedBookIds : [],
+    );
+    if (state.missionsDay !== today) this.persist();
   }
 
-  private loadXp(): number {
-    return Number(localStorage.getItem('challenges_xp') ?? 0);
-  }
-
-  private loadMissions(): Mission[] {
-    try {
-      const raw = localStorage.getItem('challenges_missions');
-      if (raw) {
-        const saved: Mission[] = JSON.parse(raw);
-        const today = new Date().toDateString();
-        const savedDay = localStorage.getItem('challenges_missions_day');
-        if (savedDay === today) return saved;
-      }
-    } catch {}
-    const missions = this.defaultMissions();
-    this.saveMissions(missions);
-    return missions;
-  }
-
-  private saveMissions(missions: Mission[]): void {
-    localStorage.setItem('challenges_missions', JSON.stringify(missions));
-    localStorage.setItem('challenges_missions_day', new Date().toDateString());
-  }
-
-  private loadAchievements(): Achievement[] {
-    try {
-      const raw = localStorage.getItem('challenges_achievements');
-      if (raw) return JSON.parse(raw);
-    } catch {}
-    return this.defaultAchievements();
-  }
-
-  private saveAchievements(achievements: Achievement[]): void {
-    localStorage.setItem('challenges_achievements', JSON.stringify(achievements));
+  private persist(): void {
+    this.storage.writeUser(STORAGE_KEYS.challenges, this.auth.currentUser()?.email ?? 'guest', {
+      totalXp: this.totalXp(),
+      missionsDay: localDateKey(new Date()),
+      missions: this.missionState(),
+      achievements: this.achievementState(),
+      rewardedBookIds: [...this.rewardedBookIds],
+    } satisfies ChallengesState);
   }
 
   private defaultMissions(): Mission[] {

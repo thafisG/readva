@@ -1,35 +1,32 @@
-import {
-  Component,
-  Input,
-  Output,
-  EventEmitter,
-  OnDestroy,
-  OnChanges,
-  SimpleChanges,
-  signal,
-  HostListener,
-} from '@angular/core';
+import type { OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BOOK_CATEGORIES } from '../../../constants/book-categories';
+import { A11yModule } from '@angular/cdk/a11y';
+import type { Book } from '../../../core/models/book.model';
+import type { BookUpdate } from '../services/book.service';
 
 export type PanelTab = 'progress' | 'edit' | 'manage';
 
-export interface BookActionEvent {
-  type: 'post-progress' | 'save-edit' | 'move-to-library' | 'mark-completed' | 'delete';
-  bookId: string;
-  payload?: any;
-}
+export type BookActionEvent =
+  | {
+      type: 'post-progress';
+      bookId: string;
+      payload: { pages: number; comment: string; minutesRead: number };
+    }
+  | { type: 'save-edit'; bookId: string; payload: BookUpdate }
+  | { type: 'move-to-library' | 'mark-completed' | 'delete'; bookId: string };
 
 @Component({
   selector: 'app-book-action-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, A11yModule],
   templateUrl: './book-action-panel.component.html',
   styleUrls: ['./book-action-panel.component.scss'],
 })
 export class BookActionPanelComponent implements OnDestroy, OnChanges {
-  @Input() book: any | null = null;
+  @Input() book: Book | null = null;
   @Output() action = new EventEmitter<BookActionEvent>();
   @Output() closed = new EventEmitter<void>();
 
@@ -41,7 +38,7 @@ export class BookActionPanelComponent implements OnDestroy, OnChanges {
   isReading = false;
   readingElapsedSeconds = signal(0);
   private readingStartTime: number | null = null;
-  private timerInterval: any = null;
+  private timerInterval: ReturnType<typeof setInterval> | undefined;
   editTitle = '';
   editAuthor = '';
   editTotalPages = 0;

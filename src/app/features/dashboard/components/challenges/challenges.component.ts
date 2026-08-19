@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { ChallengesService } from '../../services/challenges.service';
-import { MokaComponent, MokaMood } from '../../../moka/moka.component';
+import type { MokaMood } from '../../../moka/moka.component';
+import { MokaComponent } from '../../../moka/moka.component';
 
 @Component({
   selector: 'app-challenges',
@@ -18,7 +19,7 @@ export class ChallengesComponent {
 
   mokaMood = signal<MokaMood>('welcome');
 
-  private mokaResetTimer: any = null;
+  private mokaResetTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     effect(() => {
@@ -43,7 +44,11 @@ export class ChallengesComponent {
     this.mokaMood.set('welcome');
   }
 
-  onCoffeeChanged(_count: number): void {}
+  onCoffeeChanged(count: number): void {
+    void count;
+  }
 
-  onCoffeeConfirmed(_count: number): void {}
+  onCoffeeConfirmed(count: number): void {
+    void count;
+  }
 }

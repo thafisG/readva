@@ -5,6 +5,9 @@
     (click)="onOverlayClick($event)"
     role="dialog"
     aria-modal="true"
+    [attr.aria-label]="'Ações para o livro ' + book.title"
+    cdkTrapFocus
+    [cdkTrapFocusAutoCapture]="true"
     [attr.aria-label]="book.title"
   >
     <div class="book-modal" [class.closing]="isClosing">
@@ -91,8 +94,11 @@
               </div>
 
               <div class="field">
-                <label class="flabel">Páginas lidas agora <span class="req">*</span></label>
+                <label class="flabel" for="progress-pages"
+                  >Páginas lidas agora <span class="req">*</span></label
+                >
                 <input
+                  id="progress-pages"
                   type="number"
                   [(ngModel)]="pagesRead"
                   placeholder="Quantas páginas você leu?"
@@ -102,8 +108,11 @@
               </div>
 
               <div class="field">
-                <label class="flabel">Comentário <span class="opt">(opcional)</span></label>
+                <label class="flabel" for="progress-comment"
+                  >Comentário <span class="opt">(opcional)</span></label
+                >
                 <input
+                  id="progress-comment"
                   [(ngModel)]="userComment"
                   placeholder="O que está achando da leitura?"
                   class="finput"
@@ -115,29 +124,45 @@
           @if (activeTab === 'edit') {
             <div class="tab-body" role="tabpanel">
               <div class="field">
-                <label class="flabel">Título <span class="req">*</span></label>
-                <input [(ngModel)]="editTitle" class="finput" />
+                <label class="flabel" for="edit-book-title"
+                  >Título <span class="req">*</span></label
+                >
+                <input id="edit-book-title" [(ngModel)]="editTitle" class="finput" />
               </div>
 
               <div class="field">
-                <label class="flabel">Autor <span class="req">*</span></label>
-                <input [(ngModel)]="editAuthor" class="finput" />
+                <label class="flabel" for="edit-book-author"
+                  >Autor <span class="req">*</span></label
+                >
+                <input id="edit-book-author" [(ngModel)]="editAuthor" class="finput" />
               </div>
 
               <div class="row2">
                 <div class="field">
-                  <label class="flabel">Página atual</label>
-                  <input type="number" [(ngModel)]="editCurrentPage" class="finput" min="0" />
+                  <label class="flabel" for="edit-current-page">Página atual</label>
+                  <input
+                    id="edit-current-page"
+                    type="number"
+                    [(ngModel)]="editCurrentPage"
+                    class="finput"
+                    min="0"
+                  />
                 </div>
                 <div class="field">
-                  <label class="flabel">Total de páginas</label>
-                  <input type="number" [(ngModel)]="editTotalPages" class="finput" min="1" />
+                  <label class="flabel" for="edit-total-pages">Total de páginas</label>
+                  <input
+                    id="edit-total-pages"
+                    type="number"
+                    [(ngModel)]="editTotalPages"
+                    class="finput"
+                    min="1"
+                  />
                 </div>
               </div>
 
               <div class="field">
-                <label class="flabel">Categoria</label>
-                <select [(ngModel)]="editCategory" class="finput">
+                <label class="flabel" for="edit-book-category">Categoria</label>
+                <select id="edit-book-category" [(ngModel)]="editCategory" class="finput">
                   @for (cat of categories; track cat) {
                     <option [value]="cat">{{ cat }}</option>
                   }

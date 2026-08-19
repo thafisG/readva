@@ -151,9 +151,9 @@ export class MokaComponent {
 
   coffeeReaction = computed(() => getCoffeeReaction(this.coffeeCount()));
 
-  private wiggleTimer: any = null;
-  private autoCloseTimer: any = null;
-  private autoHideTimer: any = null;
+  private wiggleTimer: ReturnType<typeof setTimeout> | null = null;
+  private autoCloseTimer: ReturnType<typeof setTimeout> | null = null;
+  private autoHideTimer: ReturnType<typeof setTimeout> | null = null;
   private previousMood: MokaMood | null = null;
 
   private readonly BUBBLE_DURATION = 4200;

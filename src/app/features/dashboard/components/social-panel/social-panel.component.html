@@ -1,0 +1,46 @@
+<section class="premium-sidebar-card" aria-labelledby="social-panel-title">
+  <h3 id="social-panel-title" class="sidebar-title">Leitores para seguir</h3>
+  @if (suggestions().length) {
+    <div class="people-list">
+      @for (user of suggestions(); track user.email) {
+        <div class="person-row">
+          <img
+            [src]="user.avatar"
+            [alt]="user.name"
+            class="avatar"
+            width="26"
+            height="26"
+            loading="lazy"
+          />
+          <span class="name">{{ user.name }}</span>
+          <button type="button" class="follow-btn" (click)="follow.emit(user.email)">
+            + Seguir
+          </button>
+        </div>
+      }
+    </div>
+  } @else {
+    <p class="empty">Você já segue todos os leitores disponíveis.</p>
+  }
+  @if (following().length) {
+    <div class="following-list">
+      <p class="following-label">Seguindo ({{ following().length }})</p>
+      @for (email of following(); track email) {
+        <div class="person-row">
+          <img
+            [src]="'https://i.pravatar.cc/24?u=' + email.split('@')[0]"
+            [alt]="userName(email)"
+            class="avatar"
+            width="22"
+            height="22"
+            loading="lazy"
+          />
+          <span class="name">{{ userName(email) }}</span>
+          <button type="button" class="unfollow-btn" (click)="unfollow.emit(email)">
+            Deixar de seguir
+          </button>
+        </div>
+      }
+    </div>
+  }
+</section>

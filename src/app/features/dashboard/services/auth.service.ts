@@ -1,58 +1,74 @@
-import { Injectable, signal, computed, inject } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import type { UserSession } from '../../../core/models/user.model';
+import { STORAGE_KEYS } from '../../../core/storage/storage.keys';
+import { StorageService } from '../../../core/storage/storage.service';
 
-export interface UserSession {
-  email: string;
-  name: string;
-  avatar: string;
-}
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class AuthService {
-  private router = inject(Router);
-  private currentUserSignal = signal<UserSession | null>(null);
+  private readonly router = inject(Router);
+  private readonly storage = inject(StorageService);
+  private readonly currentUserSignal = signal<UserSession | null>(this.loadSession());
 
-  public currentUser = computed(() => this.currentUserSignal());
-  public isLoggedIn = computed(() => this.currentUserSignal() !== null);
-
-  constructor() {
-    const savedUser = localStorage.getItem('@readva:active_session');
-    if (savedUser) {
-      this.currentUserSignal.set(JSON.parse(savedUser));
-    }
-  }
+  readonly currentUser = computed(() => this.currentUserSignal());
+  readonly isLoggedIn = computed(() => this.currentUserSignal() !== null);
 
   authenticate(email: string, name: string): boolean {
-    if (!email.trim() || !name.trim()) return false;
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedName = name.trim().replace(/\s+/g, ' ');
+    if (!EMAIL_PATTERN.test(normalizedEmail) || normalizedName.length < 2) return false;
 
-    const cleanedEmail = email.trim().toLowerCase();
-
-    const usersList = JSON.parse(localStorage.getItem('@readva:users_db') || '[]');
-
-    let user = usersList.find((u: any) => u.email === cleanedEmail);
-
+    const users = this.loadUsers();
+    let user = users.find((candidate) => candidate.email === normalizedEmail);
     if (!user) {
       user = {
-        email: cleanedEmail,
-        name: name.trim(),
-        avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=111827,6b7280`,
+        email: normalizedEmail,
+        name: normalizedName,
+        avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(normalizedName)}&backgroundColor=111827,6b7280`,
       };
-      usersList.push(user);
-      localStorage.setItem('@readva:users_db', JSON.stringify(usersList));
+      this.storage.write(STORAGE_KEYS.users, [...users, user]);
     }
 
-    localStorage.setItem('@readva:active_session', JSON.stringify(user));
+    this.storage.write(STORAGE_KEYS.activeSession, user);
     this.currentUserSignal.set(user);
-
-    this.router.navigate(['/']);
+    void this.router.navigate(['/']);
     return true;
   }
 
-  logout() {
-    localStorage.removeItem('@readva:active_session');
+  findUser(email: string): UserSession | undefined {
+    const normalizedEmail = email.trim().toLowerCase();
+    return this.loadUsers().find((user) => user.email === normalizedEmail);
+  }
+
+  logout(): void {
+    this.storage.remove(STORAGE_KEYS.activeSession);
     this.currentUserSignal.set(null);
-    this.router.navigate(['/']);
+    void this.router.navigate(['/login']);
+  }
+
+  private loadSession(): UserSession | null {
+    const candidate = this.storage.read<unknown>(STORAGE_KEYS.activeSession, null);
+    return this.isUser(candidate) ? candidate : null;
+  }
+
+  private loadUsers(): UserSession[] {
+    const candidates = this.storage.read<unknown>(STORAGE_KEYS.users, []);
+    return Array.isArray(candidates)
+      ? candidates.filter((candidate) => this.isUser(candidate))
+      : [];
+  }
+
+  private isUser(value: unknown): value is UserSession {
+    if (typeof value !== 'object' || value === null) return false;
+    const candidate = value as Record<string, unknown>;
+    return (
+      typeof candidate['email'] === 'string' &&
+      EMAIL_PATTERN.test(candidate['email']) &&
+      typeof candidate['name'] === 'string' &&
+      candidate['name'].trim().length >= 2 &&
+      typeof candidate['avatar'] === 'string'
+    );
   }
 }

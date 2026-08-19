@@ -1,15 +1,8 @@
-import {
-  Component,
-  Input,
-  Output,
-  EventEmitter,
-  HostListener,
-  AfterViewInit,
-  OnDestroy,
-} from '@angular/core';
+import type { AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { BookStats } from '../library-shelf.component';
+import type { BookStats } from '../library-shelf.component';
 
 @Component({
   selector: 'app-book-detail-modal',
