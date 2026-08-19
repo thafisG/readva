@@ -1,0 +1,58 @@
+<section class="post-box" aria-labelledby="start-reading-title">
+  <h2 id="start-reading-title" class="sr-only">Começar uma nova leitura</h2>
+  <div class="form-grid">
+    <div class="field-wrapper">
+      <span class="field-label">Buscar e preencher automaticamente</span>
+      <app-book-search (bookSelected)="selectBook($event)" />
+    </div>
+    <div class="field-wrapper">
+      <label class="field-label" for="new-book-title">
+        Título do Livro <span class="required">*</span>
+      </label>
+      <input
+        id="new-book-title"
+        [(ngModel)]="title"
+        placeholder="Ex: Dom Casmurro"
+        class="premium-input"
+      />
+    </div>
+    <div class="field-wrapper">
+      <label class="field-label" for="new-book-author">
+        Autor <span class="required">*</span>
+      </label>
+      <input
+        id="new-book-author"
+        [(ngModel)]="author"
+        placeholder="Ex: Machado de Assis"
+        class="premium-input"
+      />
+    </div>
+    <div class="inline-inputs">
+      <div class="field-wrapper">
+        <label class="field-label" for="new-book-pages">
+          Total de Páginas <span class="required">*</span>
+        </label>
+        <input
+          id="new-book-pages"
+          type="number"
+          min="1"
+          [(ngModel)]="totalPages"
+          placeholder="Ex: 320"
+          class="premium-input"
+        />
+      </div>
+      <div class="field-wrapper">
+        <label class="field-label" for="new-book-category">
+          Categoria <span class="required">*</span>
+        </label>
+        <select id="new-book-category" [(ngModel)]="category" class="premium-input">
+          <option value="" disabled>Selecione uma categoria</option>
+          @for (item of categories; track item) {
+            <option [value]="item">{{ item }}</option>
+          }
+        </select>
+      </div>
+    </div>
+    <button type="button" (click)="submit()" class="premium-btn">Começar leitura</button>
+  </div>
+</section>

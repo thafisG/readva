@@ -14,12 +14,10 @@ import { ChallengesService } from './services/challenges.service';
 import { StreakChallengeComponent } from './components/streak-challenge/streak-challenge.component';
 import { LoginComponent } from '../login/login.component';
 import type { Activity, UserProgress } from './interfaces/dashboard.interface';
-import type { Book, BookSearchResult, BookSuggestion } from '../../core/models/book.model';
+import type { Book, BookSuggestion } from '../../core/models/book.model';
 import type { ReadingActivity } from '../../core/models/activity.model';
-import { BOOK_CATEGORIES } from '../../constants/book-categories';
 import type { BookActionEvent } from './book-action-panel/book-action-panel.component';
 import { BookActionPanelComponent } from './book-action-panel/book-action-panel.component';
-import { BookSearchComponent } from './components/book-search/book-search.component';
 import type { MokaMood } from '../moka/moka.component';
 import { MokaComponent } from '../moka/moka.component';
 import { DashboardPreferencesService } from './services/dashboard-preferences.service';
@@ -27,6 +25,10 @@ import { A11yModule } from '@angular/cdk/a11y';
 import { RecommendationsComponent } from './components/recommendations/recommendations.component';
 import { SocialPanelComponent } from './components/social-panel/social-panel.component';
 import { SummaryCardExportService } from './services/summary-card-export.service';
+import {
+  StartReadingFormComponent,
+  type StartReadingRequest,
+} from './components/start-reading-form/start-reading-form.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -39,7 +41,7 @@ import { SummaryCardExportService } from './services/summary-card-export.service
     BookActionPanelComponent,
     RouterLink,
     RouterLinkActive,
-    BookSearchComponent,
+    StartReadingFormComponent,
     MatIconModule,
     MokaComponent,
     RecommendationsComponent,
@@ -95,12 +97,6 @@ export class DashboardComponent implements OnDestroy {
   public editDetail = '';
   public editPagesRead = 0;
   public editMinutesRead = 0;
-
-  categories = BOOK_CATEGORIES;
-  newTitle = '';
-  newAuthor = '';
-  newTotalPages = 100;
-  newCategory = 'Literatura';
 
   public manualCoffeeCount = signal(0);
 
@@ -246,13 +242,6 @@ export class DashboardComponent implements OnDestroy {
     void this.summaryCardExport.export('share-card', 'meu-dia-readva.png');
   }
 
-  onBookSelected(book: BookSearchResult): void {
-    this.newTitle = book.title;
-    this.newAuthor = book.author;
-    this.newTotalPages = book.totalPages || 100;
-    this.newCategory = book.category;
-  }
-
   selectBookForModal(book: Book): void {
     this.selectedBook.set({ ...book });
   }
@@ -261,17 +250,14 @@ export class DashboardComponent implements OnDestroy {
     this.selectedBook.set(null);
   }
 
-  handleStartBook(): void {
-    if (!this.newTitle.trim() || !this.newAuthor.trim()) return;
+  handleStartBook(request: StartReadingRequest): void {
     this.bookService.startNewBook(
-      this.newTitle,
-      this.newAuthor,
-      this.newTotalPages,
-      this.newCategory,
+      request.title,
+      request.author,
+      request.totalPages,
+      request.category,
     );
 
-    this.newTitle = '';
-    this.newAuthor = '';
     this.loadGlobalFeed();
     setTimeout(() => this.loadSuggestions(), 0);
     setTimeout(() => this.triggerCoffeeToast(), 600);
