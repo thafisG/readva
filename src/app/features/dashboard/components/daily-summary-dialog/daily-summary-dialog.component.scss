@@ -1,0 +1,138 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+}
+.modal-content {
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid #efe7df;
+  border-radius: 20px;
+  background: #fffdfb;
+}
+.share-card-export {
+  padding: 28px;
+  border-radius: 16px;
+  background: #fdf8f4;
+  color: #463b34;
+  font-family: Inter, sans-serif;
+}
+.share-card-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.share-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #7c5c45;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.share-name {
+  color: #463b34;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.share-date {
+  margin-top: 2px;
+  color: #9c8880;
+  font-size: 0.72rem;
+  text-transform: capitalize;
+}
+.share-logo {
+  margin-left: auto;
+  color: #7c5c45;
+  font-family: Lora, serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.share-metrics {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 18px 0;
+  border-top: 1px solid #e8ddd5;
+  border-bottom: 1px solid #e8ddd5;
+}
+.share-metric {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  flex-direction: column;
+  gap: 4px;
+}
+.share-metric-val {
+  color: #463b34;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+.share-metric-label {
+  color: #9c8880;
+  font-size: 0.68rem;
+}
+.share-metric-divider {
+  width: 1px;
+  height: 30px;
+  background: #e8ddd5;
+}
+.share-bar-wrap {
+  height: 7px;
+  margin-top: 20px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #e8ddd5;
+}
+.share-bar-fill {
+  height: 100%;
+  border-radius: 10px;
+  background: #7c5c45;
+  transition: width 0.4s ease;
+}
+.share-bar-label {
+  margin-top: 7px;
+  color: #9c8880;
+  font-size: 0.68rem;
+  text-align: right;
+}
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 24px;
+  border-top: 1px solid #f0e8e0;
+}
+.primary-btn,
+.secondary-btn {
+  padding: 8px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.primary-btn {
+  border: 0;
+  background: #7c5c45;
+  color: #fff;
+}
+.secondary-btn {
+  border: 1px solid #e8e0d8;
+  background: transparent;
+  color: #7b7168;
+}
+.secondary-btn:hover {
+  background: #f5ede8;
+  color: #463b34;
+}

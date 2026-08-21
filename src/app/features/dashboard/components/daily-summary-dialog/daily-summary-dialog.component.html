@@ -1,0 +1,51 @@
+<div class="modal-overlay" (click)="closed.emit()" role="presentation">
+  <div
+    class="modal-content"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Resumo diário de leitura"
+    cdkTrapFocus
+    [cdkTrapFocusAutoCapture]="true"
+    (click)="$event.stopPropagation()"
+  >
+    <div id="daily-summary-card" class="share-card-export">
+      <div class="share-card-top">
+        <div class="share-avatar">{{ initials() }}</div>
+        <div>
+          <div class="share-name">{{ firstName() }}</div>
+          <div class="share-date">{{ summary().dateLabel }}</div>
+        </div>
+        <div class="share-logo">readva</div>
+      </div>
+
+      <div class="share-metrics">
+        <div class="share-metric">
+          <span class="share-metric-val">{{ summary().minutesRead }}</span>
+          <span class="share-metric-label">minutos lidos</span>
+        </div>
+        <div class="share-metric-divider"></div>
+        <div class="share-metric">
+          <span class="share-metric-val">{{ summary().coffeeCount }}</span>
+          <span class="share-metric-label">☕</span>
+        </div>
+        <div class="share-metric-divider"></div>
+        <div class="share-metric">
+          <span class="share-metric-val">{{ summary().streakDays }}</span>
+          <span class="share-metric-label">dias seguidos</span>
+        </div>
+      </div>
+
+      <div class="share-bar-wrap">
+        <div class="share-bar-fill" [style.width.%]="progressPercentage()"></div>
+      </div>
+      <div class="share-bar-label">
+        Meta diária: {{ summary().minutesRead }}/{{ summary().goalMinutes }} min
+      </div>
+    </div>
+
+    <footer class="modal-footer">
+      <button type="button" class="secondary-btn" (click)="closed.emit()">Fechar</button>
+      <button type="button" class="primary-btn" (click)="exportImage()">Baixar imagem</button>
+    </footer>
+  </div>
+</div>

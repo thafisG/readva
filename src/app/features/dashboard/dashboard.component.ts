@@ -38,6 +38,10 @@ import {
   type ActivityEditRequest,
 } from './components/activity-edit-dialog/activity-edit-dialog.component';
 import { ActivityDeleteDialogComponent } from './components/activity-delete-dialog/activity-delete-dialog.component';
+import {
+  DailySummaryDialogComponent,
+  type DailySummaryViewModel,
+} from './components/daily-summary-dialog/daily-summary-dialog.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -54,6 +58,7 @@ import { ActivityDeleteDialogComponent } from './components/activity-delete-dial
     ActivityFeedComponent,
     ActivityEditDialogComponent,
     ActivityDeleteDialogComponent,
+    DailySummaryDialogComponent,
     MatIconModule,
     MokaComponent,
     RecommendationsComponent,
@@ -232,28 +237,27 @@ export class DashboardComponent implements OnDestroy {
     this.showSummaryModal.set(false);
   }
 
-  todayLabel(): string {
-    return new Date().toLocaleDateString('pt-BR', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-    });
-  }
+  readonly dailySummary = computed<DailySummaryViewModel>(() => {
+    const progress = this.userProgress();
+    return {
+      readerName: this.authService.currentUser()?.name ?? 'Leitor',
+      dateLabel: new Date().toLocaleDateString('pt-BR', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      }),
+      minutesRead: progress.dailyMinutesRead,
+      goalMinutes: progress.dailyGoalMinutes,
+      coffeeCount: this.manualCoffeeCount(),
+      streakDays: this.streakComponent?.streakCount() ?? progress.currentStreak,
+    };
+  });
 
-  streakDays(): number {
-    return this.streakComponent?.streakCount() ?? this.userProgress().currentStreak;
-  }
-
-  progressPercentage(): number {
-    const p = this.userProgress();
-    if (!p.dailyGoalMinutes) return 0;
-    return Math.min((p.dailyMinutesRead / p.dailyGoalMinutes) * 100, 100);
-  }
-
-  exportSummaryCard(): void {
-    void this.summaryCardExport.export('share-card', 'meu-dia-readva.png');
-  }
-
+  private readonly dailyGoalProgress = computed(() => {
+    const { minutesRead, goalMinutes } = this.dailySummary();
+    if (goalMinutes <= 0) return 0;
+    return Math.min(Math.max((minutesRead / goalMinutes) * 100, 0), 100);
+  });
   selectBookForModal(book: Book): void {
     this.selectedBook.set({ ...book });
   }
@@ -481,7 +485,7 @@ export class DashboardComponent implements OnDestroy {
     if (this.mokaFeedback()) return this.mokaFeedback()!;
     if (this.coffeeToast()) return 'coffee';
 
-    if (this.progressPercentage() >= 100) return 'goal';
+    if (this.dailyGoalProgress() >= 100) return 'goal';
     if (this.bookService.myCurrentBook().length === 0) return 'empty-library';
     if (this.activeTab() === 'global' && this.userService.following().length === 0) return 'love';
     if (this.activeTab() === 'meu-feed' && this.bookService.myActivities().length === 0)
