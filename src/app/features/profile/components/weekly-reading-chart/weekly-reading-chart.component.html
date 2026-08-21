@@ -1,0 +1,29 @@
+<article class="panel">
+  <header>
+    <div>
+      <span>Últimos 7 dias</span>
+      <h2>Ritmo de leitura</h2>
+    </div>
+    <b>{{ formatMinutes(stats().week.minutes) }}</b>
+  </header>
+  <div class="chart" aria-label="Minutos lidos nos últimos sete dias">
+    @for (day of stats().weekDays; track day.key) {
+      <div class="day">
+        <small>{{ day.minutes || '—' }}</small>
+        <div class="track">
+          <i [class.active]="day.active" [style.height.%]="barHeight(day.minutes)"></i>
+        </div>
+        <small>{{ day.label }}</small>
+      </div>
+    }
+  </div>
+  <footer>
+    <span
+      ><strong>{{ stats().week.pages }}</strong> páginas</span
+    ><span
+      ><strong>{{ stats().week.sessions }}</strong> sessões</span
+    ><span
+      ><strong>{{ activeDays() }}</strong> dias ativos</span
+    >
+  </footer>
+</article>

@@ -99,7 +99,7 @@ export class DashboardComponent implements OnDestroy {
     name: 'Leitor',
     avatar: '',
     currentStreak: 0,
-    dailyGoalMinutes: 60,
+    dailyGoalMinutes: this.preferences.getReadingGoals().dailyMinutes,
     dailyMinutesRead: 0,
   });
 
@@ -211,7 +211,7 @@ export class DashboardComponent implements OnDestroy {
       name: 'Leitor',
       avatar: '',
       currentStreak: 0,
-      dailyGoalMinutes: 60,
+      dailyGoalMinutes: this.preferences.getReadingGoals().dailyMinutes,
       dailyMinutesRead: 0,
     });
   }

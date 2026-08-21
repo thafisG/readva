@@ -1,0 +1,31 @@
+<header class="topbar">
+  <a routerLink="/" class="back-link" aria-label="Voltar para o início">
+    <mat-icon>arrow_back</mat-icon><span>Início</span>
+  </a>
+  <span class="brand">readva</span>
+</header>
+
+<section class="hero">
+  <div class="identity">
+    <img [src]="auth.currentUser()?.avatar" alt="" class="avatar" />
+    <div>
+      <span class="eyebrow">Meu perfil de leitura</span>
+      <h1>{{ auth.currentUser()?.name || 'Leitor' }}</h1>
+      <p>{{ auth.currentUser()?.email }}</p>
+    </div>
+  </div>
+
+  <div class="level-summary">
+    <div class="level-number">{{ challenges.levelInfo().level }}</div>
+    <div class="level-copy">
+      <strong>Nível atual</strong>
+      <span>
+        {{ challenges.levelInfo().currentLevelXp }} de
+        {{ challenges.levelInfo().xpForNextLevel }} XP
+      </span>
+      <div class="track" aria-hidden="true">
+        <div class="fill" [style.width.%]="challenges.levelInfo().progressPercent"></div>
+      </div>
+    </div>
+  </div>
+</section>

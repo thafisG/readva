@@ -1,0 +1,30 @@
+<article class="panel">
+  <header>
+    <div>
+      <span>Jornada</span>
+      <h2>Conquistas recentes</h2>
+    </div>
+    <a routerLink="/desafios">Ver todas</a>
+  </header>
+  @if (achievements().length) {
+    <div class="list">
+      @for (achievement of achievements(); track achievement.id) {
+        <div class="item">
+          <i [style.background]="achievement.color"
+            ><mat-icon>{{ achievement.matIcon }}</mat-icon></i
+          >
+          <div>
+            <strong>{{ achievement.title }}</strong
+            ><span>{{ achievement.description }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="empty">
+      <mat-icon>emoji_events</mat-icon>
+      <p>Sua próxima conquista está esperando por uma boa leitura.</p>
+      <a routerLink="/desafios">Explorar desafios</a>
+    </div>
+  }
+</article>
