@@ -59,262 +59,32 @@
         </div>
         <app-start-reading-form (submitted)="handleStartBook($event)" />
 
-        <div class="feed-tabs">
-          <button
-            class="feed-tab"
-            [class.active]="activeTab() === 'meu-feed'"
-            (click)="activeTab.set('meu-feed')"
-          >
-            Meu feed
-          </button>
-          <button
-            class="feed-tab"
-            [class.active]="activeTab() === 'global'"
-            (click)="activeTab.set('global'); loadGlobalFeed()"
-          >
-            Feed global
-            @if (userService.following().length > 0) {
-              <span class="tab-badge">{{ userService.following().length }}</span>
-            }
-          </button>
-        </div>
-
-        @if (activeTab() === 'meu-feed') {
-          <div class="feed-list">
-            @for (activity of bookService.myActivities(); track activity.id) {
-              <article class="premium-activity-card">
-                <div class="card-header">
-                  <img [src]="activity.userAvatar" [alt]="activity.userName" class="user-avatar" />
-                  <div class="user-meta">
-                    <span class="username">{{ activity.userName }}</span>
-                    <span class="timestamp">{{ activity.timestamp }}</span>
-                  </div>
-                </div>
-
-                <div class="card-content">
-                  <p class="activity-detail">
-                    Compartilhou pensamentos em
-                    <strong class="book-title">{{ activity.bookTitle }}</strong> de
-                    {{ activity.bookAuthor }}
-                  </p>
-                  <span class="activity-subtext">{{ activity.detail }}</span>
-                  @if (activity.comment) {
-                    <span class="activity-comment">"{{ activity.comment }}"</span>
-                  }
-                </div>
-
-                <div class="card-actions">
-                  <button
-                    class="action-trigger"
-                    [class.has-liked]="activity.hasLiked"
-                    (click)="onLikeTriggered(activity.id)"
-                  >
-                    <span class="heart-icon">❤️</span> {{ activity.likes }}
-                  </button>
-
-                  @if (activity.isOwner) {
-                    <button
-                      class="action-trigger edit-btn"
-                      (click)="openEditActivityModal(activity)"
-                    >
-                      <span class="edit-icon">
-                        <img src="assets/icon_edit.png" alt="Editar" class="edit-icon" />
-                      </span>
-                      Editar
-                    </button>
-
-                    <button
-                      class="action-trigger delete-btn"
-                      (click)="confirmDeleteActivity(activity)"
-                    >
-                      <span class="delete-icon">
-                        <img src="assets/icon_lixo.png" alt="lixeira" class="lixo-icon" />
-                      </span>
-                      Excluir
-                    </button>
-                  }
-                </div>
-              </article>
-            } @empty {
-              <div class="empty-feed">
-                <img src="assets/ilustra5.jpg" alt="" class="empty-illustration" />
-                <p>Seu feed está vazio. Use a caixa acima ou registre seu primeiro progresso!</p>
-              </div>
-            }
-          </div>
+        <app-activity-feed
+          [activeTab]="activeTab()"
+          [ownActivities]="bookService.myActivities()"
+          [globalActivities]="globalFeed()"
+          [following]="userService.following()"
+          (tabChanged)="onFeedTabChanged($event)"
+          (ownActivityLiked)="onLikeTriggered($event)"
+          (editRequested)="openEditActivityModal($event)"
+          (deleteRequested)="confirmDeleteActivity($event)"
+          (followToggled)="toggleFollow($event)"
+          (globalActivityLiked)="onLikeGlobalActivity($event)"
+        />
+        @if (editingActivity(); as activity) {
+          <app-activity-edit-dialog
+            [activity]="activity"
+            (saved)="saveEditedActivity($event)"
+            (cancelled)="closeEditModal()"
+          />
         }
 
-        @if (activeTab() === 'global') {
-          @if (userService.following().length === 0) {
-            <div class="empty-feed follow-prompt">
-              <p>Você ainda não segue ninguém.</p>
-            </div>
-          } @else if (globalFeed().length === 0) {
-            <div class="empty-feed">
-              <p>📭 Nenhuma atividade recente de quem você segue.</p>
-            </div>
-          } @else {
-            <div class="feed-list">
-              @for (activity of globalFeed(); track activity.id) {
-                <article class="premium-activity-card">
-                  <div class="card-header">
-                    <img
-                      [src]="activity.userAvatar"
-                      [alt]="activity.userName"
-                      class="user-avatar"
-                    />
-                    <div class="user-meta">
-                      <span class="username">{{ activity.userName }}</span>
-                      <span class="timestamp">{{ activity.timestamp }}</span>
-                    </div>
-                    <button
-                      class="follow-toggle"
-                      [class.following]="userService.isFollowing(activity.userId)"
-                      (click)="toggleFollow(activity.userId)"
-                    >
-                      {{ userService.isFollowing(activity.userId) ? 'Seguindo' : '+ Seguir' }}
-                    </button>
-                  </div>
-
-                  <div class="card-content">
-                    <p class="activity-detail">
-                      Compartilhou pensamentos em
-                      <strong class="book-title">{{ activity.bookTitle }}</strong> de
-                      {{ activity.bookAuthor }}
-                    </p>
-                    <span class="activity-subtext">{{ activity.detail }}</span>
-                    @if (activity.comment) {
-                      <span class="activity-comment">"{{ activity.comment }}"</span>
-                    }
-                  </div>
-
-                  <div class="card-actions">
-                    <button
-                      class="action-trigger"
-                      [class.has-liked]="activity.hasLiked"
-                      (click)="onLikeGlobalActivity(activity)"
-                    >
-                      <span class="heart-icon">❤️</span> {{ activity.likes }}
-                    </button>
-                  </div>
-                </article>
-              }
-            </div>
-          }
-        }
-
-        @if (editingActivity()) {
-          <div class="modal-overlay" (click)="closeEditModal()" role="presentation">
-            <div
-              class="modal-content"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="edit-activity-title"
-              cdkTrapFocus
-              [cdkTrapFocusAutoCapture]="true"
-              (click)="$event.stopPropagation()"
-            >
-              <div class="modal-header">
-                <h3 id="edit-activity-title">Editar atividade</h3>
-                <button
-                  class="close-modal"
-                  (click)="closeEditModal()"
-                  aria-label="Fechar edição da atividade"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div class="modal-body">
-                <div class="inline-inputs">
-                  <div class="field-wrapper">
-                    <label class="field-label" for="edit-pages-read">Páginas lidas</label>
-                    <input
-                      id="edit-pages-read"
-                      type="number"
-                      [(ngModel)]="editPagesRead"
-                      min="0"
-                      placeholder="Ex: 50"
-                      class="premium-input"
-                    />
-                  </div>
-
-                  <div class="field-wrapper">
-                    <label class="field-label" for="edit-minutes-read">Minutos lidos</label>
-                    <input
-                      id="edit-minutes-read"
-                      type="number"
-                      [(ngModel)]="editMinutesRead"
-                      min="0"
-                      placeholder="Ex: 30"
-                      class="premium-input"
-                    />
-                  </div>
-                </div>
-
-                <div class="field-wrapper">
-                  <label class="field-label" for="edit-activity-comment">Comentário</label>
-                  <textarea
-                    id="edit-activity-comment"
-                    [(ngModel)]="editComment"
-                    rows="3"
-                    placeholder="O que você achou da leitura?"
-                    class="premium-input"
-                  ></textarea>
-                </div>
-
-                <div class="detail-preview">
-                  <span class="detail-preview-label">Prévia</span>
-                  <span class="detail-preview-text">
-                    Leu mais {{ editPagesRead }} páginas
-                    @if (editMinutesRead > 0) {
-                      • {{ editMinutesRead }} min de leitura
-                    }
-                  </span>
-                </div>
-              </div>
-
-              <div class="modal-footer">
-                <button class="premium-btn-secondary" (click)="closeEditModal()">Cancelar</button>
-                <button class="premium-btn" (click)="saveEditedActivity()">
-                  Salvar alterações
-                </button>
-              </div>
-            </div>
-          </div>
-        }
-
-        @if (deletingActivity()) {
-          <div class="modal-overlay" (click)="cancelDeleteActivity()">
-            <div
-              class="modal-content delete-modal"
-              role="alertdialog"
-              aria-modal="true"
-              aria-labelledby="delete-activity-title"
-              aria-describedby="delete-activity-description"
-              cdkTrapFocus
-              [cdkTrapFocusAutoCapture]="true"
-              (click)="$event.stopPropagation()"
-            >
-              <div class="delete-modal-icon">
-                <img src="assets/icon_triste.gif" alt="Progresso" class="icon-triste" />
-              </div>
-              <h3 id="delete-activity-title">Excluir atividade?</h3>
-              <p id="delete-activity-description">
-                Você está prestes a excluir sua atividade e publicação em
-                <strong>{{ deletingActivity()!.bookTitle }}</strong
-                >. Essa ação não pode ser desfeita.
-              </p>
-              <div class="modal-footer">
-                <button class="premium-btn-secondary" (click)="cancelDeleteActivity()">
-                  Cancelar
-                </button>
-                <button class="delete-confirm-btn" (click)="executeDeleteActivity()">
-                  Excluir
-                </button>
-              </div>
-            </div>
-          </div>
+        @if (deletingActivity(); as activity) {
+          <app-activity-delete-dialog
+            [activity]="activity"
+            (confirmed)="executeDeleteActivity()"
+            (cancelled)="cancelDeleteActivity()"
+          />
         }
       </main>
 
@@ -384,68 +154,6 @@
   ></app-moka>
 
   @if (showSummaryModal()) {
-    <div class="modal-overlay" (click)="closeSummaryModal()">
-      <div
-        class="modal-content share-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Resumo diário de leitura"
-        cdkTrapFocus
-        [cdkTrapFocusAutoCapture]="true"
-        (click)="$event.stopPropagation()"
-      >
-        <div id="share-card" class="share-card-export">
-          <div class="share-card-top">
-            <div class="share-avatar">
-              {{ (authService.currentUser()?.name || 'L').split(' ')[0][0]
-              }}{{ (authService.currentUser()?.name || '').split(' ')[1]?.[0] }}
-            </div>
-            <div>
-              <div class="share-name">
-                {{ (authService.currentUser()?.name || 'Leitor').split(' ')[0] }}
-              </div>
-              <div class="share-date">{{ todayLabel() }}</div>
-            </div>
-            <div class="share-logo">readva</div>
-          </div>
-
-          <div class="share-metrics">
-            <div class="share-metric">
-              <span class="share-metric-val">{{ userProgress().dailyMinutesRead }}</span>
-              <span class="share-metric-label">minutos lidos</span>
-            </div>
-            <div class="share-metric-divider"></div>
-            <div class="share-metric">
-              <span class="share-metric-val">{{ manualCoffeeCount() }}</span>
-              <span class="share-metric-label">☕</span>
-            </div>
-            <div class="share-metric-divider"></div>
-            <div class="share-metric">
-              <span class="share-metric-val">{{ streakDays() }}</span>
-              <span class="share-metric-label">dias seguidos</span>
-            </div>
-          </div>
-
-          <div class="share-bar-wrap">
-            <div class="share-bar-fill" [style.width.%]="progressPercentage()"></div>
-          </div>
-          <div class="share-bar-label">
-            Meta diária: {{ userProgress().dailyMinutesRead }}/{{ userProgress().dailyGoalMinutes }}
-            min
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <button class="premium-btn-secondary" (click)="closeSummaryModal()">Fechar</button>
-          <button
-            class="premium-btn"
-            (click)="exportSummaryCard()"
-            style="margin: 0; max-width: none; display: inline-block"
-          >
-            Baixar imagem
-          </button>
-        </div>
-      </div>
-    </div>
+    <app-daily-summary-dialog [summary]="dailySummary()" (closed)="closeSummaryModal()" />
   }
 }

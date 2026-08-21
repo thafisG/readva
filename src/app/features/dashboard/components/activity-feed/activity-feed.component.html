@@ -1,0 +1,132 @@
+<nav class="feed-tabs" aria-label="Filtros do feed">
+  <button
+    type="button"
+    class="feed-tab"
+    [class.active]="activeTab() === 'meu-feed'"
+    (click)="tabChanged.emit('meu-feed')"
+  >
+    Meu feed
+  </button>
+  <button
+    type="button"
+    class="feed-tab"
+    [class.active]="activeTab() === 'global'"
+    (click)="tabChanged.emit('global')"
+  >
+    Feed global
+    @if (following().length > 0) {
+      <span class="tab-badge">{{ following().length }}</span>
+    }
+  </button>
+</nav>
+
+@if (activeTab() === 'meu-feed') {
+  <div class="feed-list">
+    @for (activity of ownActivities(); track activity.id) {
+      <article class="premium-activity-card">
+        <div class="card-header">
+          <img [src]="activity.userAvatar" [alt]="activity.userName" class="user-avatar" />
+          <div class="user-meta">
+            <span class="username">{{ activity.userName }}</span>
+            <span class="timestamp">{{ activity.timestamp }}</span>
+          </div>
+        </div>
+        <div class="card-content">
+          <p class="activity-detail">
+            Compartilhou pensamentos em
+            <strong class="book-title">{{ activity.bookTitle }}</strong> de
+            {{ activity.bookAuthor }}
+          </p>
+          <span class="activity-subtext">{{ activity.detail }}</span>
+          @if (activity.comment) {
+            <span class="activity-comment">"{{ activity.comment }}"</span>
+          }
+        </div>
+        <div class="card-actions">
+          <button
+            type="button"
+            class="action-trigger"
+            [class.has-liked]="activity.hasLiked"
+            (click)="ownActivityLiked.emit(activity.id)"
+          >
+            <span class="heart-icon" aria-hidden="true">❤️</span> {{ activity.likes }}
+          </button>
+          @if (activity.isOwner) {
+            <button
+              type="button"
+              class="action-trigger edit-btn"
+              (click)="editRequested.emit(activity)"
+            >
+              <img src="assets/icon_edit.png" alt="" class="edit-icon" />
+              Editar
+            </button>
+            <button
+              type="button"
+              class="action-trigger delete-btn"
+              (click)="deleteRequested.emit(activity)"
+            >
+              <img src="assets/icon_lixo.png" alt="" class="lixo-icon" />
+              Excluir
+            </button>
+          }
+        </div>
+      </article>
+    } @empty {
+      <div class="empty-feed">
+        <img src="assets/ilustra5.jpg" alt="" class="empty-illustration" />
+        <p>Seu feed está vazio. Use a caixa acima ou registre seu primeiro progresso!</p>
+      </div>
+    }
+  </div>
+}
+
+@if (activeTab() === 'global') {
+  @if (following().length === 0) {
+    <div class="empty-feed"><p>Você ainda não segue ninguém.</p></div>
+  } @else if (globalActivities().length === 0) {
+    <div class="empty-feed"><p>📭 Nenhuma atividade recente de quem você segue.</p></div>
+  } @else {
+    <div class="feed-list">
+      @for (activity of globalActivities(); track activity.id) {
+        <article class="premium-activity-card">
+          <div class="card-header">
+            <img [src]="activity.userAvatar" [alt]="activity.userName" class="user-avatar" />
+            <div class="user-meta">
+              <span class="username">{{ activity.userName }}</span>
+              <span class="timestamp">{{ activity.timestamp }}</span>
+            </div>
+            <button
+              type="button"
+              class="follow-toggle"
+              [class.following]="isFollowing(activity.userId)"
+              (click)="followToggled.emit(activity.userId)"
+            >
+              {{ isFollowing(activity.userId) ? 'Seguindo' : '+ Seguir' }}
+            </button>
+          </div>
+          <div class="card-content">
+            <p class="activity-detail">
+              Compartilhou pensamentos em
+              <strong class="book-title">{{ activity.bookTitle }}</strong> de
+              {{ activity.bookAuthor }}
+            </p>
+            <span class="activity-subtext">{{ activity.detail }}</span>
+            @if (activity.comment) {
+              <span class="activity-comment">"{{ activity.comment }}"</span>
+            }
+          </div>
+          <div class="card-actions">
+            <button
+              type="button"
+              class="action-trigger"
+              [class.has-liked]="activity.hasLiked"
+              (click)="globalActivityLiked.emit(activity)"
+            >
+              <span class="heart-icon" aria-hidden="true">❤️</span> {{ activity.likes }}
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+  }
+}

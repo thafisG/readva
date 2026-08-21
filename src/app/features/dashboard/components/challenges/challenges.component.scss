@@ -399,3 +399,26 @@
     padding: 16px;
   }
 }
+@media (max-width: 700px) {
+  .challenges-wrapper {
+    gap: 18px;
+  }
+  .level-card {
+    align-items: flex-start;
+  }
+  .challenge-card {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 420px) {
+  .level-card {
+    flex-direction: column;
+  }
+  .level-progress-area {
+    width: 100%;
+  }
+  .achievements-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

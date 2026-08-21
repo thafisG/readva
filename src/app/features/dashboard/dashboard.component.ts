@@ -13,7 +13,7 @@ import { UserService } from './services/user.service';
 import { ChallengesService } from './services/challenges.service';
 import { StreakChallengeComponent } from './components/streak-challenge/streak-challenge.component';
 import { LoginComponent } from '../login/login.component';
-import type { Activity, UserProgress } from './interfaces/dashboard.interface';
+import type { UserProgress } from './interfaces/dashboard.interface';
 import type { Book, BookSuggestion } from '../../core/models/book.model';
 import type { ReadingActivity } from '../../core/models/activity.model';
 import type { BookActionEvent } from './book-action-panel/book-action-panel.component';
@@ -29,6 +29,19 @@ import {
   StartReadingFormComponent,
   type StartReadingRequest,
 } from './components/start-reading-form/start-reading-form.component';
+import {
+  ActivityFeedComponent,
+  type FeedTab,
+} from './components/activity-feed/activity-feed.component';
+import {
+  ActivityEditDialogComponent,
+  type ActivityEditRequest,
+} from './components/activity-edit-dialog/activity-edit-dialog.component';
+import { ActivityDeleteDialogComponent } from './components/activity-delete-dialog/activity-delete-dialog.component';
+import {
+  DailySummaryDialogComponent,
+  type DailySummaryViewModel,
+} from './components/daily-summary-dialog/daily-summary-dialog.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -42,6 +55,10 @@ import {
     RouterLink,
     RouterLinkActive,
     StartReadingFormComponent,
+    ActivityFeedComponent,
+    ActivityEditDialogComponent,
+    ActivityDeleteDialogComponent,
+    DailySummaryDialogComponent,
     MatIconModule,
     MokaComponent,
     RecommendationsComponent,
@@ -71,8 +88,8 @@ export class DashboardComponent implements OnDestroy {
   private preferences = inject(DashboardPreferencesService);
   private summaryCardExport = inject(SummaryCardExportService);
 
-  public deletingActivity = signal<Activity | null>(null);
-  public editingActivity = signal<Activity | null>(null);
+  public deletingActivity = signal<ReadingActivity | null>(null);
+  public editingActivity = signal<ReadingActivity | null>(null);
   public suggestions = signal<BookSuggestion[]>([]);
   public selectedBook = signal<Book | null>(null);
   public globalFeed = signal<ReadingActivity[]>([]);
@@ -220,28 +237,27 @@ export class DashboardComponent implements OnDestroy {
     this.showSummaryModal.set(false);
   }
 
-  todayLabel(): string {
-    return new Date().toLocaleDateString('pt-BR', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-    });
-  }
+  readonly dailySummary = computed<DailySummaryViewModel>(() => {
+    const progress = this.userProgress();
+    return {
+      readerName: this.authService.currentUser()?.name ?? 'Leitor',
+      dateLabel: new Date().toLocaleDateString('pt-BR', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      }),
+      minutesRead: progress.dailyMinutesRead,
+      goalMinutes: progress.dailyGoalMinutes,
+      coffeeCount: this.manualCoffeeCount(),
+      streakDays: this.streakComponent?.streakCount() ?? progress.currentStreak,
+    };
+  });
 
-  streakDays(): number {
-    return this.streakComponent?.streakCount() ?? this.userProgress().currentStreak;
-  }
-
-  progressPercentage(): number {
-    const p = this.userProgress();
-    if (!p.dailyGoalMinutes) return 0;
-    return Math.min((p.dailyMinutesRead / p.dailyGoalMinutes) * 100, 100);
-  }
-
-  exportSummaryCard(): void {
-    void this.summaryCardExport.export('share-card', 'meu-dia-readva.png');
-  }
-
+  private readonly dailyGoalProgress = computed(() => {
+    const { minutesRead, goalMinutes } = this.dailySummary();
+    if (goalMinutes <= 0) return 0;
+    return Math.min(Math.max((minutesRead / goalMinutes) * 100, 0), 100);
+  });
   selectBookForModal(book: Book): void {
     this.selectedBook.set({ ...book });
   }
@@ -330,61 +346,44 @@ export class DashboardComponent implements OnDestroy {
     this.loadSuggestions();
   }
 
-  openEditActivityModal(activity: Activity): void {
+  openEditActivityModal(activity: ReadingActivity): void {
     this.editingActivity.set(activity);
-    this.editComment = activity.comment || '';
-    this.editPagesRead = activity.pagesRead ?? 0;
-    this.editMinutesRead = activity.minutesRead ?? 0;
-    this.editDetail = activity.detail;
   }
 
   closeEditModal(): void {
     this.editingActivity.set(null);
-    this.editComment = '';
-    this.editDetail = '';
-    this.editPagesRead = 0;
-    this.editMinutesRead = 0;
   }
 
-  saveEditedActivity(): void {
-    const activity = this.editingActivity();
-    if (!activity) return;
-
-    const oldPages: number = activity['pagesRead'] ?? 0;
-    const oldMinutes: number = activity['minutesRead'] ?? 0;
-    const diffPages = this.editPagesRead - oldPages;
-    const diffMinutes = this.editMinutesRead - oldMinutes;
-
-    const minutesLabel =
-      this.editMinutesRead > 0 ? ` • ${this.editMinutesRead} min de leitura` : '';
-    const newDetail = `Leu mais ${this.editPagesRead} páginas${minutesLabel}`;
+  saveEditedActivity(request: ActivityEditRequest): void {
+    const { activity, comment, pagesRead, minutesRead } = request;
+    const oldPages = activity.pagesRead ?? 0;
+    const oldMinutes = activity.minutesRead ?? 0;
+    const diffPages = pagesRead - oldPages;
+    const diffMinutes = minutesRead - oldMinutes;
+    const minutesLabel = minutesRead > 0 ? ` • ${minutesRead} min de leitura` : '';
 
     this.bookService.updateActivity(activity.id, {
-      comment: this.editComment,
-      detail: newDetail,
-      pagesRead: this.editPagesRead,
-      minutesRead: this.editMinutesRead,
+      comment,
+      detail: `Leu mais ${pagesRead} páginas${minutesLabel}`,
+      pagesRead,
+      minutesRead,
     });
-    if (diffPages !== 0) {
-      this.challengesService.onPagesRead(diffPages);
-    }
-    if (diffMinutes !== 0) {
-      this.challengesService.onMinutesRead(diffMinutes);
-    }
+    if (diffPages !== 0) this.challengesService.onPagesRead(diffPages);
+    if (diffMinutes !== 0) this.challengesService.onMinutesRead(diffMinutes);
 
     if (diffMinutes !== 0) {
-      this.userProgress.update((p) => {
+      this.userProgress.update((progress) => {
         const updated = {
-          ...p,
-          dailyMinutesRead: Math.max(0, p.dailyMinutesRead + diffMinutes),
+          ...progress,
+          dailyMinutesRead: Math.max(0, progress.dailyMinutesRead + diffMinutes),
         };
         this.saveDailyProgress(updated);
         return updated;
       });
     }
 
-    if (this.selectedBook()?.id === activity['bookId']) {
-      const updated = this.bookService.myCurrentBook().find((b) => b.id === activity['bookId']);
+    if (this.selectedBook()?.id === activity.bookId) {
+      const updated = this.bookService.myCurrentBook().find((book) => book.id === activity.bookId);
       if (updated) this.selectedBook.set({ ...updated });
     }
 
@@ -392,8 +391,7 @@ export class DashboardComponent implements OnDestroy {
     this.loadGlobalFeed();
     setTimeout(() => this.triggerCoffeeToast(), 400);
   }
-
-  confirmDeleteActivity(activity: Activity): void {
+  confirmDeleteActivity(activity: ReadingActivity): void {
     this.deletingActivity.set(activity);
   }
 
@@ -410,6 +408,11 @@ export class DashboardComponent implements OnDestroy {
 
   onLikeTriggered(activityId: string): void {
     this.bookService.toggleActivityLike(activityId);
+  }
+
+  onFeedTabChanged(tab: FeedTab): void {
+    this.activeTab.set(tab);
+    if (tab === 'global') this.loadGlobalFeed();
   }
 
   loadGlobalFeed(): void {
@@ -482,7 +485,7 @@ export class DashboardComponent implements OnDestroy {
     if (this.mokaFeedback()) return this.mokaFeedback()!;
     if (this.coffeeToast()) return 'coffee';
 
-    if (this.progressPercentage() >= 100) return 'goal';
+    if (this.dailyGoalProgress() >= 100) return 'goal';
     if (this.bookService.myCurrentBook().length === 0) return 'empty-library';
     if (this.activeTab() === 'global' && this.userService.following().length === 0) return 'love';
     if (this.activeTab() === 'meu-feed' && this.bookService.myActivities().length === 0)

@@ -171,3 +171,25 @@
     opacity: 0.7;
   }
 }
+@media (max-width: 600px) {
+  .library-wrapper {
+    padding: 12px 0 24px;
+  }
+  .library-header {
+    align-items: flex-start;
+    padding-left: 44px;
+  }
+  .library-header .back-btn {
+    left: 0;
+  }
+  .shelf-container {
+    padding: 22px 14px 0;
+  }
+  .shelf-row {
+    gap: 8px;
+  }
+  .shelf-plank {
+    left: -14px;
+    right: -14px;
+  }
+}

@@ -1,0 +1,74 @@
+<div class="modal-overlay" (click)="cancelled.emit()" role="presentation">
+  <div
+    class="modal-content"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="edit-activity-title"
+    cdkTrapFocus
+    [cdkTrapFocusAutoCapture]="true"
+    (click)="$event.stopPropagation()"
+  >
+    <header class="modal-header">
+      <h3 id="edit-activity-title">Editar atividade</h3>
+      <button
+        type="button"
+        class="close-modal"
+        (click)="cancelled.emit()"
+        aria-label="Fechar edição da atividade"
+      >
+        ✕
+      </button>
+    </header>
+    <div class="modal-body">
+      <div class="inline-inputs">
+        <div class="field-wrapper">
+          <label class="field-label" for="edit-pages-read">Páginas lidas</label>
+          <input
+            id="edit-pages-read"
+            type="number"
+            [(ngModel)]="pagesRead"
+            min="0"
+            placeholder="Ex: 50"
+            class="premium-input"
+          />
+        </div>
+        <div class="field-wrapper">
+          <label class="field-label" for="edit-minutes-read">Minutos lidos</label>
+          <input
+            id="edit-minutes-read"
+            type="number"
+            [(ngModel)]="minutesRead"
+            min="0"
+            placeholder="Ex: 30"
+            class="premium-input"
+          />
+        </div>
+      </div>
+      <div class="field-wrapper">
+        <label class="field-label" for="edit-activity-comment">Comentário</label>
+        <textarea
+          id="edit-activity-comment"
+          [(ngModel)]="comment"
+          rows="3"
+          placeholder="O que você achou da leitura?"
+          class="premium-input"
+        ></textarea>
+      </div>
+      <div class="detail-preview">
+        <span class="detail-preview-label">Prévia</span>
+        <span class="detail-preview-text">
+          Leu mais {{ pagesRead }} páginas
+          @if (minutesRead > 0) {
+            • {{ minutesRead }} min de leitura
+          }
+        </span>
+      </div>
+    </div>
+    <footer class="modal-footer">
+      <button type="button" class="premium-btn-secondary" (click)="cancelled.emit()">
+        Cancelar
+      </button>
+      <button type="button" class="premium-btn" (click)="save()">Salvar alterações</button>
+    </footer>
+  </div>
+</div>
