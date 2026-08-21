@@ -79,37 +79,12 @@
           />
         }
 
-        @if (deletingActivity()) {
-          <div class="modal-overlay" (click)="cancelDeleteActivity()">
-            <div
-              class="modal-content delete-modal"
-              role="alertdialog"
-              aria-modal="true"
-              aria-labelledby="delete-activity-title"
-              aria-describedby="delete-activity-description"
-              cdkTrapFocus
-              [cdkTrapFocusAutoCapture]="true"
-              (click)="$event.stopPropagation()"
-            >
-              <div class="delete-modal-icon">
-                <img src="assets/icon_triste.gif" alt="Progresso" class="icon-triste" />
-              </div>
-              <h3 id="delete-activity-title">Excluir atividade?</h3>
-              <p id="delete-activity-description">
-                Você está prestes a excluir sua atividade e publicação em
-                <strong>{{ deletingActivity()!.bookTitle }}</strong
-                >. Essa ação não pode ser desfeita.
-              </p>
-              <div class="modal-footer">
-                <button class="premium-btn-secondary" (click)="cancelDeleteActivity()">
-                  Cancelar
-                </button>
-                <button class="delete-confirm-btn" (click)="executeDeleteActivity()">
-                  Excluir
-                </button>
-              </div>
-            </div>
-          </div>
+        @if (deletingActivity(); as activity) {
+          <app-activity-delete-dialog
+            [activity]="activity"
+            (confirmed)="executeDeleteActivity()"
+            (cancelled)="cancelDeleteActivity()"
+          />
         }
       </main>
 

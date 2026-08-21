@@ -1,0 +1,26 @@
+<div class="modal-overlay" (click)="cancelled.emit()" role="presentation">
+  <div
+    class="delete-modal"
+    role="alertdialog"
+    aria-modal="true"
+    aria-labelledby="delete-activity-title"
+    aria-describedby="delete-activity-description"
+    cdkTrapFocus
+    [cdkTrapFocusAutoCapture]="true"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="delete-modal-icon">
+      <img src="assets/icon_triste.gif" alt="" class="icon-triste" />
+    </div>
+    <h3 id="delete-activity-title">Excluir atividade?</h3>
+    <p id="delete-activity-description">
+      Você está prestes a excluir sua atividade e publicação em
+      <strong>{{ activity().bookTitle }}</strong
+      >. Essa ação não pode ser desfeita.
+    </p>
+    <footer class="modal-footer">
+      <button type="button" class="secondary-btn" (click)="cancelled.emit()">Cancelar</button>
+      <button type="button" class="delete-btn" (click)="confirmed.emit()">Excluir</button>
+    </footer>
+  </div>
+</div>

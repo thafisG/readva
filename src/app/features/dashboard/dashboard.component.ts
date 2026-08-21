@@ -37,6 +37,7 @@ import {
   ActivityEditDialogComponent,
   type ActivityEditRequest,
 } from './components/activity-edit-dialog/activity-edit-dialog.component';
+import { ActivityDeleteDialogComponent } from './components/activity-delete-dialog/activity-delete-dialog.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -52,6 +53,7 @@ import {
     StartReadingFormComponent,
     ActivityFeedComponent,
     ActivityEditDialogComponent,
+    ActivityDeleteDialogComponent,
     MatIconModule,
     MokaComponent,
     RecommendationsComponent,
