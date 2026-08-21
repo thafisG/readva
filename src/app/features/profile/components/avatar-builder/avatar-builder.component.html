@@ -1,0 +1,109 @@
+<div class="backdrop" (click)="cancelled.emit()">
+  <section
+    class="builder"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="avatar-title"
+    (click)="$event.stopPropagation()"
+  >
+    <header>
+      <div>
+        <span>Seu personagem</span>
+        <h2 id="avatar-title">Crie seu bonequinho</h2>
+      </div>
+      <button class="close" (click)="cancelled.emit()" aria-label="Fechar">
+        <mat-icon>close</mat-icon>
+      </button>
+    </header>
+
+    <div class="content">
+      <div class="preview">
+        <div class="preview-glow"></div>
+        <img [src]="previewUrl()" alt="Prévia do seu avatar" />
+        <p>Esse será o seu rosto na Readva</p>
+      </div>
+      <div class="controls">
+        <fieldset>
+          <legend>Tom de pele</legend>
+          <div class="swatches">
+            @for (option of skinOptions; track option.value) {
+              <button
+                type="button"
+                class="swatch"
+                [class.selected]="config().skinTone === option.value"
+                [attr.aria-label]="option.label"
+                [style.--swatch]="option.color"
+                (click)="update('skinTone', option.value)"
+              ></button>
+            }
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Cabelo</legend>
+          <div class="choice-grid">
+            @for (option of hairStyleOptions; track option.value) {
+              <button
+                type="button"
+                [class.selected]="config().hairStyle === option.value"
+                (click)="update('hairStyle', option.value)"
+              >
+                <mat-icon>{{ option.icon }}</mat-icon
+                ><span>{{ option.label }}</span>
+              </button>
+            }
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Cor do cabelo</legend>
+          <div class="swatches">
+            @for (option of hairColorOptions; track option.value) {
+              <button
+                type="button"
+                class="swatch"
+                [class.selected]="config().hairColor === option.value"
+                [attr.aria-label]="option.label"
+                [style.--swatch]="option.color"
+                (click)="update('hairColor', option.value)"
+              ></button>
+            }
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Cor da roupa</legend>
+          <div class="swatches">
+            @for (option of shirtOptions; track option.value) {
+              <button
+                type="button"
+                class="swatch"
+                [class.selected]="config().shirtColor === option.value"
+                [attr.aria-label]="option.label"
+                [style.--swatch]="option.color"
+                (click)="update('shirtColor', option.value)"
+              ></button>
+            }
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Acessório</legend>
+          <div class="choice-grid">
+            @for (option of accessoryOptions; track option.value) {
+              <button
+                type="button"
+                [class.selected]="config().accessory === option.value"
+                (click)="update('accessory', option.value)"
+              >
+                <mat-icon>{{ option.icon }}</mat-icon
+                ><span>{{ option.label }}</span>
+              </button>
+            }
+          </div>
+        </fieldset>
+      </div>
+    </div>
+
+    <footer>
+      <button class="secondary" (click)="cancelled.emit()">Cancelar</button
+      ><button class="primary" (click)="save()"><mat-icon>check</mat-icon>Usar este avatar</button>
+    </footer>
+  </section>
+</div>

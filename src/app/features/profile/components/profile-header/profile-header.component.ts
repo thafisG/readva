@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, output } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../dashboard/services/auth.service';
@@ -12,6 +12,7 @@ import { ChallengesService } from '../../../dashboard/services/challenges.servic
   styleUrl: './profile-header.component.scss',
 })
 export class ProfileHeaderComponent {
+  readonly customizeAvatar = output<void>();
   readonly auth = inject(AuthService);
   readonly challenges = inject(ChallengesService);
 }

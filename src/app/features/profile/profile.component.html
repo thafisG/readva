@@ -1,6 +1,6 @@
 <div class="profile-page">
   <main class="profile-content">
-    <app-profile-header />
+    <app-profile-header (customizeAvatar)="avatarBuilderOpen.set(true)" />
     @let stats = profileStatistics.statistics();
     <app-stats-overview [stats]="stats" />
     <section class="insights-grid">
@@ -11,3 +11,6 @@
     </section>
   </main>
 </div>
+@if (avatarBuilderOpen()) {
+  <app-avatar-builder (saved)="saveAvatar($event)" (cancelled)="closeAvatarBuilder()" />
+}

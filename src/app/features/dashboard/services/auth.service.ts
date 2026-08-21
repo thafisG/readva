@@ -42,6 +42,20 @@ export class AuthService {
     return this.loadUsers().find((user) => user.email === normalizedEmail);
   }
 
+  updateAvatar(avatar: string): boolean {
+    const current = this.currentUserSignal();
+    if (!current || !avatar.startsWith('data:image/svg+xml')) return false;
+    const updated = { ...current, avatar };
+    const users = this.loadUsers();
+    const nextUsers = users.some((user) => user.email === current.email)
+      ? users.map((user) => (user.email === current.email ? updated : user))
+      : [...users, updated];
+    this.storage.write(STORAGE_KEYS.users, nextUsers);
+    this.storage.write(STORAGE_KEYS.activeSession, updated);
+    this.currentUserSignal.set(updated);
+    return true;
+  }
+
   logout(): void {
     this.storage.remove(STORAGE_KEYS.activeSession);
     this.currentUserSignal.set(null);

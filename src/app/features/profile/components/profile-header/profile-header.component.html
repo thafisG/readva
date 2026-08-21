@@ -12,6 +12,10 @@
       <span class="eyebrow">Meu perfil de leitura</span>
       <h1>{{ auth.currentUser()?.name || 'Leitor' }}</h1>
       <p>{{ auth.currentUser()?.email }}</p>
+      <button class="avatar-action" (click)="customizeAvatar.emit()">
+        <mat-icon>palette</mat-icon>
+        Personalizar avatar
+      </button>
     </div>
   </div>
 
