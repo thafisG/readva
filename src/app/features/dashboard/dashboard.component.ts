@@ -13,7 +13,7 @@ import { UserService } from './services/user.service';
 import { ChallengesService } from './services/challenges.service';
 import { StreakChallengeComponent } from './components/streak-challenge/streak-challenge.component';
 import { LoginComponent } from '../login/login.component';
-import type { Activity, UserProgress } from './interfaces/dashboard.interface';
+import type { UserProgress } from './interfaces/dashboard.interface';
 import type { Book, BookSuggestion } from '../../core/models/book.model';
 import type { ReadingActivity } from '../../core/models/activity.model';
 import type { BookActionEvent } from './book-action-panel/book-action-panel.component';
@@ -33,6 +33,10 @@ import {
   ActivityFeedComponent,
   type FeedTab,
 } from './components/activity-feed/activity-feed.component';
+import {
+  ActivityEditDialogComponent,
+  type ActivityEditRequest,
+} from './components/activity-edit-dialog/activity-edit-dialog.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -47,6 +51,7 @@ import {
     RouterLinkActive,
     StartReadingFormComponent,
     ActivityFeedComponent,
+    ActivityEditDialogComponent,
     MatIconModule,
     MokaComponent,
     RecommendationsComponent,
@@ -76,8 +81,8 @@ export class DashboardComponent implements OnDestroy {
   private preferences = inject(DashboardPreferencesService);
   private summaryCardExport = inject(SummaryCardExportService);
 
-  public deletingActivity = signal<Activity | null>(null);
-  public editingActivity = signal<Activity | null>(null);
+  public deletingActivity = signal<ReadingActivity | null>(null);
+  public editingActivity = signal<ReadingActivity | null>(null);
   public suggestions = signal<BookSuggestion[]>([]);
   public selectedBook = signal<Book | null>(null);
   public globalFeed = signal<ReadingActivity[]>([]);
@@ -335,61 +340,44 @@ export class DashboardComponent implements OnDestroy {
     this.loadSuggestions();
   }
 
-  openEditActivityModal(activity: Activity): void {
+  openEditActivityModal(activity: ReadingActivity): void {
     this.editingActivity.set(activity);
-    this.editComment = activity.comment || '';
-    this.editPagesRead = activity.pagesRead ?? 0;
-    this.editMinutesRead = activity.minutesRead ?? 0;
-    this.editDetail = activity.detail;
   }
 
   closeEditModal(): void {
     this.editingActivity.set(null);
-    this.editComment = '';
-    this.editDetail = '';
-    this.editPagesRead = 0;
-    this.editMinutesRead = 0;
   }
 
-  saveEditedActivity(): void {
-    const activity = this.editingActivity();
-    if (!activity) return;
-
-    const oldPages: number = activity['pagesRead'] ?? 0;
-    const oldMinutes: number = activity['minutesRead'] ?? 0;
-    const diffPages = this.editPagesRead - oldPages;
-    const diffMinutes = this.editMinutesRead - oldMinutes;
-
-    const minutesLabel =
-      this.editMinutesRead > 0 ? ` • ${this.editMinutesRead} min de leitura` : '';
-    const newDetail = `Leu mais ${this.editPagesRead} páginas${minutesLabel}`;
+  saveEditedActivity(request: ActivityEditRequest): void {
+    const { activity, comment, pagesRead, minutesRead } = request;
+    const oldPages = activity.pagesRead ?? 0;
+    const oldMinutes = activity.minutesRead ?? 0;
+    const diffPages = pagesRead - oldPages;
+    const diffMinutes = minutesRead - oldMinutes;
+    const minutesLabel = minutesRead > 0 ? ` • ${minutesRead} min de leitura` : '';
 
     this.bookService.updateActivity(activity.id, {
-      comment: this.editComment,
-      detail: newDetail,
-      pagesRead: this.editPagesRead,
-      minutesRead: this.editMinutesRead,
+      comment,
+      detail: `Leu mais ${pagesRead} páginas${minutesLabel}`,
+      pagesRead,
+      minutesRead,
     });
-    if (diffPages !== 0) {
-      this.challengesService.onPagesRead(diffPages);
-    }
-    if (diffMinutes !== 0) {
-      this.challengesService.onMinutesRead(diffMinutes);
-    }
+    if (diffPages !== 0) this.challengesService.onPagesRead(diffPages);
+    if (diffMinutes !== 0) this.challengesService.onMinutesRead(diffMinutes);
 
     if (diffMinutes !== 0) {
-      this.userProgress.update((p) => {
+      this.userProgress.update((progress) => {
         const updated = {
-          ...p,
-          dailyMinutesRead: Math.max(0, p.dailyMinutesRead + diffMinutes),
+          ...progress,
+          dailyMinutesRead: Math.max(0, progress.dailyMinutesRead + diffMinutes),
         };
         this.saveDailyProgress(updated);
         return updated;
       });
     }
 
-    if (this.selectedBook()?.id === activity['bookId']) {
-      const updated = this.bookService.myCurrentBook().find((b) => b.id === activity['bookId']);
+    if (this.selectedBook()?.id === activity.bookId) {
+      const updated = this.bookService.myCurrentBook().find((book) => book.id === activity.bookId);
       if (updated) this.selectedBook.set({ ...updated });
     }
 
@@ -397,8 +385,7 @@ export class DashboardComponent implements OnDestroy {
     this.loadGlobalFeed();
     setTimeout(() => this.triggerCoffeeToast(), 400);
   }
-
-  confirmDeleteActivity(activity: Activity): void {
+  confirmDeleteActivity(activity: ReadingActivity): void {
     this.deletingActivity.set(activity);
   }
 

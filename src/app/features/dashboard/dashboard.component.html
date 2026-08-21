@@ -71,85 +71,12 @@
           (followToggled)="toggleFollow($event)"
           (globalActivityLiked)="onLikeGlobalActivity($event)"
         />
-        @if (editingActivity()) {
-          <div class="modal-overlay" (click)="closeEditModal()" role="presentation">
-            <div
-              class="modal-content"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="edit-activity-title"
-              cdkTrapFocus
-              [cdkTrapFocusAutoCapture]="true"
-              (click)="$event.stopPropagation()"
-            >
-              <div class="modal-header">
-                <h3 id="edit-activity-title">Editar atividade</h3>
-                <button
-                  class="close-modal"
-                  (click)="closeEditModal()"
-                  aria-label="Fechar edição da atividade"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div class="modal-body">
-                <div class="inline-inputs">
-                  <div class="field-wrapper">
-                    <label class="field-label" for="edit-pages-read">Páginas lidas</label>
-                    <input
-                      id="edit-pages-read"
-                      type="number"
-                      [(ngModel)]="editPagesRead"
-                      min="0"
-                      placeholder="Ex: 50"
-                      class="premium-input"
-                    />
-                  </div>
-
-                  <div class="field-wrapper">
-                    <label class="field-label" for="edit-minutes-read">Minutos lidos</label>
-                    <input
-                      id="edit-minutes-read"
-                      type="number"
-                      [(ngModel)]="editMinutesRead"
-                      min="0"
-                      placeholder="Ex: 30"
-                      class="premium-input"
-                    />
-                  </div>
-                </div>
-
-                <div class="field-wrapper">
-                  <label class="field-label" for="edit-activity-comment">Comentário</label>
-                  <textarea
-                    id="edit-activity-comment"
-                    [(ngModel)]="editComment"
-                    rows="3"
-                    placeholder="O que você achou da leitura?"
-                    class="premium-input"
-                  ></textarea>
-                </div>
-
-                <div class="detail-preview">
-                  <span class="detail-preview-label">Prévia</span>
-                  <span class="detail-preview-text">
-                    Leu mais {{ editPagesRead }} páginas
-                    @if (editMinutesRead > 0) {
-                      • {{ editMinutesRead }} min de leitura
-                    }
-                  </span>
-                </div>
-              </div>
-
-              <div class="modal-footer">
-                <button class="premium-btn-secondary" (click)="closeEditModal()">Cancelar</button>
-                <button class="premium-btn" (click)="saveEditedActivity()">
-                  Salvar alterações
-                </button>
-              </div>
-            </div>
-          </div>
+        @if (editingActivity(); as activity) {
+          <app-activity-edit-dialog
+            [activity]="activity"
+            (saved)="saveEditedActivity($event)"
+            (cancelled)="closeEditModal()"
+          />
         }
 
         @if (deletingActivity()) {
