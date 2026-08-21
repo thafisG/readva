@@ -73,3 +73,21 @@
 .delete-btn:hover {
   opacity: 0.85;
 }
+@media (max-width: 420px) {
+  .modal-overlay {
+    align-items: flex-end;
+  }
+  .delete-modal {
+    width: 100%;
+    padding: 24px 16px max(20px, env(safe-area-inset-bottom));
+    border-radius: 20px 20px 0 0;
+  }
+  .modal-footer {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+  .secondary-btn,
+  .delete-btn {
+    width: 100%;
+  }
+}

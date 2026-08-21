@@ -136,3 +136,31 @@
   background: #f5ede8;
   color: #463b34;
 }
+@media (max-width: 480px) {
+  .modal-overlay {
+    align-items: flex-end;
+  }
+  .modal-content {
+    width: 100%;
+    max-height: 94dvh;
+    border-radius: 20px 20px 0 0;
+  }
+  .share-card-export {
+    padding: 20px 16px;
+  }
+  .share-card-top {
+    align-items: flex-start;
+  }
+  .share-logo {
+    font-size: 0.9rem;
+  }
+  .share-metrics {
+    gap: 8px;
+  }
+  .share-metric-val {
+    font-size: 1.1rem;
+  }
+  .modal-footer {
+    padding: 12px 16px max(12px, env(safe-area-inset-bottom));
+  }
+}

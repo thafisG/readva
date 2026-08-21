@@ -213,3 +213,22 @@
 .heart-icon {
   font-size: 0.9rem;
 }
+@media (max-width: 560px) {
+  .feed-tabs {
+    width: 100%;
+  }
+  .feed-tab {
+    flex: 1;
+    justify-content: center;
+  }
+  .activity-card {
+    padding: 16px;
+  }
+  .activity-header,
+  .activity-actions {
+    flex-wrap: wrap;
+  }
+  .follow-toggle {
+    margin-left: 50px;
+  }
+}

@@ -246,3 +246,9 @@
     border-color: #a07850;
   }
 }
+@media (max-width: 700px) {
+  .streak-card {
+    max-width: none;
+    width: 100%;
+  }
+}

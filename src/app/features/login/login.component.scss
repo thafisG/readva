@@ -193,3 +193,33 @@
     }
   }
 }
+// Compact login layout for phones and short viewports.
+@media (max-width: 600px) {
+  .login-wrapper {
+    align-items: flex-start;
+    padding: 12px;
+  }
+  .login-split {
+    min-height: auto;
+    border-radius: 18px;
+  }
+  .login-right {
+    padding: 28px 20px;
+  }
+  .login-logo {
+    margin-bottom: 24px;
+  }
+}
+
+@media (max-height: 650px) and (min-width: 601px) {
+  .login-wrapper {
+    align-items: flex-start;
+    padding-block: 16px;
+  }
+  .login-split {
+    min-height: 0;
+  }
+  .login-right {
+    padding-block: 28px;
+  }
+}

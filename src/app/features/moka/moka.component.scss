@@ -449,3 +449,12 @@ $themes: (
     transition: opacity 0.15s ease !important;
   }
 }
+@media (max-width: 480px) {
+  .moka-floating {
+    right: 12px;
+    bottom: max(12px, env(safe-area-inset-bottom));
+  }
+  .moka-bubble {
+    width: min(248px, calc(100vw - 24px));
+  }
+}

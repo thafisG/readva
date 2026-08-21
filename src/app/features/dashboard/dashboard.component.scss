@@ -787,3 +787,109 @@ $themes: (
     transform: translateY(-5px);
   }
 }
+// Responsive layout orchestration. Component-specific details stay in their own stylesheets.
+.left-column,
+.center-column,
+.right-column {
+  min-width: 0;
+}
+.left-column {
+  grid-area: left;
+}
+.center-column {
+  grid-area: center;
+}
+.right-column {
+  grid-area: right;
+}
+
+@media (max-width: 1180px) {
+  .dashboard-wrapper {
+    padding: 36px 0;
+  }
+  .dashboard-container,
+  .dashboard-container.panel-open {
+    grid-template-columns: 210px minmax(0, 1fr) 250px;
+    grid-template-areas: 'left center right';
+    gap: 24px;
+  }
+  .action-panel-column {
+    display: none;
+  }
+}
+
+@media (max-width: 920px) {
+  .dashboard-container,
+  .dashboard-container.panel-open {
+    grid-template-columns: 200px minmax(0, 1fr);
+    grid-template-areas: 'left center' 'left right';
+    align-items: start;
+  }
+  .left-column {
+    position: sticky;
+    top: 24px;
+  }
+  .right-column {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+
+@media (max-width: 700px) {
+  .dashboard-wrapper {
+    padding: 20px 0 32px;
+  }
+  .dashboard-container,
+  .dashboard-container.panel-open {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'left' 'center' 'right';
+    gap: 20px;
+    padding: 0 16px;
+  }
+  .left-column {
+    position: static;
+  }
+  .navigation-card {
+    flex-direction: row;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: thin;
+  }
+  .nav-button {
+    width: auto;
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .nav-separator {
+    width: 1px;
+    height: auto;
+    margin: 4px;
+  }
+  .right-column {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 420px) {
+  .dashboard-container,
+  .dashboard-container.panel-open {
+    padding: 0 12px;
+  }
+  .center-banner {
+    height: 104px;
+    border-radius: 16px;
+  }
+  .center-banner-overlay {
+    padding: 0 16px;
+  }
+  .moka-card {
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
+  }
+  .moka-img {
+    width: 64px;
+    height: 64px;
+  }
+}

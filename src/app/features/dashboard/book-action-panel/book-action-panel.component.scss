@@ -477,3 +477,28 @@
   width: 14px;
   height: 14px;
 }
+@media (max-width: 640px) {
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .book-modal {
+    width: 100%;
+    max-height: 94dvh;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 20px 20px 0 0;
+  }
+  .modal-body {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .book-left {
+    width: 100%;
+    padding: 18px 20px 12px;
+  }
+  .modal-footer {
+    padding: 12px 16px max(12px, env(safe-area-inset-bottom));
+  }
+}
