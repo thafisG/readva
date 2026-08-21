@@ -22,8 +22,7 @@ export class LoginComponent {
     if (!this.loginEmail.trim()) return;
 
     const cleanedEmail = this.loginEmail.trim().toLowerCase();
-    const usersList = JSON.parse(localStorage.getItem('@readva:users_db') || '[]');
-    const existingUser = usersList.find((u: any) => u.email === cleanedEmail);
+    const existingUser = this.authService.findUser(cleanedEmail);
 
     if (existingUser) {
       this.authService.authenticate(cleanedEmail, existingUser.name);

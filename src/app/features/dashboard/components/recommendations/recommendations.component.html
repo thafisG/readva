@@ -1,0 +1,35 @@
+<section class="premium-sidebar-card text-suggestions" aria-labelledby="recommendations-title">
+  <h3 id="recommendations-title" class="sidebar-title">Recomendado para você</h3>
+  <div class="rec-banner">
+    <img src="assets/ilustra4.jpg" alt="" aria-hidden="true" width="260" height="64" />
+    <span class="rec-banner-label">✨ Para você</span>
+  </div>
+  @if (suggestions().length) {
+    <div class="suggestions-grid">
+      @for (suggestion of suggestions(); track suggestion.id) {
+        <article class="suggestion-row">
+          <img
+            [src]="suggestion.coverUrl"
+            [alt]="'Capa de ' + suggestion.title"
+            class="sug-cover"
+            width="26"
+            height="38"
+            loading="lazy"
+          />
+          <div class="sug-meta">
+            <h4>{{ suggestion.title }}</h4>
+            <p>{{ suggestion.author }}</p>
+            @if (suggestion.matchPercentage) {
+              <span class="match">{{ suggestion.matchPercentage }}% compatível</span>
+            }
+            @if (suggestion.explanation) {
+              <span class="explanation">{{ suggestion.explanation }}</span>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  } @else {
+    <p class="empty-suggestions" role="status">Buscando recomendações para você...</p>
+  }
+</section>

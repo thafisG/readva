@@ -57,52 +57,7 @@
             </div>
           </div>
         </div>
-        <div class="premium-activity-card post-box">
-          <div class="form-grid">
-            <div class="field-wrapper">
-              <label class="field-label">Buscar e preencher automaticamente</label>
-              <app-book-search (bookSelected)="onBookSelected($event)"></app-book-search>
-            </div>
-
-            <div class="field-wrapper">
-              <label class="field-label">Título do Livro <span class="required">*</span></label>
-              <input [(ngModel)]="newTitle" placeholder="Ex: Dom Casmurro" class="premium-input" />
-            </div>
-
-            <div class="field-wrapper">
-              <label class="field-label">Autor <span class="required">*</span></label>
-              <input
-                [(ngModel)]="newAuthor"
-                placeholder="Ex: Machado de Assis"
-                class="premium-input"
-              />
-            </div>
-
-            <div class="inline-inputs">
-              <div class="field-wrapper">
-                <label class="field-label">Total de Páginas <span class="required">*</span></label>
-                <input
-                  type="number"
-                  [(ngModel)]="newTotalPages"
-                  placeholder="Ex: 320"
-                  class="premium-input"
-                />
-              </div>
-
-              <div class="field-wrapper">
-                <label class="field-label">Categoria <span class="required">*</span></label>
-                <select [(ngModel)]="newCategory" class="premium-input half">
-                  <option value="" disabled>Selecione uma categoria</option>
-                  @for (cat of categories; track cat) {
-                    <option [value]="cat">{{ cat }}</option>
-                  }
-                </select>
-              </div>
-            </div>
-
-            <button (click)="handleStartBook()" class="premium-btn">Começar leitura</button>
-          </div>
-        </div>
+        <app-start-reading-form (submitted)="handleStartBook($event)" />
 
         <div class="feed-tabs">
           <button
@@ -129,7 +84,7 @@
             @for (activity of bookService.myActivities(); track activity.id) {
               <article class="premium-activity-card">
                 <div class="card-header">
-                  <img [src]="activity.userAvatar" class="user-avatar" />
+                  <img [src]="activity.userAvatar" [alt]="activity.userName" class="user-avatar" />
                   <div class="user-meta">
                     <span class="username">{{ activity.userName }}</span>
                     <span class="timestamp">{{ activity.timestamp }}</span>
@@ -203,7 +158,11 @@
               @for (activity of globalFeed(); track activity.id) {
                 <article class="premium-activity-card">
                   <div class="card-header">
-                    <img [src]="activity.userAvatar" class="user-avatar" />
+                    <img
+                      [src]="activity.userAvatar"
+                      [alt]="activity.userName"
+                      class="user-avatar"
+                    />
                     <div class="user-meta">
                       <span class="username">{{ activity.userName }}</span>
                       <span class="timestamp">{{ activity.timestamp }}</span>
@@ -245,18 +204,33 @@
         }
 
         @if (editingActivity()) {
-          <div class="modal-overlay" (click)="closeEditModal()">
-            <div class="modal-content" (click)="$event.stopPropagation()">
+          <div class="modal-overlay" (click)="closeEditModal()" role="presentation">
+            <div
+              class="modal-content"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="edit-activity-title"
+              cdkTrapFocus
+              [cdkTrapFocusAutoCapture]="true"
+              (click)="$event.stopPropagation()"
+            >
               <div class="modal-header">
-                <h3>Editar atividade</h3>
-                <button class="close-modal" (click)="closeEditModal()">✕</button>
+                <h3 id="edit-activity-title">Editar atividade</h3>
+                <button
+                  class="close-modal"
+                  (click)="closeEditModal()"
+                  aria-label="Fechar edição da atividade"
+                >
+                  ✕
+                </button>
               </div>
 
               <div class="modal-body">
                 <div class="inline-inputs">
                   <div class="field-wrapper">
-                    <label class="field-label">Páginas lidas</label>
+                    <label class="field-label" for="edit-pages-read">Páginas lidas</label>
                     <input
+                      id="edit-pages-read"
                       type="number"
                       [(ngModel)]="editPagesRead"
                       min="0"
@@ -266,8 +240,9 @@
                   </div>
 
                   <div class="field-wrapper">
-                    <label class="field-label">Minutos lidos</label>
+                    <label class="field-label" for="edit-minutes-read">Minutos lidos</label>
                     <input
+                      id="edit-minutes-read"
                       type="number"
                       [(ngModel)]="editMinutesRead"
                       min="0"
@@ -278,8 +253,9 @@
                 </div>
 
                 <div class="field-wrapper">
-                  <label class="field-label">Comentário</label>
+                  <label class="field-label" for="edit-activity-comment">Comentário</label>
                   <textarea
+                    id="edit-activity-comment"
                     [(ngModel)]="editComment"
                     rows="3"
                     placeholder="O que você achou da leitura?"
@@ -310,12 +286,21 @@
 
         @if (deletingActivity()) {
           <div class="modal-overlay" (click)="cancelDeleteActivity()">
-            <div class="modal-content delete-modal" (click)="$event.stopPropagation()">
+            <div
+              class="modal-content delete-modal"
+              role="alertdialog"
+              aria-modal="true"
+              aria-labelledby="delete-activity-title"
+              aria-describedby="delete-activity-description"
+              cdkTrapFocus
+              [cdkTrapFocusAutoCapture]="true"
+              (click)="$event.stopPropagation()"
+            >
               <div class="delete-modal-icon">
                 <img src="assets/icon_triste.gif" alt="Progresso" class="icon-triste" />
               </div>
-              <h3>Excluir atividade?</h3>
-              <p>
+              <h3 id="delete-activity-title">Excluir atividade?</h3>
+              <p id="delete-activity-description">
                 Você está prestes a excluir sua atividade e publicação em
                 <strong>{{ deletingActivity()!.bookTitle }}</strong
                 >. Essa ação não pode ser desfeita.
@@ -346,7 +331,7 @@
                   (click)="selectBookForModal(book)"
                   title="Clique para gerenciar"
                 >
-                  <img [src]="book.coverUrl" class="book-cover" />
+                  <img [src]="book.coverUrl" [alt]="'Capa de ' + book.title" class="book-cover" />
                   <div class="book-details">
                     <span class="tag">{{ book.category }}</span>
                     <h4>{{ book.title }}</h4>
@@ -375,72 +360,14 @@
           }
         </section>
 
-        <section class="premium-sidebar-card text-suggestions">
-          <h3 class="sidebar-title">Recomendado para você</h3>
-
-          <div class="rec-banner">
-            <img src="assets/ilustra4.jpg" alt="" aria-hidden="true" />
-            <span class="rec-banner-label">✨ Para você</span>
-          </div>
-
-          @if (suggestions().length > 0) {
-            <div class="suggestions-grid">
-              @for (sug of suggestions(); track sug.id) {
-                <div class="suggestion-row">
-                  <img [src]="sug.coverUrl" [alt]="sug.title" class="sug-cover" />
-                  <div class="sug-meta">
-                    <h5>{{ sug.title }}</h5>
-                    <p>{{ sug.author }}</p>
-                    @if (sug.matchPercentage) {
-                      <span class="match"> {{ sug.matchPercentage }}% compatível </span>
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          } @else {
-            <div class="empty-suggestions">
-              <p>Buscando recomendações para você...</p>
-            </div>
-          }
-        </section>
-
-        <section class="premium-sidebar-card">
-          <h3 class="sidebar-title">Leitores para seguir</h3>
-
-          @if (userService.suggestions().length > 0) {
-            <div class="follow-suggestions">
-              @for (user of userService.suggestions(); track user.email) {
-                <div class="follow-row">
-                  <img [src]="user.avatar" [alt]="user.name" class="follow-avatar" />
-                  <span class="follow-name">{{ user.name }}</span>
-                  <button class="follow-btn" (click)="followUser(user.email)">+ Seguir</button>
-                </div>
-              }
-            </div>
-          } @else {
-            <p class="no-book-text">Você já segue todos os leitores disponíveis.</p>
-          }
-
-          @if (userService.following().length > 0) {
-            <div class="following-list">
-              <p class="following-label">Seguindo ({{ userService.following().length }})</p>
-              @for (email of userService.following(); track email) {
-                <div class="following-row">
-                  <img
-                    [src]="'https://i.pravatar.cc/24?u=' + email.split('@')[0]"
-                    [alt]="getUserName(email)"
-                    class="following-avatar"
-                  />
-                  <span class="following-name">{{ getUserName(email) }}</span>
-                  <button class="unfollow-btn" (click)="unfollowUser(email)">
-                    Deixar de seguir
-                  </button>
-                </div>
-              }
-            </div>
-          }
-        </section>
+        <app-recommendations [suggestions]="suggestions()" />
+        <app-social-panel
+          [suggestions]="userService.suggestions()"
+          [following]="userService.following()"
+          [users]="userService.allUsers()"
+          (follow)="followUser($event)"
+          (unfollow)="unfollowUser($event)"
+        />
       </aside>
     </div>
   </div>
@@ -458,12 +385,20 @@
 
   @if (showSummaryModal()) {
     <div class="modal-overlay" (click)="closeSummaryModal()">
-      <div class="modal-content share-modal" (click)="$event.stopPropagation()">
+      <div
+        class="modal-content share-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Resumo diário de leitura"
+        cdkTrapFocus
+        [cdkTrapFocusAutoCapture]="true"
+        (click)="$event.stopPropagation()"
+      >
         <div id="share-card" class="share-card-export">
           <div class="share-card-top">
             <div class="share-avatar">
               {{ (authService.currentUser()?.name || 'L').split(' ')[0][0]
-              }}{{ (authService.currentUser()?.name || '').split(' ')[1]?.[0] ?? '' }}
+              }}{{ (authService.currentUser()?.name || '').split(' ')[1]?.[0] }}
             </div>
             <div>
               <div class="share-name">

@@ -2,7 +2,7 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { BookDetailModalComponent } from './book-detail/book-detail-modal.component';
 import { BookService } from '../../services/book.service';
-import { Activity } from '../../interfaces/dashboard.interface';
+import type { Activity } from '../../interfaces/dashboard.interface';
 
 export interface BookStats {
   id: string;

@@ -31,8 +31,7 @@
 }
 
 .premium-activity-card,
-.premium-sidebar-card,
-.post-box {
+.premium-sidebar-card {
   background: #fffdfb;
   border: 1px solid #efe7df;
   border-radius: 24px;
@@ -160,19 +159,6 @@ mat-icon {
   font-size: 11px;
   color: rgba(255, 255, 255, 0.82);
   margin: 0;
-}
-
-.post-box {
-  border: 1px solid var(--border);
-  margin-bottom: 20px;
-  box-shadow: var(--shadow-md);
-  padding: 20px;
-}
-
-.form-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
 }
 
 .inline-inputs {

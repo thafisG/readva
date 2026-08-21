@@ -1,16 +1,16 @@
+import type { OnInit, OnDestroy, AfterViewChecked } from '@angular/core';
 import {
   Component,
   input,
   output,
   signal,
   computed,
-  OnInit,
-  OnDestroy,
-  AfterViewChecked,
   inject,
   ChangeDetectorRef,
 } from '@angular/core';
-import { UserProgress } from '../../interfaces/dashboard.interface';
+import type { UserProgress } from '../../interfaces/dashboard.interface';
+import { localDateKey } from '../../../../core/domain/gamification.rules';
+import { ReadingStreakService } from '../../services/reading-streak.service';
 
 @Component({
   selector: 'app-streak-challenge',
@@ -23,8 +23,8 @@ export class StreakChallengeComponent implements OnInit, OnDestroy, AfterViewChe
   shareRequested = output<void>();
 
   private cdr = inject(ChangeDetectorRef);
+  private readonly streakService = inject(ReadingStreakService);
 
-  private readonly STORAGE_KEY = '@readva:streak_data';
   private readonly DAY_LABELS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
   todayMarked = signal(false);
@@ -43,8 +43,8 @@ export class StreakChallengeComponent implements OnInit, OnDestroy, AfterViewChe
     return Math.min((current.dailyMinutesRead / current.dailyGoalMinutes) * 100, 100);
   });
 
-  private confettiTimeout: any = null;
-  private animTimeout: any = null;
+  private confettiTimeout: ReturnType<typeof setTimeout> | undefined;
+  private animTimeout: ReturnType<typeof setTimeout> | undefined;
   private confettiRunning = false;
   private readonly CONFETTI_DURATION = 3500;
 
@@ -53,7 +53,7 @@ export class StreakChallengeComponent implements OnInit, OnDestroy, AfterViewChe
   }
 
   get todayKey(): string {
-    return new Date().toISOString().split('T')[0];
+    return localDateKey(new Date());
   }
 
   ngOnInit() {
@@ -74,76 +74,33 @@ export class StreakChallengeComponent implements OnInit, OnDestroy, AfterViewChe
   }
 
   private loadFromStorage() {
-    const raw = localStorage.getItem(this.STORAGE_KEY);
-    const data = raw ? JSON.parse(raw) : { markedDays: [] };
-    const markedDays: string[] = data.markedDays ?? [];
-
-    this.todayMarked.set(markedDays.includes(this.todayKey));
-    this.streakCount.set(this.calculateStreak(markedDays));
-  }
-
-  private saveToStorage(marked: boolean) {
-    const raw = localStorage.getItem(this.STORAGE_KEY);
-    const data = raw ? JSON.parse(raw) : { markedDays: [] };
-
-    if (marked) {
-      if (!data.markedDays.includes(this.todayKey)) data.markedDays.push(this.todayKey);
-    } else {
-      data.markedDays = data.markedDays.filter((d: string) => d !== this.todayKey);
-    }
-
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
-  }
-
-  private dateKey(d: Date): string {
-    return d.toISOString().split('T')[0];
-  }
-  private calculateStreak(markedDays: string[]): number {
-    const marked = new Set(markedDays);
-    const cursor = new Date();
-
-    if (!marked.has(this.dateKey(cursor))) {
-      cursor.setDate(cursor.getDate() - 1);
-    }
-
-    let streak = 0;
-    while (marked.has(this.dateKey(cursor))) {
-      streak++;
-      cursor.setDate(cursor.getDate() - 1);
-    }
-
-    return streak;
+    this.todayMarked.set(this.streakService.isTodayMarked());
+    this.streakCount.set(this.streakService.currentStreak());
   }
 
   private buildWeekDays() {
-    const raw = localStorage.getItem(this.STORAGE_KEY);
-    const data = raw ? JSON.parse(raw) : { markedDays: [] };
-    const markedDays: string[] = data.markedDays ?? [];
+    const markedDays = this.streakService.getMarkedDays();
     const today = new Date();
 
     this.weekDays.set(
       this.DAY_LABELS.map((label, i) => {
         const d = new Date(today);
         d.setDate(today.getDate() - (this.todayIndex - i));
-        const key = d.toISOString().split('T')[0];
+        const key = localDateKey(d);
         return { label, read: markedDays.includes(key), isToday: i === this.todayIndex };
       }),
     );
   }
 
   toggleToday() {
-    const nowMarked = !this.todayMarked();
+    const { marked: nowMarked, streak } = this.streakService.toggleToday();
     this.todayMarked.set(nowMarked);
 
     this.animating.set(true);
     clearTimeout(this.animTimeout);
     this.animTimeout = setTimeout(() => this.animating.set(false), 400);
 
-    this.saveToStorage(nowMarked);
-
-    const raw = localStorage.getItem(this.STORAGE_KEY);
-    const data = raw ? JSON.parse(raw) : { markedDays: [] };
-    this.streakCount.set(this.calculateStreak(data.markedDays ?? []));
+    this.streakCount.set(streak);
 
     if (nowMarked) {
       this.showConfetti.set(true);

@@ -1,10 +1,8 @@
-import { Injectable, signal, computed } from '@angular/core';
-
-export interface PublicUser {
-  email: string;
-  name: string;
-  avatar: string;
-}
+import { Injectable, computed, inject, signal } from '@angular/core';
+import type { ReadingActivity } from '../../../core/models/activity.model';
+import type { PublicUser } from '../../../core/models/user.model';
+import { STORAGE_KEYS } from '../../../core/storage/storage.keys';
+import { StorageService } from '../../../core/storage/storage.service';
 
 const SEED_USERS: PublicUser[] = [
   { email: 'ana@readva.com', name: 'Ana Lima', avatar: 'https://i.pravatar.cc/32?u=ana' },
@@ -15,153 +13,175 @@ const SEED_USERS: PublicUser[] = [
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
-  private currentUserEmail = signal<string>('');
-  following = signal<string[]>([]);
-  allUsers = signal<PublicUser[]>(SEED_USERS);
-  suggestions = computed(() =>
+  private readonly storage = inject(StorageService);
+  private readonly currentUserEmail = signal('guest');
+  readonly following = signal<string[]>([]);
+  readonly allUsers = signal<PublicUser[]>(SEED_USERS);
+  readonly suggestions = computed(() =>
     this.allUsers().filter(
-      (u) => u.email !== this.currentUserEmail() && !this.following().includes(u.email),
+      (user) => user.email !== this.currentUserEmail() && !this.following().includes(user.email),
     ),
   );
 
-  private get storageKey() {
-    return `@readva:following:${this.currentUserEmail()}`;
-  }
-
   init(email: string): void {
-    this.currentUserEmail.set(email);
-    const saved = localStorage.getItem(this.storageKey);
-    this.following.set(saved ? JSON.parse(saved) : []);
-    this.seedOtherUsersActivities();
+    const owner = email.trim().toLowerCase() || 'guest';
+    this.currentUserEmail.set(owner);
+    const following = this.storage.readUser<unknown>(
+      STORAGE_KEYS.following,
+      owner,
+      [],
+      [`@readva:following:${owner}`],
+    );
+    this.following.set(
+      Array.isArray(following)
+        ? [...new Set(following.filter((item): item is string => typeof item === 'string'))]
+        : [],
+    );
+    this.seedActivities();
   }
 
   follow(email: string): void {
-    this.following.update((list) => {
-      const next = [...list, email];
-      localStorage.setItem(this.storageKey, JSON.stringify(next));
-      return next;
-    });
+    const normalized = email.trim().toLowerCase();
+    if (!normalized || this.following().includes(normalized)) return;
+    this.following.update((items) => [...items, normalized]);
+    this.persistFollowing();
   }
 
   unfollow(email: string): void {
-    this.following.update((list) => {
-      const next = list.filter((e) => e !== email);
-      localStorage.setItem(this.storageKey, JSON.stringify(next));
-      return next;
-    });
+    this.following.update((items) => items.filter((item) => item !== email));
+    this.persistFollowing();
   }
 
   isFollowing(email: string): boolean {
     return this.following().includes(email);
   }
-
   getUserName(email: string): string {
-    return this.allUsers().find((u) => u.email === email)?.name ?? email;
+    return this.allUsers().find((user) => user.email === email)?.name ?? email;
   }
 
-  getFollowingActivities(): any[] {
+  getFollowingActivities(): ReadingActivity[] {
     return this.following()
-      .flatMap((email) => {
-        const raw = localStorage.getItem(`@readva:activities:${email}`);
-        return raw ? JSON.parse(raw) : [];
-      })
-      .sort((a, b) => {
-        return 0;
-      });
+      .flatMap((email) => this.loadActivities(email))
+      .sort((a, b) => Date.parse(b.createdAt ?? '') - Date.parse(a.createdAt ?? ''));
   }
 
-  private seedOtherUsersActivities(): void {
-    const seeds = [
+  private loadActivities(email: string): ReadingActivity[] {
+    const value = this.storage.readUser<unknown>(
+      STORAGE_KEYS.activities,
+      email,
+      [],
+      [`@readva:activities:${email}`],
+    );
+    return Array.isArray(value) ? value.filter(this.isActivity) : [];
+  }
+
+  private seedActivities(): void {
+    const seeds: Array<{
+      user: PublicUser;
+      activities: Array<
+        Pick<ReadingActivity, 'bookTitle' | 'bookAuthor' | 'detail'> & {
+          comment?: string;
+          createdAt: string;
+        }
+      >;
+    }> = [
       {
-        email: 'ana@readva.com',
-        name: 'Ana Lima',
-        avatar: 'https://i.pravatar.cc/32?u=ana',
+        user: SEED_USERS[0],
         activities: [
           {
             bookTitle: 'O Senhor dos Anéis',
             bookAuthor: 'J.R.R. Tolkien',
             detail: 'Leu mais 42 páginas',
             comment: 'A Sociedade do Anel é incrível.',
-            timestamp: '2h atrás',
+            createdAt: '2026-06-01T12:00:00.000Z',
           },
           {
             bookTitle: 'Sapiens',
             bookAuthor: 'Yuval Noah Harari',
             detail: 'Leu mais 80 páginas',
             comment: 'Muda muito a perspectiva sobre história.',
-            timestamp: 'ontem',
+            createdAt: '2026-05-31T12:00:00.000Z',
           },
         ],
       },
       {
-        email: 'pedro@readva.com',
-        name: 'Pedro Souza',
-        avatar: 'https://i.pravatar.cc/32?u=pedro',
+        user: SEED_USERS[1],
         activities: [
           {
             bookTitle: '1984',
             bookAuthor: 'George Orwell',
             detail: 'Leu mais 60 páginas',
             comment: 'Assustadoramente atual.',
-            timestamp: '4h atrás',
+            createdAt: '2026-06-01T10:00:00.000Z',
           },
         ],
       },
       {
-        email: 'julia@readva.com',
-        name: 'Julia Ferreira',
-        avatar: 'https://i.pravatar.cc/32?u=julia',
+        user: SEED_USERS[2],
         activities: [
           {
             bookTitle: 'Duna',
             bookAuthor: 'Frank Herbert',
             detail: 'Leu mais 100 páginas',
             comment: 'Worldbuilding impressionante.',
-            timestamp: '1h atrás',
+            createdAt: '2026-06-01T13:00:00.000Z',
           },
           {
             bookTitle: 'A Revolução dos Bichos',
             bookAuthor: 'George Orwell',
             detail: 'Leu mais 30 páginas',
-            comment: null,
-            timestamp: '3 dias atrás',
+            createdAt: '2026-05-29T12:00:00.000Z',
           },
         ],
       },
       {
-        email: 'marcos@readva.com',
-        name: 'Marcos Costa',
-        avatar: 'https://i.pravatar.cc/32?u=marcos',
+        user: SEED_USERS[3],
         activities: [
           {
             bookTitle: 'Clean Code',
             bookAuthor: 'Robert C. Martin',
             detail: 'Leu mais 25 páginas',
             comment: 'Leitura obrigatória pra dev.',
-            timestamp: '6h atrás',
+            createdAt: '2026-06-01T08:00:00.000Z',
           },
         ],
       },
     ];
-
-    seeds.forEach(({ email, name, avatar, activities }) => {
-      const key = `@readva:activities:${email}`;
-      if (localStorage.getItem(key)) return;
-      const seeded = activities.map((a, i) => ({
-        id: `${email}-seed-${i}`,
-        userId: email,
-        userName: name,
-        userAvatar: avatar,
-        bookTitle: a.bookTitle,
-        bookAuthor: a.bookAuthor,
-        detail: a.detail,
-        comment: a.comment,
-        timestamp: a.timestamp,
-        likes: Math.floor(Math.random() * 12) + 1,
-        hasLiked: false,
-        isOwner: false,
-      }));
-      localStorage.setItem(key, JSON.stringify(seeded));
-    });
+    for (const { user, activities } of seeds) {
+      if (this.loadActivities(user.email).length) continue;
+      this.storage.writeUser(
+        STORAGE_KEYS.activities,
+        user.email,
+        activities.map(
+          (activity, index): ReadingActivity => ({
+            ...activity,
+            id: `${user.email}-seed-${index}`,
+            userId: user.email,
+            userName: user.name,
+            userAvatar: user.avatar,
+            actionType: 'progress',
+            bookId: `${user.email}-book-${index}`,
+            timestamp: activity.createdAt,
+            likes: ((index + user.name.length) % 12) + 1,
+            hasLiked: false,
+            isOwner: false,
+            commentsCount: 0,
+          }),
+        ),
+      );
+    }
   }
+
+  private persistFollowing(): void {
+    this.storage.writeUser(STORAGE_KEYS.following, this.currentUserEmail(), this.following());
+  }
+  private readonly isActivity = (value: unknown): value is ReadingActivity => {
+    if (typeof value !== 'object' || value === null) return false;
+    const item = value as Record<string, unknown>;
+    return (
+      typeof item['id'] === 'string' &&
+      typeof item['bookTitle'] === 'string' &&
+      typeof item['detail'] === 'string'
+    );
+  };
 }

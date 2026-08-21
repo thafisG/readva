@@ -1,173 +1,76 @@
-# <p align="center">📚 Readva</p>
+# Readva
 
-<p align="center">
-  <img src="./public/favicon.png" width="120" alt="Readva Logo">
-</p>
+Aplicação Angular para registrar leituras, acompanhar progresso, manter uma biblioteca pessoal e interagir com um feed social demonstrativo. A experiência inclui recomendações locais baseadas em regras, missões, XP, streak e o assistente visual Moka.
 
-<p align="center">
-  Uma plataforma web para acompanhar leituras, criar hábitos e tornar a experiência de leitura mais inteligente e divertida.
-</p>
+> O login atual é somente uma demonstração local, sem senha e sem segurança de autenticação real. A sessão pode ser alterada pelo próprio navegador. Nunca armazene senhas ou segredos no `localStorage`.
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Angular-22-DD0031?logo=angular" />
-  <img src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript" />
-  <img src="https://img.shields.io/badge/SCSS-CC6699?logo=sass" />
-  <img src="https://img.shields.io/badge/Status-Em%20Desenvolvimento-orange" />
-</p>
+## Funcionalidades
 
----
+- cadastro local por nome e e-mail;
+- busca de livros na Open Library;
+- leituras atuais, progresso, conclusão e biblioteca;
+- feed pessoal e feed social simulado;
+- pessoas demonstrativas para seguir;
+- missões diárias, XP, níveis, conquistas e streak;
+- recomendações locais por pontuação de categorias, com explicação do critério;
+- Moka e animações com suporte a movimento reduzido.
 
-# 🎥 Demonstração
+O feed e seus perfis demonstrativos não representam uma rede social conectada. As recomendações não usam inteligência artificial: são uma classificação local e determinística baseada no histórico disponível.
 
-### 🔎 Busca Inteligente
+## Requisitos
 
-Busca automática de livros utilizando a **Google Books API** e **Open Library API**.
+- Node.js 24
+- npm 11
 
-<p align="center">
-  <img src="./public/search-book.gif" width="900">
-</p>
+As versões aceitas estão declaradas em `package.json` e `.nvmrc`.
 
----
-
-### 📚 Biblioteca Interativa
-
-Visualização do livro com estatísticas e animação de abertura inspirada em um livro físico.
-
-<p align="center">
-  <img src="./public/library.gif" width="900">
-</p>
-
----
-
-# ✨ Funcionalidades
-
-- 📚 Biblioteca pessoal
-- 🔎 Busca inteligente de livros
-- 📖 Registro de sessões de leitura
-- ⏱ Controle de tempo e páginas lidas
-- 🔥 Sistema de Streak
-- 🎯 Missões diárias e XP
-- 🏆 Sistema de conquistas
-- 📊 Estatísticas de leitura
-- 👥 Feed social
-- ❤️ Curtidas e comentários
-- 🤖 Recomendações inteligentes
-- 📖 Animação de virar páginas
-
----
-
-# 🛠 Tecnologias
-
-- Angular 22
-- TypeScript
-- SCSS
-- Angular Material
-- Angular Signals
-- RxJS
-- Local Storage
-
----
-
-# 🌐 APIs
-
-- Google Books API
-- Open Library API
-
----
-
-# 🏗 Arquitetura
-
-O projeto utiliza uma arquitetura baseada em **Features**, separando cada funcionalidade em módulos independentes para facilitar manutenção e escalabilidade.
-
-```
-src
-├── features
-├── core
-├── shared
-├── constants
-└── app
-```
-
----
-
-# 💾 Persistência
-
-Atualmente o projeto utiliza **Local Storage**.
-
-O backend será desenvolvido nas próximas versões, permitindo:
-
-- Autenticação
-- Banco de dados
-- Sincronização entre dispositivos
-- Recursos sociais completos
-
----
-
-# 🚀 Executando o projeto
-
-Clone o repositório
+## Execução
 
 ```bash
-git clone https://github.com/thafisG/readva.git
+npm ci
+npm start
 ```
 
-Entre na pasta
+A aplicação fica disponível em `http://localhost:4200`.
+
+## Qualidade e testes
 
 ```bash
-cd readva
+npm run test:run
+npm run lint
+npm run format
+npm run format:check
+npm run build
+npm run check
 ```
 
-Instale as dependências
+`npm run check` executa formatação, lint, testes e build de produção. As APIs externas são simuladas nos testes; a suíte não depende da rede ou de aleatoriedade real.
 
-```bash
-npm install
-```
+## Arquitetura
 
-Execute a aplicação
+- `src/app/core/models`: contratos separados por domínio;
+- `src/app/core/domain`: regras puras de gamificação e recomendação;
+- `src/app/core/storage`: porta de persistência, chaves e implementação local versionada;
+- `src/app/core/api`: configuração das integrações externas;
+- `src/app/features`: componentes e serviços por funcionalidade.
 
-```bash
-ng serve
-```
+Detalhes: [arquitetura](docs/architecture.md), [persistência](docs/storage-schema.md) e [acessibilidade](docs/accessibility.md).
 
-Acesse
+## Limitações atuais
 
-```text
-http://localhost:4200
-```
+- não há backend, sincronização entre dispositivos ou autenticação segura;
+- o armazenamento está limitado ao navegador e pode ser apagado pelo usuário;
+- Open Library, Google Books e capas remotas podem ficar indisponíveis;
+- o feed social é local e usa seeds determinísticos;
+- ainda não existe uma suíte E2E dedicada;
+- permanecem avisos de orçamento em estilos grandes e um aviso CommonJS de `html2canvas`.
 
----
+## Roadmap
 
-# 🚧 Roadmap
+1. concluir a divisão incremental do dashboard e dos modais;
+2. ampliar cobertura de componentes e fluxo E2E;
+3. substituir adapters locais por contratos HTTP quando houver backend;
+4. autenticação real, autorização e sincronização do feed;
+5. otimizar estilos, imagens e o carregamento de `html2canvas`.
 
-- ✅ Biblioteca
-- ✅ Feed Social
-- ✅ Estatísticas
-- ✅ Gamificação
-- ✅ Sistema de Recomendações
-- ✅ Animação de abertura dos livros
-- 🚧 Backend
-- 🚧 Banco de Dados
-- 🚧 Perfil do usuário
-- 🚧 Responsividade
-- 🚧 Clubes de leitura
-
----
-
-# 🌟 Diferenciais
-
-O Readva vai além de um simples catálogo de livros.
-
-- 📖 Diário de leitura
-- 📊 Dashboard analítico
-- 🎯 Gamificação
-- 🤖 Recomendações inteligentes
-- 👥 Rede social para leitores
-- 📚 Biblioteca interativa
-
----
-
-# 👩‍💻 Desenvolvido por
-
-**Thais Guedes**
-
-⭐ Se gostou do projeto, deixe uma estrela no repositório!
+As ilustrações e GIFs existentes ficam em `public/` e fazem parte da identidade visual.

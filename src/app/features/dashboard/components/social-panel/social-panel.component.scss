@@ -1,0 +1,82 @@
+:host {
+  display: block;
+}
+.premium-sidebar-card {
+  border: 0;
+  background: transparent;
+  padding: 16px 0;
+}
+.sidebar-title,
+.following-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #b8a89e;
+  margin-bottom: 14px;
+}
+.people-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.person-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.avatar {
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.name {
+  flex: 1;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #1c1917;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.follow-btn {
+  background: transparent;
+  border: 1px solid #e8d5c8;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #7c5c45;
+  cursor: pointer;
+}
+.follow-btn:hover {
+  background: #7c5c45;
+  color: #fff;
+}
+.empty {
+  font-size: 0.8rem;
+  color: #b8a89e;
+}
+.following-list {
+  border-top: 1px solid #f0e8e0;
+  padding-top: 10px;
+  margin-top: 4px;
+}
+.following-label {
+  font-size: 0.68rem;
+  margin-bottom: 8px;
+}
+.unfollow-btn {
+  background: transparent;
+  border: 0;
+  font-size: 0.68rem;
+  color: #b8a89e;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.unfollow-btn:hover {
+  color: #c77c7b;
+  background: #fef2f2;
+}

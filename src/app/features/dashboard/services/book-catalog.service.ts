@@ -1,18 +1,24 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-
-const COVERS_CACHE_KEY = '@readva:covers-cache';
+import type { CatalogBook } from '../../../core/models/book.model';
+import type {
+  GoogleBooksResponse,
+  OpenLibrarySearchResponse,
+} from '../../../core/models/external-api.model';
+import { STORAGE_KEYS } from '../../../core/storage/storage.keys';
+import { StorageService } from '../../../core/storage/storage.service';
 
 @Injectable({ providedIn: 'root' })
 export class BookCatalogService {
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
+  private readonly storage = inject(StorageService);
 
-  getBooks(): Observable<any[]> {
+  getBooks(): Observable<CatalogBook[]> {
     const cache = this.loadCoversCache();
 
     return new Observable((observer) => {
-      this.http.get<any[]>('assets/books.json').subscribe((books) => {
+      this.http.get<CatalogBook[]>('assets/books.json').subscribe((books) => {
         const withCached = books.map((book) => ({
           ...book,
           coverUrl: cache[book.id] || book.coverUrl,
@@ -38,7 +44,7 @@ export class BookCatalogService {
   }
 
   private async enrichMissingCovers(
-    books: any[],
+    books: CatalogBook[],
     cache: Record<string, string>,
   ): Promise<Record<string, string>> {
     const updated = { ...cache };
@@ -60,15 +66,14 @@ export class BookCatalogService {
 
   private loadCoversCache(): Record<string, string> {
     try {
-      const raw = localStorage.getItem(COVERS_CACHE_KEY);
-      return raw ? JSON.parse(raw) : {};
+      return this.storage.read<Record<string, string>>(STORAGE_KEYS.covers, {});
     } catch {
       return {};
     }
   }
 
   private saveCoversCache(cache: Record<string, string>): void {
-    localStorage.setItem(COVERS_CACHE_KEY, JSON.stringify(cache));
+    this.storage.write(STORAGE_KEYS.covers, cache);
   }
 
   async fetchBookCover(title: string, author: string): Promise<string> {
@@ -78,7 +83,9 @@ export class BookCatalogService {
         new Promise<null>((res) => setTimeout(() => res(null), 8000)),
       ]);
       if (result) return result;
-    } catch {}
+    } catch {
+      return this.generateCoverFallback(title, author);
+    }
     return this.generateCoverFallback(title, author);
   }
 
@@ -105,10 +112,12 @@ export class BookCatalogService {
       const res = await this.fetchWithTimeout(
         `https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=3&langRestrict=pt`,
       );
-      const data = await res.json();
+      if (!res.ok) return null;
+      const data = (await res.json()) as GoogleBooksResponse;
       for (const item of data.items ?? []) {
         const links = item.volumeInfo?.imageLinks;
-        const thumb = links?.extraLarge || links?.large || links?.medium || links?.thumbnail;
+        const thumb =
+          links?.['extraLarge'] || links?.['large'] || links?.['medium'] || links?.['thumbnail'];
         if (thumb) return thumb.replace('http://', 'https://');
       }
       return null;
@@ -123,7 +132,8 @@ export class BookCatalogService {
       const res = await this.fetchWithTimeout(
         `https://openlibrary.org/search.json?q=${q}&limit=1&fields=cover_i`,
       );
-      const data = await res.json();
+      if (!res.ok) return null;
+      const data = (await res.json()) as OpenLibrarySearchResponse;
       const coverId = data.docs?.[0]?.cover_i;
       return coverId ? `https://covers.openlibrary.org/b/id/${coverId}-M.jpg` : null;
     } catch {

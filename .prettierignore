@@ -1,0 +1,6 @@
+dist
+node_modules
+.angular
+coverage
+package-lock.json
+public/assets/books.json

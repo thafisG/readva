@@ -1,4 +1,5 @@
-import { Component, inject, signal, OnDestroy, ViewChild, computed } from '@angular/core';
+import type { OnDestroy } from '@angular/core';
+import { Component, inject, signal, ViewChild, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, RouterLinkActive } from '@angular/router';
@@ -12,17 +13,22 @@ import { UserService } from './services/user.service';
 import { ChallengesService } from './services/challenges.service';
 import { StreakChallengeComponent } from './components/streak-challenge/streak-challenge.component';
 import { LoginComponent } from '../login/login.component';
-import { Activity, BookSuggestion, UserProgress } from './interfaces/dashboard.interface';
-import { BOOK_CATEGORIES } from '../../constants/book-categories';
+import type { Activity, UserProgress } from './interfaces/dashboard.interface';
+import type { Book, BookSuggestion } from '../../core/models/book.model';
+import type { ReadingActivity } from '../../core/models/activity.model';
+import type { BookActionEvent } from './book-action-panel/book-action-panel.component';
+import { BookActionPanelComponent } from './book-action-panel/book-action-panel.component';
+import type { MokaMood } from '../moka/moka.component';
+import { MokaComponent } from '../moka/moka.component';
+import { DashboardPreferencesService } from './services/dashboard-preferences.service';
+import { A11yModule } from '@angular/cdk/a11y';
+import { RecommendationsComponent } from './components/recommendations/recommendations.component';
+import { SocialPanelComponent } from './components/social-panel/social-panel.component';
+import { SummaryCardExportService } from './services/summary-card-export.service';
 import {
-  BookActionEvent,
-  BookActionPanelComponent,
-} from './book-action-panel/book-action-panel.component';
-import {
-  BookSearchComponent,
-  BookSearchResult,
-} from './components/book-search/book-search.component';
-import { MokaComponent, MokaMood } from '../moka/moka.component';
+  StartReadingFormComponent,
+  type StartReadingRequest,
+} from './components/start-reading-form/start-reading-form.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -35,14 +41,24 @@ import { MokaComponent, MokaMood } from '../moka/moka.component';
     BookActionPanelComponent,
     RouterLink,
     RouterLinkActive,
-    BookSearchComponent,
+    StartReadingFormComponent,
     MatIconModule,
     MokaComponent,
+    RecommendationsComponent,
+    SocialPanelComponent,
+    A11yModule,
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
 })
 export class DashboardComponent implements OnDestroy {
+  @HostListener('document:keydown.escape')
+  closeActiveDialog(): void {
+    if (this.deletingActivity()) this.cancelDeleteActivity();
+    else if (this.editingActivity()) this.closeEditModal();
+    else if (this.showSummaryModal()) this.closeSummaryModal();
+  }
+
   @ViewChild(StreakChallengeComponent) streakComponent!: StreakChallengeComponent;
 
   public utilsService = inject(UtilsService);
@@ -52,12 +68,14 @@ export class DashboardComponent implements OnDestroy {
   private catalogService = inject(BookCatalogService);
   private recommendationService = inject(RecommendationService);
   private challengesService = inject(ChallengesService);
+  private preferences = inject(DashboardPreferencesService);
+  private summaryCardExport = inject(SummaryCardExportService);
 
   public deletingActivity = signal<Activity | null>(null);
   public editingActivity = signal<Activity | null>(null);
   public suggestions = signal<BookSuggestion[]>([]);
-  public selectedBook = signal<any | null>(null);
-  public globalFeed = signal<any[]>([]);
+  public selectedBook = signal<Book | null>(null);
+  public globalFeed = signal<ReadingActivity[]>([]);
   public activeTab = signal<'meu-feed' | 'global'>('meu-feed');
   public showSummaryModal = signal(false);
   public userProgress = signal<UserProgress>({
@@ -72,39 +90,13 @@ export class DashboardComponent implements OnDestroy {
   public mokaToast = signal<MokaMood | null>(null);
   private coffeeToast = signal(false);
 
-  private mokaFeedbackTimer: any = null;
-  private mokaToastTimer: any = null;
+  private mokaFeedbackTimer: ReturnType<typeof setTimeout> | null = null;
+  private mokaToastTimer: ReturnType<typeof setTimeout> | null = null;
 
   public editComment = '';
   public editDetail = '';
   public editPagesRead = 0;
   public editMinutesRead = 0;
-
-  categories = BOOK_CATEGORIES;
-  newTitle = '';
-  newAuthor = '';
-  newTotalPages = 100;
-  newCategory = 'Literatura';
-
-  private get WELCOME_MOKA_KEY() {
-    return `@readva:moka-welcome:${this.authService.currentUser()?.email || 'guest'}`;
-  }
-
-  private get LAST_LOGIN_KEY() {
-    return `@readva:last-login:${this.authService.currentUser()?.email || 'guest'}`;
-  }
-
-  private get PROGRESS_KEY() {
-    return `@readva:daily-progress:${this.authService.currentUser()?.email || 'guest'}`;
-  }
-
-  private get FIRST_POST_KEY() {
-    return `@readva:first-post-date:${this.authService.currentUser()?.email || 'guest'}`;
-  }
-
-  private get COFFEE_KEY() {
-    return `@readva:coffee:${new Date().toDateString()}:${this.authService.currentUser()?.email || 'guest'}`;
-  }
 
   public manualCoffeeCount = signal(0);
 
@@ -117,8 +109,7 @@ export class DashboardComponent implements OnDestroy {
     this.loadGlobalFeed();
 
     this.initMoka();
-    const savedCoffee = Number(localStorage.getItem(this.COFFEE_KEY) || '0');
-    this.manualCoffeeCount.set(savedCoffee);
+    this.manualCoffeeCount.set(this.preferences.getCoffeeCount());
   }
 
   ngOnDestroy() {
@@ -134,7 +125,7 @@ export class DashboardComponent implements OnDestroy {
    * Só um dos dois dispara por sessão pra não colidir.
    */
   private initMoka(): void {
-    const lastLogin = localStorage.getItem(this.LAST_LOGIN_KEY);
+    const lastLogin = this.preferences.getLastLogin();
     let willShowSleepy = false;
 
     if (lastLogin) {
@@ -146,7 +137,7 @@ export class DashboardComponent implements OnDestroy {
         setTimeout(() => this.showToast('sleepy'), 1500);
       }
     }
-    localStorage.setItem(this.LAST_LOGIN_KEY, new Date().toISOString());
+    this.preferences.recordLogin();
 
     if (!willShowSleepy && !this.hasShownWelcomeToday()) {
       this.markWelcomeShownToday();
@@ -155,11 +146,11 @@ export class DashboardComponent implements OnDestroy {
   }
 
   private hasShownWelcomeToday(): boolean {
-    return localStorage.getItem(this.WELCOME_MOKA_KEY) === new Date().toDateString();
+    return this.preferences.wasWelcomeShownToday();
   }
 
   private markWelcomeShownToday(): void {
-    localStorage.setItem(this.WELCOME_MOKA_KEY, new Date().toDateString());
+    this.preferences.markWelcomeShown();
   }
 
   showToast(mood: MokaMood): void {
@@ -188,52 +179,33 @@ export class DashboardComponent implements OnDestroy {
     return streak > 0 && streak % 7 === 0;
   }
 
-  onCoffeeChanged(count: number): void {}
+  onCoffeeChanged(count: number): void {
+    void count;
+  }
 
   onCoffeeConfirmed(count: number): void {
-    const saved = Number(localStorage.getItem(this.COFFEE_KEY) || '0');
-    const total = saved + count;
-    localStorage.setItem(this.COFFEE_KEY, String(total));
+    const total = this.preferences.addCoffee(count);
     this.manualCoffeeCount.set(total);
     this.coffeeToast.set(false);
   }
 
   private loadDailyProgress(): UserProgress {
-    const today = new Date().toDateString();
-    const saved = localStorage.getItem(this.PROGRESS_KEY);
-
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed.date === today) {
-        return {
-          name: 'Leitor',
-          avatar: '',
-          currentStreak: parsed.currentStreak ?? 0,
-          dailyGoalMinutes: parsed.dailyGoalMinutes ?? 60,
-          dailyMinutesRead: parsed.dailyMinutesRead ?? 0,
-        };
-      }
-    }
-
-    return {
+    return this.preferences.loadProgress({
       name: 'Leitor',
       avatar: '',
       currentStreak: 0,
       dailyGoalMinutes: 60,
       dailyMinutesRead: 0,
-    };
+    });
   }
 
   private saveDailyProgress(progress: UserProgress): void {
-    const today = new Date().toDateString();
-    localStorage.setItem(this.PROGRESS_KEY, JSON.stringify({ ...progress, date: today }));
+    this.preferences.saveProgress(progress);
   }
 
   private maybeFireStreakAndConfetti(): void {
-    const today = new Date().toDateString();
-    const lastPostDate = localStorage.getItem(this.FIRST_POST_KEY);
-    if (lastPostDate === today) return;
-    localStorage.setItem(this.FIRST_POST_KEY, today);
+    if (this.preferences.isFirstPostToday()) return;
+    this.preferences.markFirstPostToday();
     this.streakComponent?.markTodayRead();
 
     const streak = this.streakComponent?.streakCount() ?? this.userProgress().currentStreak;
@@ -267,26 +239,10 @@ export class DashboardComponent implements OnDestroy {
   }
 
   exportSummaryCard(): void {
-    import('html2canvas').then(({ default: html2canvas }) => {
-      const el = document.getElementById('share-card');
-      if (!el) return;
-      html2canvas(el, { backgroundColor: '#fdf8f4', scale: 2 }).then((canvas) => {
-        const link = document.createElement('a');
-        link.download = 'meu-dia-readva.png';
-        link.href = canvas.toDataURL();
-        link.click();
-      });
-    });
+    void this.summaryCardExport.export('share-card', 'meu-dia-readva.png');
   }
 
-  onBookSelected(book: BookSearchResult): void {
-    this.newTitle = book.title;
-    this.newAuthor = book.author;
-    this.newTotalPages = book.totalPages || 100;
-    this.newCategory = book.category;
-  }
-
-  selectBookForModal(book: any): void {
+  selectBookForModal(book: Book): void {
     this.selectedBook.set({ ...book });
   }
 
@@ -294,17 +250,14 @@ export class DashboardComponent implements OnDestroy {
     this.selectedBook.set(null);
   }
 
-  handleStartBook(): void {
-    if (!this.newTitle.trim() || !this.newAuthor.trim()) return;
+  handleStartBook(request: StartReadingRequest): void {
     this.bookService.startNewBook(
-      this.newTitle,
-      this.newAuthor,
-      this.newTotalPages,
-      this.newCategory,
+      request.title,
+      request.author,
+      request.totalPages,
+      request.category,
     );
 
-    this.newTitle = '';
-    this.newAuthor = '';
     this.loadGlobalFeed();
     setTimeout(() => this.loadSuggestions(), 0);
     setTimeout(() => this.triggerCoffeeToast(), 600);
@@ -330,7 +283,7 @@ export class DashboardComponent implements OnDestroy {
     }
   }
 
-  private onPostProgress(event: BookActionEvent): void {
+  private onPostProgress(event: Extract<BookActionEvent, { type: 'post-progress' }>): void {
     const { pages, comment, minutesRead } = event.payload;
     this.bookService.registerProgress(event.bookId, pages, comment, minutesRead);
 
@@ -349,7 +302,7 @@ export class DashboardComponent implements OnDestroy {
     setTimeout(() => this.triggerCoffeeToast(), 800);
   }
 
-  private onSaveEdit(event: BookActionEvent): void {
+  private onSaveEdit(event: Extract<BookActionEvent, { type: 'save-edit' }>): void {
     this.bookService.updateBook(event.bookId, event.payload);
     const updated = this.bookService.myCurrentBook().find((b) => b.id === event.bookId);
     if (updated) this.selectedBook.set({ ...updated });
@@ -456,21 +409,7 @@ export class DashboardComponent implements OnDestroy {
   }
 
   onLikeTriggered(activityId: string): void {
-    this.bookService.myActivities.update((items: Activity[]) =>
-      items.map((item: Activity) =>
-        item.id === activityId
-          ? {
-              ...item,
-              hasLiked: !item.hasLiked,
-              likes: item.hasLiked ? item.likes - 1 : item.likes + 1,
-            }
-          : item,
-      ),
-    );
-    localStorage.setItem(
-      `@readva:activities:${this.authService.currentUser()?.email || 'guest'}`,
-      JSON.stringify(this.bookService.myActivities()),
-    );
+    this.bookService.toggleActivityLike(activityId);
   }
 
   loadGlobalFeed(): void {
@@ -500,7 +439,7 @@ export class DashboardComponent implements OnDestroy {
     return this.userService.getUserName(email);
   }
 
-  onLikeGlobalActivity(activity: any): void {
+  onLikeGlobalActivity(activity: ReadingActivity): void {
     this.globalFeed.update((items) =>
       items.map((item) =>
         item.id === activity.id
@@ -519,48 +458,22 @@ export class DashboardComponent implements OnDestroy {
   }
 
   loadSuggestions(): void {
-    this.catalogService.getBooks().subscribe((catalog: any[]) => {
+    this.catalogService.getBooks().subscribe((catalog) => {
       const activities = this.bookService.myActivities?.() ?? [];
-      const hasHistory = activities.length > 0;
       const currentBookTitles = this.bookService.myCurrentBook().map((b) => b.title);
-
-      const profile = this.recommendationService.getReaderProfile(
-        activities.map((a) => ({
-          category: a.bookCategory || a.category,
-          completed: a.completed,
-          progress: a.progress,
-          totalPages: a.totalPages,
-          likes: a.likes,
-        })),
+      this.suggestions.set(
+        this.recommendationService.recommend(
+          catalog,
+          activities.map((a) => ({
+            category: a.bookCategory || a.category,
+            completed: a.completed,
+            progress: a.progress,
+            totalPages: a.totalPages,
+            likes: a.likes,
+          })),
+          currentBookTitles,
+        ),
       );
-
-      const byCategory = catalog.reduce((acc: Record<string, any[]>, book) => {
-        if (currentBookTitles.includes(book.title)) return acc;
-        (acc[book.category] ??= []).push(book);
-        return acc;
-      }, {});
-
-      let orderedCategories = Object.keys(byCategory).sort((a, b) => {
-        const sa = profile.categoryScore[a] ?? 0;
-        const sb = profile.categoryScore[b] ?? 0;
-        return sb - sa;
-      });
-
-      if (!hasHistory) orderedCategories = orderedCategories.sort(() => Math.random() - 0.5);
-
-      const recommendations: any[] = [];
-      for (const cat of orderedCategories) {
-        if (recommendations.length >= 3) break;
-        const pick = byCategory[cat][Math.floor(Math.random() * byCategory[cat].length)];
-        const score = profile.categoryScore[cat] ?? 0;
-        recommendations.push({
-          ...pick,
-          score,
-          matchPercentage: hasHistory ? Math.round(score * 100) : 0,
-        });
-      }
-
-      this.suggestions.set(recommendations);
     });
   }
 

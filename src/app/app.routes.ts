@@ -1,13 +1,16 @@
-import { Routes } from '@angular/router';
+import type { Routes } from '@angular/router';
+import { authGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
   {
     path: '',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/dashboard/dashboard.component').then((m) => m.DashboardComponent),
   },
   {
     path: 'biblioteca',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./features/dashboard/components/minha-biblioteca/library-shelf.component').then(
         (m) => m.LibraryShelfComponent,
@@ -15,8 +18,11 @@ export const routes: Routes = [
   },
   {
     path: 'desafios',
+    canActivate: [authGuard],
     loadComponent: () =>
-      import('./features/dashboard/components/challenges/challenges.component').then((m) => m.ChallengesComponent),
+      import('./features/dashboard/components/challenges/challenges.component').then(
+        (m) => m.ChallengesComponent,
+      ),
   },
   {
     path: 'login',

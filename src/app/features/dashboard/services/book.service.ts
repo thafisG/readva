@@ -1,51 +1,29 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, effect, inject, signal } from '@angular/core';
+import type { ReadingActivity } from '../../../core/models/activity.model';
+import type { Book } from '../../../core/models/book.model';
+import { STORAGE_KEYS } from '../../../core/storage/storage.keys';
+import { StorageService } from '../../../core/storage/storage.service';
 import { AuthService } from './auth.service';
 import { BookCatalogService } from './book-catalog.service';
 import { ChallengesService } from './challenges.service';
 
-@Injectable({
-  providedIn: 'root',
-})
+export type BookUpdate = Partial<
+  Pick<Book, 'title' | 'author' | 'totalPages' | 'currentPage' | 'category' | 'status'>
+>;
+
+@Injectable({ providedIn: 'root' })
 export class BookService {
-  private get HISTORY_KEY() {
-    return `@readva:history:${this.userEmail}`;
-  }
+  private readonly auth = inject(AuthService);
+  private readonly catalog = inject(BookCatalogService);
+  private readonly challenges = inject(ChallengesService);
+  private readonly storage = inject(StorageService);
 
-  public myBooks = signal<any[]>([]);
-
-  private authService = inject(AuthService);
-  private catalogService = inject(BookCatalogService);
-  private challengesService = inject(ChallengesService);
-
-  private get userEmail() {
-    return this.authService.currentUser()?.email || 'guest';
-  }
-
-  private get BOOKS_KEY() {
-    return `@readva:books:${this.userEmail}`;
-  }
-  private get ACTIVITIES_KEY() {
-    return `@readva:activities:${this.userEmail}`;
-  }
-
-  public myCurrentBook = signal<any[]>([]);
-  public myActivities = signal<any[]>([]);
+  readonly myBooks = signal<Book[]>([]);
+  readonly myCurrentBook = signal<Book[]>([]);
+  readonly myActivities = signal<ReadingActivity[]>([]);
 
   constructor() {
-    this.loadUserData();
-  }
-
-  private loadUserData() {
-    const savedBooks = localStorage.getItem(this.BOOKS_KEY);
-    const savedActivities = localStorage.getItem(this.ACTIVITIES_KEY);
-    const savedHistory = localStorage.getItem(this.HISTORY_KEY);
-
-    if (savedBooks) {
-      const parsed = JSON.parse(savedBooks);
-      this.myCurrentBook.set(Array.isArray(parsed) ? parsed : [parsed]);
-    }
-    if (savedActivities) this.myActivities.set(JSON.parse(savedActivities));
-    if (savedHistory) this.myBooks.set(JSON.parse(savedHistory));
+    effect(() => this.loadUserData(this.auth.currentUser()?.email ?? 'guest'));
   }
 
   async startNewBook(
@@ -54,257 +32,231 @@ export class BookService {
     totalPages: number,
     category: string,
     coverUrl?: string,
-  ) {
-    const fallback = this.catalogService.generateCoverFallback(title, author);
+  ): Promise<void> {
+    const cleanTitle = title.trim();
+    const cleanAuthor = author.trim();
+    const pages = this.positiveInteger(totalPages);
+    if (!cleanTitle || !cleanAuthor || pages === 0) return;
 
-    const newBook = {
-      id: Math.random().toString(36).substr(2, 9),
-      title,
-      author,
-      totalPages,
-      category,
+    const duplicate = this.myBooks().find(
+      (book) =>
+        book.title.toLocaleLowerCase() === cleanTitle.toLocaleLowerCase() &&
+        book.author.toLocaleLowerCase() === cleanAuthor.toLocaleLowerCase(),
+    );
+    if (duplicate) {
+      this.moveToCurrentReading(duplicate.id);
+      return;
+    }
+
+    const book: Book = {
+      id: this.createId(),
+      title: cleanTitle,
+      author: cleanAuthor,
+      totalPages: pages,
+      category: category.trim() || 'Sem categoria',
       currentPage: 0,
-      coverUrl: coverUrl || fallback,
+      status: 'reading',
+      createdAt: new Date().toISOString(),
+      coverUrl: coverUrl || this.catalog.generateCoverFallback(cleanTitle, cleanAuthor),
     };
-
-    this.myCurrentBook.update((books) => {
-      const updated = [...books, newBook];
-      localStorage.setItem(this.BOOKS_KEY, JSON.stringify(updated));
-      return updated;
-    });
-
-    this.myBooks.update((books) => {
-      const updated = [...books, newBook];
-      localStorage.setItem(this.HISTORY_KEY, JSON.stringify(updated));
-      return updated;
-    });
-
-    this.challengesService.onBookStarted();
+    this.myCurrentBook.update((books) => [...books, book]);
+    this.myBooks.update((books) => [...books, book]);
+    this.persistBooks();
+    this.challenges.onBookStarted();
 
     if (!coverUrl) {
-      this.catalogService.fetchBookCover(title, author).then((cover) => {
-        if (!cover || cover.startsWith('data:image/svg+xml')) return;
-
-        this.myCurrentBook.update((books) => {
-          const updated = books.map((b) => (b.id === newBook.id ? { ...b, coverUrl: cover } : b));
-          localStorage.setItem(this.BOOKS_KEY, JSON.stringify(updated));
-          return updated;
-        });
-
-        this.myBooks.update((books) => {
-          const updated = books.map((b) => (b.id === newBook.id ? { ...b, coverUrl: cover } : b));
-          localStorage.setItem(this.HISTORY_KEY, JSON.stringify(updated));
-          return updated;
-        });
-      });
+      const cover = await this.catalog.fetchBookCover(cleanTitle, cleanAuthor);
+      if (cover && !cover.startsWith('data:image/svg+xml')) this.updateBook(book.id, {}, cover);
     }
   }
 
-  private getCurrentTimestamp(): string {
-    const now = new Date();
-    return (
-      now.toLocaleDateString('pt-BR') +
-      ' às ' +
-      now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-    );
-  }
+  registerProgress(bookId: string, pages: number, comment: string, minutesRead = 0): void {
+    const current = this.myCurrentBook().find((book) => book.id === bookId);
+    const user = this.auth.currentUser();
+    const safePages = this.nonNegativeInteger(pages);
+    const safeMinutes = this.nonNegativeInteger(minutesRead);
+    if (!current || !user || (safePages === 0 && safeMinutes === 0)) return;
 
-  registerProgress(bookId: string, pages: number, comment: string, minutesRead: number = 0) {
-    const current = this.myCurrentBook().find((b) => b.id === bookId);
-    const user = this.authService.currentUser();
-    if (!current || !user) return;
-
-    const safePages = Number(pages);
-    const updatedPage = Math.min(current.currentPage + safePages, current.totalPages);
-    const updatedBook = { ...current, currentPage: updatedPage };
-
-    this.myCurrentBook.update((books) => {
-      const updated = books.map((b) => (b.id === bookId ? updatedBook : b));
-      localStorage.setItem(this.BOOKS_KEY, JSON.stringify(updated));
-      return updated;
-    });
-
-    const minutesLabel = minutesRead > 0 ? ` • ${minutesRead} min de leitura` : '';
-
-    const newActivity = {
-      id: Math.random().toString(36).substr(2, 9),
+    const nextPage = Math.min(current.currentPage + safePages, current.totalPages);
+    const actualPages = nextPage - current.currentPage;
+    this.updateBook(bookId, { currentPage: nextPage });
+    const activity: ReadingActivity = {
+      id: this.createId(),
+      userId: user.email,
       userName: user.name,
       userAvatar: user.avatar,
-      timestamp: this.getCurrentTimestamp(),
-      bookId: bookId,
+      actionType: 'progress',
+      bookId,
       bookTitle: current.title,
       bookAuthor: current.author,
       bookCategory: current.category,
-      detail: `Leu mais ${safePages} páginas${minutesLabel}`,
-      comment: comment || '',
-      minutesRead: minutesRead,
-      pagesRead: safePages,
+      detail: `Leu mais ${actualPages} páginas${safeMinutes ? ` • ${safeMinutes} min de leitura` : ''}`,
+      comment: comment.trim(),
+      minutesRead: safeMinutes,
+      pagesRead: actualPages,
+      createdAt: new Date().toISOString(),
+      timestamp: new Date().toISOString(),
       likes: 0,
+      commentsCount: 0,
       hasLiked: false,
       isOwner: true,
-      userId: user.email,
     };
-
-    this.myActivities.update((list) => {
-      const newList = [newActivity, ...list];
-      localStorage.setItem(this.ACTIVITIES_KEY, JSON.stringify(newList));
-      return newList;
-    });
-
-    this.challengesService.onPagesRead(safePages);
-    this.challengesService.onReadingSession();
-    if (minutesRead > 0) this.challengesService.onMinutesRead(minutesRead);
-
-    const hour = new Date().getHours();
-    if (hour >= 22) this.challengesService.onNightReading();
+    this.myActivities.update((activities) => [activity, ...activities]);
+    this.persistActivities();
+    if (actualPages > 0) this.challenges.onPagesRead(actualPages);
+    this.challenges.onReadingSession();
+    if (safeMinutes > 0) this.challenges.onMinutesRead(safeMinutes);
+    if (new Date().getHours() >= 22) this.challenges.onNightReading();
   }
 
-  updateBook(
-    id: string,
-    data: {
-      title?: string;
-      author?: string;
-      totalPages?: number;
-      currentPage?: number;
-      category?: string;
-    },
-  ) {
-    this.myCurrentBook.update((books) => {
-      const updated = books.map((b) => (b.id === id ? { ...b, ...data } : b));
-      localStorage.setItem(this.BOOKS_KEY, JSON.stringify(updated));
-      return updated;
-    });
-
-    this.myBooks.update((books) => {
-      const updated = books.map((b) => (b.id === id ? { ...b, ...data } : b));
-      localStorage.setItem(this.HISTORY_KEY, JSON.stringify(updated));
-      return updated;
-    });
+  updateBook(id: string, data: BookUpdate, coverUrl?: string): void {
+    const update = (book: Book): Book => {
+      if (book.id !== id) return book;
+      const totalPages =
+        data.totalPages === undefined ? book.totalPages : this.positiveInteger(data.totalPages);
+      const currentPage = Math.min(
+        this.nonNegativeInteger(data.currentPage ?? book.currentPage),
+        totalPages || book.totalPages,
+      );
+      return {
+        ...book,
+        ...data,
+        ...(coverUrl ? { coverUrl } : {}),
+        totalPages: totalPages || book.totalPages,
+        currentPage,
+      };
+    };
+    this.myCurrentBook.update((books) => books.map(update));
+    this.myBooks.update((books) => books.map(update));
+    this.persistBooks();
   }
 
-  moveToLibrary(id: string) {
-    const book = this.myCurrentBook().find((b) => b.id === id);
+  moveToLibrary(id: string): void {
+    const book = this.myCurrentBook().find((candidate) => candidate.id === id);
     if (!book) return;
-
-    this.myCurrentBook.update((books) => {
-      const updated = books.filter((b) => b.id !== id);
-      localStorage.setItem(this.BOOKS_KEY, JSON.stringify(updated));
-      return updated;
-    });
-
-    this.myBooks.update((books) => {
-      const alreadyExists = books.some((b) => b.id === id);
-      if (alreadyExists) return books;
-      const updated = [...books, book];
-      localStorage.setItem(this.HISTORY_KEY, JSON.stringify(updated));
-      return updated;
-    });
+    this.myCurrentBook.update((books) => books.filter((candidate) => candidate.id !== id));
+    if (!this.myBooks().some((candidate) => candidate.id === id))
+      this.myBooks.update((books) => [...books, book]);
+    this.persistBooks();
   }
 
-  markCompleted(id: string) {
-    const book = this.myCurrentBook().find((b) => b.id === id);
-    if (!book) return;
-
-    const completedBook = {
+  markCompleted(id: string): void {
+    const book = this.myBooks().find((candidate) => candidate.id === id);
+    if (!book || book.status === 'completed' || book.completedAt) return;
+    const completed: Book = {
       ...book,
       currentPage: book.totalPages,
+      status: 'completed',
       completedAt: new Date().toISOString(),
     };
-
-    this.myBooks.update((books) => {
-      const updated = books.map((b) => (b.id === id ? completedBook : b));
-      localStorage.setItem(this.HISTORY_KEY, JSON.stringify(updated));
-      return updated;
-    });
-
-    this.myCurrentBook.update((books) => {
-      const updated = books.filter((b) => b.id !== id);
-      localStorage.setItem(this.BOOKS_KEY, JSON.stringify(updated));
-      return updated;
-    });
-
-    this.challengesService.onBookFinished();
+    this.myBooks.update((books) =>
+      books.map((candidate) => (candidate.id === id ? completed : candidate)),
+    );
+    this.myCurrentBook.update((books) => books.filter((candidate) => candidate.id !== id));
+    this.persistBooks();
+    this.challenges.onBookFinished(id);
   }
 
-  deleteBook(id: string) {
-    this.myCurrentBook.update((books) => {
-      const updated = books.filter((b) => b.id !== id);
-      localStorage.setItem(this.BOOKS_KEY, JSON.stringify(updated));
-      return updated;
-    });
-
-    this.myBooks.update((books) => {
-      const updated = books.filter((b) => b.id !== id);
-      localStorage.setItem(this.HISTORY_KEY, JSON.stringify(updated));
-      return updated;
-    });
-
-    this.myActivities.update((list) => {
-      const updated = list.filter((a) => a.bookId !== id);
-      localStorage.setItem(this.ACTIVITIES_KEY, JSON.stringify(updated));
-      return updated;
-    });
+  deleteBook(id: string): void {
+    this.myCurrentBook.update((books) => books.filter((book) => book.id !== id));
+    this.myBooks.update((books) => books.filter((book) => book.id !== id));
+    this.myActivities.update((activities) =>
+      activities.filter((activity) => activity.bookId !== id),
+    );
+    this.persistBooks();
+    this.persistActivities();
   }
 
   moveToCurrentReading(bookId: string): void {
-    const book = this.myBooks().find((b) => b.id === bookId);
-    if (!book) return;
-
-    const { completedAt, ...bookWithoutCompleted } = book;
-    const readingBook = { ...bookWithoutCompleted, completed: false };
-
-    this.myCurrentBook.update((books) => {
-      const alreadyReading = books.some((b) => b.id === bookId);
-      if (alreadyReading) return books;
-      const updated = [...books, readingBook];
-      localStorage.setItem(this.BOOKS_KEY, JSON.stringify(updated));
-      return updated;
-    });
-
-    this.myBooks.update((books) => {
-      const updated = books.map((b) => (b.id === bookId ? readingBook : b));
-      localStorage.setItem(this.HISTORY_KEY, JSON.stringify(updated));
-      return updated;
-    });
+    const book = this.myBooks().find((candidate) => candidate.id === bookId);
+    if (!book || this.myCurrentBook().some((candidate) => candidate.id === bookId)) return;
+    const { completedAt, ...stored } = book;
+    void completedAt;
+    const reading: Book = { ...stored, status: 'reading' };
+    this.myCurrentBook.update((books) => [...books, reading]);
+    this.myBooks.update((books) =>
+      books.map((candidate) => (candidate.id === bookId ? reading : candidate)),
+    );
+    this.persistBooks();
   }
 
   deleteActivity(activityId: string): void {
-    this.myActivities.update((activities) => {
-      const updated = activities.filter((activity) => activity.id !== activityId);
-      localStorage.setItem(this.ACTIVITIES_KEY, JSON.stringify(updated));
-      return updated;
-    });
+    this.myActivities.update((activities) =>
+      activities.filter((activity) => activity.id !== activityId),
+    );
+    this.persistActivities();
   }
 
-  updateActivity(activityId: string, updatedData: Partial<any>): void {
-    const existing = this.myActivities().find((a) => a.id === activityId);
-
+  toggleActivityLike(activityId: string): void {
     this.myActivities.update((activities) =>
       activities.map((activity) =>
         activity.id === activityId
-          ? { ...activity, ...updatedData, timestamp: this.getCurrentTimestamp() }
+          ? {
+              ...activity,
+              hasLiked: !activity.hasLiked,
+              likes: Math.max(0, activity.likes + (activity.hasLiked ? -1 : 1)),
+            }
           : activity,
       ),
     );
-    localStorage.setItem(this.ACTIVITIES_KEY, JSON.stringify(this.myActivities()));
-
-    if (existing && updatedData['detail'] !== undefined) {
-      const newPages = this._parsePagesFromDetail(updatedData['detail']);
-      const oldPages = this._parsePagesFromDetail(existing['detail']);
-      const diff = newPages - oldPages;
-
-      if (diff !== 0) {
-        const book = this.myCurrentBook().find((b) => b.id === existing['bookId']);
-        if (book) {
-          const newCurrentPage = Math.min(Math.max(0, book.currentPage + diff), book.totalPages);
-          this.updateBook(existing['bookId'], { currentPage: newCurrentPage });
-        }
-      }
-    }
+    this.persistActivities();
   }
 
-  private _parsePagesFromDetail(detail: string): number {
-    const match = detail?.match(/(\d+)\s*p[áa]g/i);
-    return match ? parseInt(match[1], 10) : 0;
+  updateActivity(activityId: string, updatedData: Partial<ReadingActivity>): void {
+    const existing = this.myActivities().find((activity) => activity.id === activityId);
+    if (!existing) return;
+    this.myActivities.update((activities) =>
+      activities.map((activity) =>
+        activity.id === activityId
+          ? { ...activity, ...updatedData, createdAt: new Date().toISOString() }
+          : activity,
+      ),
+    );
+    this.persistActivities();
+    if (updatedData.detail === undefined) return;
+    const difference = this.parsePages(updatedData.detail) - this.parsePages(existing.detail);
+    const book = this.myCurrentBook().find((candidate) => candidate.id === existing.bookId);
+    if (difference && book)
+      this.updateBook(book.id, { currentPage: book.currentPage + difference });
+  }
+
+  private loadUserData(email: string): void {
+    this.myCurrentBook.set(
+      this.storage.readUser(STORAGE_KEYS.books, email, [], [`@readva:books:${email}`]),
+    );
+    this.myBooks.set(
+      this.storage.readUser(STORAGE_KEYS.history, email, [], [`@readva:history:${email}`]),
+    );
+    this.myActivities.set(
+      this.storage.readUser(STORAGE_KEYS.activities, email, [], [`@readva:activities:${email}`]),
+    );
+  }
+  private persistBooks(): void {
+    const email = this.auth.currentUser()?.email ?? 'guest';
+    this.storage.writeUser(STORAGE_KEYS.books, email, this.myCurrentBook());
+    this.storage.writeUser(STORAGE_KEYS.history, email, this.myBooks());
+  }
+  private persistActivities(): void {
+    this.storage.writeUser(
+      STORAGE_KEYS.activities,
+      this.auth.currentUser()?.email ?? 'guest',
+      this.myActivities(),
+    );
+  }
+  private nonNegativeInteger(value: number): number {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? Math.max(0, Math.trunc(parsed)) : 0;
+  }
+  private positiveInteger(value: number): number {
+    return this.nonNegativeInteger(value);
+  }
+  private parsePages(detail: string): number {
+    const match = detail.match(/(\d+)\s*p[áa]g/i);
+    return match ? Number.parseInt(match[1], 10) : 0;
+  }
+  private createId(): string {
+    return (
+      globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`
+    );
   }
 }
