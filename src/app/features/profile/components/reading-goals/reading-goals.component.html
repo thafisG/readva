@@ -1,0 +1,55 @@
+<article class="panel">
+  <header>
+    <div>
+      <span>Metas pessoais</span>
+      <h2>Seu próximo capítulo</h2>
+    </div>
+    <button (click)="toggle()" aria-label="Editar metas">
+      <mat-icon>{{ editing() ? 'close' : 'edit' }}</mat-icon>
+    </button>
+  </header>
+  @if (editing()) {
+    <form (ngSubmit)="save()">
+      <label
+        >Minutos por dia<input
+          type="number"
+          name="daily"
+          min="5"
+          max="600"
+          [(ngModel)]="dailyMinutes" /></label
+      ><label
+        >Livros por mês<input
+          type="number"
+          name="monthly"
+          min="1"
+          max="50"
+          [(ngModel)]="monthlyBooks" /></label
+      ><button class="primary" type="submit">Salvar metas</button>
+    </form>
+  } @else {
+    <div class="goals">
+      <div class="goal">
+        <mat-icon>timer</mat-icon>
+        <div>
+          <strong>{{ goals.goals().dailyMinutes }} minutos por dia</strong
+          ><small>Construa consistência, uma sessão por vez.</small>
+        </div>
+      </div>
+      <div class="goal">
+        <mat-icon>auto_stories</mat-icon>
+        <div class="grow">
+          <p>
+            <strong
+              >{{ stats().month.completedBooks }}/{{ goals.goals().monthlyBooks }} livros no
+              mês</strong
+            ><small>{{ progress() }}%</small>
+          </p>
+          <div class="track"><i [style.width.%]="progress()"></i></div>
+        </div>
+      </div>
+    </div>
+  }
+  @if (saved()) {
+    <p class="feedback" role="status">Metas atualizadas com sucesso.</p>
+  }
+</article>

@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { localDateKey } from '../../../core/domain/gamification.rules';
+import type { ReadingGoals } from '../../../core/models/profile-statistics.model';
 import { StorageService } from '../../../core/storage/storage.service';
 import { AuthService } from './auth.service';
 import type { UserProgress } from '../interfaces/dashboard.interface';
@@ -66,10 +67,30 @@ export class DashboardPreferencesService {
       value: progress,
     } satisfies DailyValue<UserProgress>);
   }
+
+  getReadingGoals(): ReadingGoals {
+    const goals = this.storage.readUser<ReadingGoals>('reading-goals', this.email, {
+      dailyMinutes: 60,
+      monthlyBooks: 2,
+    });
+    return {
+      dailyMinutes: this.clamp(goals.dailyMinutes, 5, 600),
+      monthlyBooks: this.clamp(goals.monthlyBooks, 1, 50),
+    };
+  }
+  saveReadingGoals(goals: ReadingGoals): void {
+    this.storage.writeUser('reading-goals', this.email, goals);
+  }
   isFirstPostToday(): boolean {
     return this.storage.readUser('first-post', this.email, '') === localDateKey(new Date());
   }
   markFirstPostToday(): void {
     this.storage.writeUser('first-post', this.email, localDateKey(new Date()));
+  }
+  private clamp(value: number, minimum: number, maximum: number): number {
+    const parsed = Number(value);
+    return Number.isFinite(parsed)
+      ? Math.min(maximum, Math.max(minimum, Math.trunc(parsed)))
+      : minimum;
   }
 }

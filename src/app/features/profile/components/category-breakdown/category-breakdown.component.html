@@ -1,0 +1,21 @@
+<article class="panel">
+  <header>
+    <span>Seu gosto literário</span>
+    <h2>Categorias favoritas</h2>
+  </header>
+  @if (categories().length) {
+    <div class="list">
+      @for (category of categories(); track category.name; let index = $index) {
+        <div class="item">
+          <p>
+            <span><i [style.--index]="index"></i>{{ category.name }}</span
+            ><strong>{{ category.books }} {{ category.books === 1 ? 'livro' : 'livros' }}</strong>
+          </p>
+          <div class="track"><b [style.width.%]="category.percentage"></b></div>
+        </div>
+      }
+    </div>
+  } @else {
+    <p class="empty">Adicione livros à biblioteca para descobrir seu perfil literário.</p>
+  }
+</article>

@@ -1,0 +1,18 @@
+<section class="summary-grid" aria-label="Resumo da leitura">
+  <article class="summary-card brown">
+    <mat-icon>menu_book</mat-icon><strong>{{ stats().pagesRead }}</strong
+    ><span>páginas lidas</span>
+  </article>
+  <article class="summary-card amber">
+    <mat-icon>schedule</mat-icon><strong>{{ formatMinutes(stats().minutesRead) }}</strong
+    ><span>tempo de leitura</span>
+  </article>
+  <article class="summary-card green">
+    <mat-icon>task_alt</mat-icon><strong>{{ stats().completedBooks }}</strong
+    ><span>livros concluídos</span>
+  </article>
+  <article class="summary-card rose">
+    <mat-icon>local_fire_department</mat-icon><strong>{{ stats().currentStreak }}</strong
+    ><span>dias de sequência</span>
+  </article>
+</section>
