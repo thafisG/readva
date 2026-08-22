@@ -1,14 +1,44 @@
-<div class="moka-floating" [class.visible]="visible()" [attr.aria-hidden]="!visible()">
+@if (spotlightVisible()) {
+  <div class="moka-spotlight" [ngClass]="'spotlight-' + spotlightConfig().theme" role="status">
+    <div class="spotlight-decorations" aria-hidden="true">
+      <span>✦</span><span>●</span><span>★</span><span>✦</span><span>●</span>
+    </div>
+    <section class="spotlight-card">
+      <button
+        class="spotlight-close"
+        (click)="dismissSpotlight()"
+        aria-label="Fechar mensagem da Moka"
+      >
+        ✕
+      </button>
+      <div class="spotlight-art" [class.celebrating]="isCelebrating()">
+        <div class="spotlight-halo"></div>
+        <img [src]="spotlightConfig().image" [alt]="spotlightConfig().title" />
+      </div>
+      <div class="spotlight-copy">
+        <span class="spotlight-badge"
+          >{{ spotlightConfig().emoji }} {{ spotlightConfig().badge }}</span
+        >
+        <h2>{{ spotlightConfig().title }}</h2>
+        <p>{{ spotlightConfig().message }}</p>
+        <button class="spotlight-action" (click)="dismissSpotlight()">
+          Continuar minha jornada
+        </button>
+      </div>
+    </section>
+  </div>
+}
+
+<div class="moka-floating" [class.visible]="visible()">
   <div class="moka-bubble-wrap" [class.visible]="showBubble()">
     <div class="moka-bubble" [ngClass]="'theme-' + config().theme">
-      <button class="bubble-close" (click)="dismiss()" aria-label="Fechar mensagem do Moka">
+      <button class="bubble-close" (click)="dismiss()" aria-label="Fechar mensagem da Moka">
         ✕
       </button>
 
       @if (isCoffeeMood()) {
         <span class="bubble-emoji">{{ coffeeReaction().emoji }}</span>
         <h4 class="moka-title">{{ coffeeReaction().title }}</h4>
-
         <div class="coffee-counter">
           <button
             class="counter-btn minus"
@@ -18,7 +48,6 @@
           >
             −
           </button>
-
           <div class="counter-display">
             <span class="counter-cups">
               @for (_ of [].constructor(coffeeCount()); track $index) {
@@ -30,12 +59,10 @@
             </span>
             <span class="counter-number">{{ coffeeCount() }}</span>
           </div>
-
           <button class="counter-btn plus" (click)="incrementCoffee()" aria-label="Adicionar café">
             +
           </button>
         </div>
-
         @if (coffeeCount() > 0) {
           <button class="confirm-coffee-btn" (click)="confirmCoffee()">Confirmar ☕</button>
         }
@@ -51,10 +78,11 @@
     class="moka-btn"
     [class.wiggle]="isWiggling()"
     (click)="toggleBubble()"
-    [attr.aria-label]="'Moka diz: ' + config().title"
+    [attr.aria-label]="'Ouvir a Moka: ' + config().title"
     [attr.aria-expanded]="showBubble()"
   >
     <div class="moka-avatar">
+      <span class="presence-dot" aria-hidden="true"></span>
       <img [src]="config().image" [alt]="config().title" class="moka-img" />
       <span class="xp-badge" [ngClass]="'badge-' + config().theme">
         @if (isCoffeeMood() && coffeeCount() > 0) {
@@ -65,4 +93,5 @@
       </span>
     </div>
   </button>
+  <span class="moka-presence-label">Moka está aqui</span>
 </div>

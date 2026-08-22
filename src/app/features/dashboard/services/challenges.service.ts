@@ -3,7 +3,7 @@ import { calculateLevel, localDateKey } from '../../../core/domain/gamification.
 import type { Achievement, Mission } from '../../../core/models/gamification.model';
 import { STORAGE_KEYS } from '../../../core/storage/storage.keys';
 import { StorageService } from '../../../core/storage/storage.service';
-import type { MokaMood } from '../../moka/moka.component';
+import type { MokaCelebration, MokaMood } from '../../moka/moka.component';
 import { AuthService } from './auth.service';
 
 interface ChallengesState {
@@ -27,10 +27,13 @@ export class ChallengesService {
 
   private readonly justUnlockedState = signal<Achievement | null>(null);
   private readonly justUnlockedMoodState = signal<MokaMood | null>(null);
+  private readonly celebrationState = signal<MokaCelebration | null>(null);
+  private celebrationSequence = 0;
   readonly missions = this.missionState.asReadonly();
   readonly achievements = this.achievementState.asReadonly();
   readonly justUnlocked = this.justUnlockedState.asReadonly();
   readonly justUnlockedMood = this.justUnlockedMoodState.asReadonly();
+  readonly celebration = this.celebrationState.asReadonly();
   readonly levelInfo = computed(() => calculateLevel(this.totalXp()));
   readonly unlockedCount = computed(
     () => this.achievementState().filter((item) => item.unlocked).length,
@@ -72,6 +75,7 @@ export class ChallengesService {
   dismissJustUnlocked(): void {
     this.justUnlockedState.set(null);
     this.justUnlockedMoodState.set(null);
+    this.celebrationState.set(null);
   }
   resetDailyMissions(): void {
     this.missionState.set(this.defaultMissions());
@@ -96,24 +100,30 @@ export class ChallengesService {
       }),
     );
     if (earnedXp) this.totalXp.update((xp) => xp + earnedXp);
-    if (completed)
-      this.unlock(
-        this.missionState().every((mission) => mission.completed)
-          ? 'all-missions'
-          : 'first-mission',
-      );
+    if (completed) {
+      const allMissionsCompleted = this.missionState().every((mission) => mission.completed);
+      const achievementId = allMissionsCompleted ? 'all-missions' : 'first-mission';
+      const mood: MokaMood = allMissionsCompleted ? 'perfect-day' : 'mission';
+      if (!this.unlock(achievementId)) this.announceCelebration(mood);
+    }
     this.persist();
   }
 
-  private unlock(id: string): void {
+  private unlock(id: string): boolean {
     const achievement = this.achievementState().find((item) => item.id === id);
-    if (!achievement || achievement.unlocked) return;
+    if (!achievement || achievement.unlocked) return false;
     const unlocked = { ...achievement, unlocked: true };
     this.achievementState.update((items) =>
       items.map((item) => (item.id === id ? unlocked : item)),
     );
     this.justUnlockedState.set(unlocked);
     this.justUnlockedMoodState.set(unlocked.mokaMood);
+    this.announceCelebration(unlocked.mokaMood);
+    return true;
+  }
+
+  private announceCelebration(mood: MokaMood): void {
+    this.celebrationState.set({ id: ++this.celebrationSequence, mood });
     if (this.unlockTimer) clearTimeout(this.unlockTimer);
     this.unlockTimer = setTimeout(() => this.dismissJustUnlocked(), 5000);
   }

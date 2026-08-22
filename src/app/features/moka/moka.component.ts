@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { getMokaSpotlight } from './moka-spotlight-content';
 import {
   Component,
   DestroyRef,
@@ -22,6 +23,11 @@ export type MokaMood =
   | 'love'
   | 'mission'
   | 'perfect-day';
+
+export interface MokaCelebration {
+  id: number;
+  mood: MokaMood;
+}
 
 export interface MokaConfig {
   image: string;
@@ -128,6 +134,18 @@ function getCoffeeReaction(count: number) {
   return COFFEE_REACTIONS[Math.min(count, 5)] ?? COFFEE_REACTIONS[5];
 }
 
+const CELEBRATION_MOODS = new Set<MokaMood>([
+  'streak',
+  'goal',
+  'completed-book',
+  'mission',
+  'perfect-day',
+]);
+
+function isCelebrationMood(mood: MokaMood): boolean {
+  return CELEBRATION_MOODS.has(mood);
+}
+
 @Component({
   selector: 'app-moka',
   standalone: true,
@@ -136,28 +154,33 @@ function getCoffeeReaction(count: number) {
   styleUrls: ['./moka.component.scss'],
 })
 export class MokaComponent {
-  mood = input<MokaMood | null>(null);
+  readonly mood = input<MokaMood | null>(null);
+  readonly celebration = input<MokaCelebration | null>(null);
+  readonly coffeeChanged = output<number>();
+  readonly coffeeConfirmed = output<number>();
 
-  coffeeChanged = output<number>();
-  coffeeConfirmed = output<number>();
+  readonly config = computed(() => MOKA_CONFIG[this.mood() ?? 'welcome']);
+  readonly isCoffeeMood = computed(() => this.mood() === 'coffee');
+  readonly coffeeReaction = computed(() => getCoffeeReaction(this.coffeeCount()));
 
-  config = computed(() => MOKA_CONFIG[this.mood() ?? 'welcome']);
-  isCoffeeMood = computed(() => this.mood() === 'coffee');
+  readonly visible = signal(true);
+  readonly showBubble = signal(false);
+  readonly isWiggling = signal(false);
+  readonly isCelebrating = signal(false);
+  readonly spotlightVisible = signal(false);
+  readonly spotlightConfig = signal<MokaConfig>(MOKA_CONFIG.goal);
+  readonly coffeeCount = signal(0);
 
-  visible = signal(false);
-  showBubble = signal(false);
-  isWiggling = signal(false);
-  coffeeCount = signal(0);
-
-  coffeeReaction = computed(() => getCoffeeReaction(this.coffeeCount()));
-
-  private wiggleTimer: ReturnType<typeof setTimeout> | null = null;
-  private autoCloseTimer: ReturnType<typeof setTimeout> | null = null;
-  private autoHideTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly spotlightOccurrences = new Map<MokaMood, number>();
   private previousMood: MokaMood | null = null;
+  private previousCelebrationId: number | null = null;
+  private wiggleTimer: ReturnType<typeof setTimeout> | null = null;
+  private bubbleTimer: ReturnType<typeof setTimeout> | null = null;
+  private celebrationTimer: ReturnType<typeof setTimeout> | null = null;
+  private spotlightTimer: ReturnType<typeof setTimeout> | null = null;
 
   private readonly BUBBLE_DURATION = 4200;
-  private readonly HIDE_DELAY = 550;
+  private readonly SPOTLIGHT_DURATION = 6200;
 
   constructor() {
     const destroyRef = inject(DestroyRef);
@@ -166,81 +189,54 @@ export class MokaComponent {
     effect(() => {
       const mood = this.mood();
       untracked(() => {
-        if (mood === null) {
-          this.previousMood = null;
-          return;
-        }
-
-        const moodChanged = mood !== this.previousMood;
+        if (mood === this.previousMood) return;
         this.previousMood = mood;
-        if (!moodChanged) return;
-
-        this.clearAllTimers();
-        this.triggerWiggle();
+        this.showBubble.set(false);
         this.coffeeCount.set(0);
+      });
+    });
 
-        if (mood === 'coffee') {
-          this.visible.set(true);
-          return;
-        }
-
-        this.visible.set(true);
-        this.showBubble.set(true);
-        this.scheduleAutoClose();
+    effect(() => {
+      const celebration = this.celebration();
+      untracked(() => {
+        if (!celebration || !isCelebrationMood(celebration.mood)) return;
+        if (celebration.id === this.previousCelebrationId) return;
+        this.previousCelebrationId = celebration.id;
+        this.showBubble.set(false);
+        this.showSpotlight(celebration.mood);
       });
     });
   }
 
-  private clearAllTimers(): void {
-    if (this.wiggleTimer) clearTimeout(this.wiggleTimer);
-    if (this.autoCloseTimer) clearTimeout(this.autoCloseTimer);
-    if (this.autoHideTimer) clearTimeout(this.autoHideTimer);
+  showSpotlight(mood: MokaMood): void {
+    if (!isCelebrationMood(mood)) return;
+    const occurrence = this.spotlightOccurrences.get(mood) ?? 0;
+    this.spotlightOccurrences.set(mood, occurrence + 1);
+    this.spotlightConfig.set(getMokaSpotlight(mood, occurrence, MOKA_CONFIG[mood]));
+    this.spotlightVisible.set(true);
+    this.triggerCelebration();
+    if (this.spotlightTimer) clearTimeout(this.spotlightTimer);
+    this.spotlightTimer = setTimeout(() => this.dismissSpotlight(), this.SPOTLIGHT_DURATION);
   }
 
-  private scheduleAutoClose(): void {
-    if (this.autoCloseTimer) clearTimeout(this.autoCloseTimer);
-    this.autoCloseTimer = setTimeout(() => {
-      this.showBubble.set(false);
-      this.scheduleAutoHide();
-    }, this.BUBBLE_DURATION);
-  }
-
-  private scheduleAutoHide(): void {
-    if (this.autoHideTimer) clearTimeout(this.autoHideTimer);
-    this.autoHideTimer = setTimeout(() => this.visible.set(false), this.HIDE_DELAY);
+  dismissSpotlight(): void {
+    if (this.spotlightTimer) clearTimeout(this.spotlightTimer);
+    this.spotlightVisible.set(false);
   }
 
   toggleBubble(): void {
-    if (this.isCoffeeMood()) {
-      if (!this.showBubble()) {
-        this.showBubble.set(true);
-        this.triggerWiggle();
-      }
-      return;
-    }
-
-    if (this.autoCloseTimer) clearTimeout(this.autoCloseTimer);
-    if (this.autoHideTimer) clearTimeout(this.autoHideTimer);
-
+    if (this.bubbleTimer) clearTimeout(this.bubbleTimer);
     const next = !this.showBubble();
     this.showBubble.set(next);
-
     if (next) {
       this.triggerWiggle();
-      this.scheduleAutoClose();
-    } else {
-      this.scheduleAutoHide();
+      this.bubbleTimer = setTimeout(() => this.showBubble.set(false), this.BUBBLE_DURATION);
     }
   }
 
   dismiss(): void {
-    if (this.isCoffeeMood()) {
-      this.showBubble.set(false);
-      return;
-    }
-    if (this.autoCloseTimer) clearTimeout(this.autoCloseTimer);
+    if (this.bubbleTimer) clearTimeout(this.bubbleTimer);
     this.showBubble.set(false);
-    this.scheduleAutoHide();
   }
 
   triggerWiggle(): void {
@@ -253,13 +249,13 @@ export class MokaComponent {
   }
 
   incrementCoffee(): void {
-    this.coffeeCount.update((n) => n + 1);
+    this.coffeeCount.update((count) => count + 1);
     this.coffeeChanged.emit(this.coffeeCount());
     this.triggerWiggle();
   }
 
   decrementCoffee(): void {
-    this.coffeeCount.update((n) => Math.max(0, n - 1));
+    this.coffeeCount.update((count) => Math.max(0, count - 1));
     this.coffeeChanged.emit(this.coffeeCount());
   }
 
@@ -267,5 +263,21 @@ export class MokaComponent {
     this.coffeeConfirmed.emit(this.coffeeCount());
     this.coffeeCount.set(0);
     this.showBubble.set(false);
+  }
+
+  private triggerCelebration(): void {
+    if (this.celebrationTimer) clearTimeout(this.celebrationTimer);
+    this.isCelebrating.set(false);
+    setTimeout(() => {
+      this.isCelebrating.set(true);
+      this.celebrationTimer = setTimeout(() => this.isCelebrating.set(false), 1000);
+    }, 10);
+  }
+
+  private clearAllTimers(): void {
+    if (this.wiggleTimer) clearTimeout(this.wiggleTimer);
+    if (this.bubbleTimer) clearTimeout(this.bubbleTimer);
+    if (this.celebrationTimer) clearTimeout(this.celebrationTimer);
+    if (this.spotlightTimer) clearTimeout(this.spotlightTimer);
   }
 }

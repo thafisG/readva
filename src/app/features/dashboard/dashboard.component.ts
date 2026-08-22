@@ -18,7 +18,7 @@ import type { Book, BookSuggestion } from '../../core/models/book.model';
 import type { ReadingActivity } from '../../core/models/activity.model';
 import type { BookActionEvent } from './book-action-panel/book-action-panel.component';
 import { BookActionPanelComponent } from './book-action-panel/book-action-panel.component';
-import type { MokaMood } from '../moka/moka.component';
+import type { MokaCelebration, MokaMood } from '../moka/moka.component';
 import { MokaComponent } from '../moka/moka.component';
 import { DashboardPreferencesService } from './services/dashboard-preferences.service';
 import { A11yModule } from '@angular/cdk/a11y';
@@ -105,6 +105,8 @@ export class DashboardComponent implements OnDestroy {
 
   public mokaFeedback = signal<MokaMood | null>(null);
   public mokaToast = signal<MokaMood | null>(null);
+  public mokaCelebration = signal<MokaCelebration | null>(null);
+  private mokaCelebrationSequence = 0;
   private coffeeToast = signal(false);
 
   private mokaFeedbackTimer: ReturnType<typeof setTimeout> | null = null;
@@ -184,7 +186,11 @@ export class DashboardComponent implements OnDestroy {
   private showFeedback(mood: MokaMood): void {
     if (this.mokaFeedbackTimer) clearTimeout(this.mokaFeedbackTimer);
     this.mokaFeedback.set(mood);
-    this.mokaFeedbackTimer = setTimeout(() => this.mokaFeedback.set(null), 5000);
+    this.mokaCelebration.set({ id: ++this.mokaCelebrationSequence, mood });
+    this.mokaFeedbackTimer = setTimeout(() => {
+      this.mokaFeedback.set(null);
+      this.mokaCelebration.set(null);
+    }, 5000);
   }
 
   private triggerCoffeeToast(): void {
@@ -220,6 +226,20 @@ export class DashboardComponent implements OnDestroy {
     this.preferences.saveProgress(progress);
   }
 
+  private updateDailyReadingMinutes(delta: number): boolean {
+    let reachedGoal = false;
+    this.userProgress.update((progress) => {
+      const nextMinutes = Math.max(0, progress.dailyMinutesRead + delta);
+      reachedGoal =
+        progress.dailyGoalMinutes > 0 &&
+        progress.dailyMinutesRead < progress.dailyGoalMinutes &&
+        nextMinutes >= progress.dailyGoalMinutes;
+      const updated = { ...progress, dailyMinutesRead: nextMinutes };
+      this.saveDailyProgress(updated);
+      return updated;
+    });
+    return reachedGoal;
+  }
   private maybeFireStreakAndConfetti(): void {
     if (this.preferences.isFirstPostToday()) return;
     this.preferences.markFirstPostToday();
@@ -303,11 +323,7 @@ export class DashboardComponent implements OnDestroy {
     const { pages, comment, minutesRead } = event.payload;
     this.bookService.registerProgress(event.bookId, pages, comment, minutesRead);
 
-    this.userProgress.update((p) => {
-      const updated = { ...p, dailyMinutesRead: p.dailyMinutesRead + minutesRead };
-      this.saveDailyProgress(updated);
-      return updated;
-    });
+    if (this.updateDailyReadingMinutes(minutesRead)) this.showFeedback('goal');
 
     this.maybeFireStreakAndConfetti();
     this.loadGlobalFeed();
@@ -371,16 +387,7 @@ export class DashboardComponent implements OnDestroy {
     if (diffPages !== 0) this.challengesService.onPagesRead(diffPages);
     if (diffMinutes !== 0) this.challengesService.onMinutesRead(diffMinutes);
 
-    if (diffMinutes !== 0) {
-      this.userProgress.update((progress) => {
-        const updated = {
-          ...progress,
-          dailyMinutesRead: Math.max(0, progress.dailyMinutesRead + diffMinutes),
-        };
-        this.saveDailyProgress(updated);
-        return updated;
-      });
-    }
+    if (diffMinutes !== 0 && this.updateDailyReadingMinutes(diffMinutes)) this.showFeedback('goal');
 
     if (this.selectedBook()?.id === activity.bookId) {
       const updated = this.bookService.myCurrentBook().find((book) => book.id === activity.bookId);
@@ -479,6 +486,10 @@ export class DashboardComponent implements OnDestroy {
       );
     });
   }
+
+  currentMokaCelebration = computed<MokaCelebration | null>(
+    () => this.mokaCelebration() ?? this.challengesService.celebration(),
+  );
 
   currentMokaMood = computed<MokaMood | null>(() => {
     if (this.mokaToast()) return this.mokaToast()!;

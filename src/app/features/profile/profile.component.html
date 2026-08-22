@@ -14,3 +14,5 @@
 @if (avatarBuilderOpen()) {
   <app-avatar-builder (saved)="saveAvatar($event)" (cancelled)="closeAvatarBuilder()" />
 }
+
+<app-moka [mood]="mokaMood()" />
