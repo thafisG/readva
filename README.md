@@ -11,6 +11,7 @@ O Readva é uma aplicação Angular para organizar leituras e transformar o háb
 - avatar exibido no dashboard e usado como atalho para o perfil;
 - busca de livros e capas em catálogos externos;
 - leituras atuais, registro de páginas e minutos, conclusão e biblioteca pessoal;
+- cronômetro de leitura minimizável com relógio flip;
 - feed pessoal e feed social simulado;
 - pessoas demonstrativas para seguir;
 - missões diárias, XP, níveis, conquistas e streak;

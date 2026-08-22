@@ -43,6 +43,9 @@ import {
   type DailySummaryViewModel,
 } from './components/daily-summary-dialog/daily-summary-dialog.component';
 
+import { ReadingTimerComponent } from './components/reading-timer/reading-timer.component';
+import { ReadingTimerService } from './services/reading-timer.service';
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -59,6 +62,7 @@ import {
     ActivityEditDialogComponent,
     ActivityDeleteDialogComponent,
     DailySummaryDialogComponent,
+    ReadingTimerComponent,
     MatIconModule,
     MokaComponent,
     RecommendationsComponent,
@@ -87,6 +91,7 @@ export class DashboardComponent implements OnDestroy {
   private challengesService = inject(ChallengesService);
   private preferences = inject(DashboardPreferencesService);
   private summaryCardExport = inject(SummaryCardExportService);
+  private readingTimer = inject(ReadingTimerService);
 
   public deletingActivity = signal<ReadingActivity | null>(null);
   public editingActivity = signal<ReadingActivity | null>(null);
@@ -278,6 +283,16 @@ export class DashboardComponent implements OnDestroy {
     if (goalMinutes <= 0) return 0;
     return Math.min(Math.max((minutesRead / goalMinutes) * 100, 0), 100);
   });
+  readonly activeTimerBook = computed<Book | null>(() => {
+    const currentBooks = this.bookService.myCurrentBook();
+    const activeBookId = this.readingTimer.activeBookId();
+    return currentBooks.find((book) => book.id === activeBookId) ?? currentBooks.at(0) ?? null;
+  });
+
+  openReadingManager(): void {
+    const book = this.activeTimerBook();
+    if (book) this.selectBookForModal(book);
+  }
   selectBookForModal(book: Book): void {
     this.selectedBook.set({ ...book });
   }
