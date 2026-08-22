@@ -1,11 +1,12 @@
-import type { OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
-import { Component, Input, Output, EventEmitter, signal, HostListener } from '@angular/core';
+import type { OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BOOK_CATEGORIES } from '../../../constants/book-categories';
 import { A11yModule } from '@angular/cdk/a11y';
 import type { Book } from '../../../core/models/book.model';
 import type { BookUpdate } from '../services/book.service';
+import { ReadingTimerService } from '../services/reading-timer.service';
 
 export type PanelTab = 'progress' | 'edit' | 'manage';
 
@@ -25,7 +26,7 @@ export type BookActionEvent =
   templateUrl: './book-action-panel.component.html',
   styleUrls: ['./book-action-panel.component.scss'],
 })
-export class BookActionPanelComponent implements OnDestroy, OnChanges {
+export class BookActionPanelComponent implements OnChanges {
   @Input() book: Book | null = null;
   @Output() action = new EventEmitter<BookActionEvent>();
   @Output() closed = new EventEmitter<void>();
@@ -35,10 +36,8 @@ export class BookActionPanelComponent implements OnDestroy, OnChanges {
   isClosing = false;
   pagesRead = 0;
   userComment = '';
-  isReading = false;
-  readingElapsedSeconds = signal(0);
-  private readingStartTime: number | null = null;
-  private timerInterval: ReturnType<typeof setInterval> | undefined;
+  private readonly readingTimer = inject(ReadingTimerService);
+  readonly readingElapsedSeconds = this.readingTimer.elapsedSeconds;
   editTitle = '';
   editAuthor = '';
   editTotalPages = 0;
@@ -47,13 +46,12 @@ export class BookActionPanelComponent implements OnDestroy, OnChanges {
 
   confirmDelete = false;
 
+  get isReading(): boolean {
+    return this.readingTimer.isRunning();
+  }
+
   get formattedTime(): string {
-    const total = this.readingElapsedSeconds();
-    const m = Math.floor(total / 60)
-      .toString()
-      .padStart(2, '0');
-    const s = (total % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
+    return this.readingTimer.formattedTime();
   }
 
   get progressPercent(): number {
@@ -75,15 +73,11 @@ export class BookActionPanelComponent implements OnDestroy, OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['book'] && this.book) {
       this.syncEditFields();
-      this.resetProgressForm();
+      if (this.readingTimer.activeBookId() !== this.book.id) this.resetProgressForm();
       this.confirmDelete = false;
       this.isClosing = false;
       this.activeTab = 'progress';
     }
-  }
-
-  ngOnDestroy(): void {
-    clearInterval(this.timerInterval);
   }
 
   close(): void {
@@ -106,23 +100,11 @@ export class BookActionPanelComponent implements OnDestroy, OnChanges {
   }
 
   toggleTimer(): void {
-    if (!this.isReading) {
-      this.isReading = true;
-      this.readingStartTime = Date.now() - this.readingElapsedSeconds() * 1000;
-      this.timerInterval = setInterval(() => {
-        this.readingElapsedSeconds.set(Math.floor((Date.now() - this.readingStartTime!) / 1000));
-      }, 1000);
-    } else {
-      this.isReading = false;
-      clearInterval(this.timerInterval);
-    }
+    if (this.book) this.readingTimer.toggle(this.book.id);
   }
 
   resetTimer(): void {
-    this.isReading = false;
-    clearInterval(this.timerInterval);
-    this.readingElapsedSeconds.set(0);
-    this.readingStartTime = null;
+    this.readingTimer.reset();
   }
 
   onFooterAction(): void {

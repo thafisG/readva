@@ -158,6 +158,10 @@
     (coffeeChanged)="onCoffeeChanged($event)"
     (coffeeConfirmed)="onCoffeeConfirmed($event)"
   ></app-moka>
+  <app-reading-timer
+    [hasActiveBook]="activeTimerBook() !== null"
+    (manageRequested)="openReadingManager()"
+  />
 
   @if (showSummaryModal()) {
     <app-daily-summary-dialog [summary]="dailySummary()" (closed)="closeSummaryModal()" />
