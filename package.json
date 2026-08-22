@@ -11,7 +11,10 @@
     "lint": "eslint . --max-warnings=0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run format:check && npm run lint && npm run test:run && npm run build"
+    "check": "npm run format:check && npm run lint && npm run test:run && npm run build",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "e2e:report": "playwright show-report"
   },
   "private": true,
   "type": "module",
@@ -39,6 +42,7 @@
     "@angular/cli": "22.0.2",
     "@angular/compiler-cli": "22.0.2",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.62.1",
     "angular-eslint": "^22.1.0",
     "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",

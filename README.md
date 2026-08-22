@@ -44,6 +44,7 @@ O feed e seus perfis demonstrativos não representam uma rede social conectada. 
 - Angular Material e CDK;
 - SCSS responsivo;
 - Vitest e Angular TestBed;
+- Playwright para jornadas E2E;
 - ESLint e Prettier.
 
 ## Requisitos
@@ -78,6 +79,7 @@ As rotas pessoais são protegidas pelo `authGuard` demonstrativo.
 
 ```bash
 npm run test:run
+npm run e2e
 npm run lint
 npm run format
 npm run format:check
@@ -85,7 +87,31 @@ npm run build
 npm run check
 ```
 
-`npm run check` executa formatação, lint, testes e build de produção. As APIs externas são simuladas nos testes; a suíte não depende da rede ou de aleatoriedade real.
+`npm run check` executa formatação, lint, testes unitários e build de produção.
+
+### Testes E2E
+
+Na primeira execução, instale o Chromium gerenciado pelo Playwright:
+
+```bash
+npx playwright install chromium
+```
+
+Comandos disponíveis:
+
+```bash
+npm run e2e          # execução headless
+npm run e2e:ui       # modo visual e interativo
+npm run e2e:report   # abre o último relatório HTML
+```
+
+A suíte cobre jornadas completas e isoladas:
+
+- leitura: criação do livro, cronômetro, registro de páginas e publicação no feed;
+- meta: edição da meta diária, sessão cronometrada, progresso concluído e celebração da Moka;
+- desafio: missão concluída, XP persistido e conquista desbloqueada.
+
+O Playwright inicia a aplicação automaticamente e bloqueia integrações externas para evitar dependência de rede. O GitHub Actions executa lint, testes unitários, E2E no Chromium e build em pushes e pull requests para `main`.
 
 ## Arquitetura
 
@@ -106,16 +132,14 @@ Detalhes: [arquitetura](docs/architecture.md), [persistência](docs/storage-sche
 - o armazenamento está limitado ao navegador e pode ser apagado pelo usuário;
 - Open Library, Google Books e capas remotas podem ficar indisponíveis;
 - o feed social é local e usa seeds determinísticos;
-- ainda não existe uma suíte E2E dedicada;
 - permanecem avisos de orçamento em estilos grandes e um aviso CommonJS de `html2canvas`.
 
 ## Próximos passos
 
-1. adicionar testes E2E para os fluxos completos de leitura, meta e desafio;
-2. concluir a divisão incremental do dashboard em componentes menores;
-3. substituir a persistência local por uma API quando houver backend;
-4. implementar autenticação real, autorização e sincronização entre dispositivos;
-5. conectar o feed social a dados reais;
-6. otimizar estilos, imagens e o carregamento de `html2canvas`.
+1. concluir a divisão incremental do dashboard em componentes menores;
+2. substituir a persistência local por uma API quando houver backend;
+3. implementar autenticação real, autorização e sincronização entre dispositivos;
+4. conectar o feed social a dados reais;
+5. otimizar estilos, imagens e o carregamento de `html2canvas`.
 
 As ilustrações e animações existentes em `public/` fazem parte da identidade visual do projeto.
