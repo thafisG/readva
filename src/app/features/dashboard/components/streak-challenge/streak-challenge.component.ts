@@ -8,6 +8,7 @@ import {
   inject,
   ChangeDetectorRef,
 } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import type { UserProgress } from '../../interfaces/dashboard.interface';
 import { localDateKey } from '../../../../core/domain/gamification.rules';
 import { ReadingStreakService } from '../../services/reading-streak.service';
@@ -15,6 +16,7 @@ import { ReadingStreakService } from '../../services/reading-streak.service';
 @Component({
   selector: 'app-streak-challenge',
   standalone: true,
+  imports: [RouterLink],
   templateUrl: './streak-challenge.component.html',
   styleUrls: ['./streak-challenge.component.scss'],
 })
