@@ -173,7 +173,7 @@ export class MokaComponent {
 
   private readonly spotlightOccurrences = new Map<MokaMood, number>();
   private previousMood: MokaMood | null = null;
-  private previousCelebrationId: number | null = null;
+  private previousCelebration: MokaCelebration | null = null;
   private wiggleTimer: ReturnType<typeof setTimeout> | null = null;
   private bubbleTimer: ReturnType<typeof setTimeout> | null = null;
   private celebrationTimer: ReturnType<typeof setTimeout> | null = null;
@@ -200,8 +200,8 @@ export class MokaComponent {
       const celebration = this.celebration();
       untracked(() => {
         if (!celebration || !isCelebrationMood(celebration.mood)) return;
-        if (celebration.id === this.previousCelebrationId) return;
-        this.previousCelebrationId = celebration.id;
+        if (celebration === this.previousCelebration) return;
+        this.previousCelebration = celebration;
         this.showBubble.set(false);
         this.showSpotlight(celebration.mood);
       });

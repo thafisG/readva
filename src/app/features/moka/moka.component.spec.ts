@@ -36,6 +36,20 @@ describe('MokaComponent', () => {
     expect(fixture.nativeElement.querySelector('.moka-spotlight')).toBeNull();
   });
 
+  it('shows distinct celebrations when different sources reuse the same numeric id', () => {
+    const fixture = TestBed.createComponent(MokaComponent);
+    const component = fixture.componentInstance;
+
+    fixture.componentRef.setInput('celebration', { id: 1, mood: 'mission' });
+    fixture.detectChanges();
+    component.dismissSpotlight();
+
+    fixture.componentRef.setInput('celebration', { id: 1, mood: 'goal' });
+    fixture.detectChanges();
+
+    expect(component.spotlightVisible()).toBe(true);
+    expect(component.spotlightConfig().badge).toContain('Meta');
+  });
   it('changes the message when the same reward happens again', () => {
     const fixture = TestBed.createComponent(MokaComponent);
     const component = fixture.componentInstance;
