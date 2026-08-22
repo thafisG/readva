@@ -1,4 +1,5 @@
 import { Component, inject, signal, computed } from '@angular/core';
+import { MokaComponent, type MokaMood } from '../../../moka/moka.component';
 import { CommonModule, Location } from '@angular/common';
 import { BookDetailModalComponent } from './book-detail/book-detail-modal.component';
 import { BookService } from '../../services/book.service';
@@ -22,7 +23,7 @@ export interface BookStats {
 @Component({
   selector: 'app-library-shelf',
   standalone: true,
-  imports: [CommonModule, BookDetailModalComponent],
+  imports: [CommonModule, BookDetailModalComponent, MokaComponent],
   templateUrl: './library-shelf.component.html',
   styleUrls: ['./library-shelf.component.scss'],
 })
@@ -71,6 +72,13 @@ export class LibraryShelfComponent {
         completed: progressPercent >= 100,
       };
     });
+  });
+
+  readonly mokaMood = computed<MokaMood>(() => {
+    const books = this.booksWithStats();
+    if (books.length === 0) return 'empty-library';
+    if (books.some((book) => book.completed)) return 'completed-book';
+    return 'love';
   });
 
   openBookDetail(book: BookStats) {

@@ -156,3 +156,23 @@ p {
     height: 68px;
   }
 }
+
+.avatar-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 7px 10px;
+  border: 1px solid #dfcfc2;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.65);
+  color: #7c5c45;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 650;
+}
+.avatar-action mat-icon {
+  width: 15px;
+  height: 15px;
+  font-size: 15px;
+}

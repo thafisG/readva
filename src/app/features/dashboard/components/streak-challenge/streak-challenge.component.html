@@ -6,9 +6,13 @@
 
   <div class="streak-body">
     <div class="streak-user">
-      <div class="streak-avatar">
-        {{ progress().name.split(' ')[0][0] }}{{ progress().name.split(' ')[1]?.[0] }}
-      </div>
+      <a routerLink="/perfil" class="streak-avatar" aria-label="Abrir meu perfil">
+        @if (progress().avatar) {
+          <img [src]="progress().avatar" [alt]="'Avatar de ' + progress().name" />
+        } @else {
+          {{ progress().name.split(' ')[0][0] }}{{ progress().name.split(' ')[1]?.[0] }}
+        }
+      </a>
       <div>
         <div class="streak-name">{{ progress().name.split(' ')[0] }}</div>
         <div class="streak-sub">Boa leitura hoje!</div>

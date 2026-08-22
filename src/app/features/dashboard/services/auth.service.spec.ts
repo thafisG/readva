@@ -45,4 +45,29 @@ describe('AuthService', () => {
 
     expect(TestBed.inject(AuthService).currentUser()).toBeNull();
   });
+
+  it('persists a generated avatar in the user and active session', () => {
+    const storage = new SessionStorageStub();
+    TestBed.configureTestingModule({
+      providers: [provideRouter([]), { provide: STORAGE_PORT, useValue: storage }],
+    });
+    const service = TestBed.inject(AuthService);
+    service.authenticate('avatar@example.com', 'Avatar Reader');
+
+    const avatar = 'data:image/svg+xml;charset=UTF-8,%3Csvg%3E%3C%2Fsvg%3E';
+    expect(service.updateAvatar(avatar)).toBe(true);
+    expect(service.currentUser()?.avatar).toBe(avatar);
+    expect(service.findUser('avatar@example.com')?.avatar).toBe(avatar);
+  });
+
+  it('rejects an external avatar update', () => {
+    const storage = new SessionStorageStub();
+    TestBed.configureTestingModule({
+      providers: [provideRouter([]), { provide: STORAGE_PORT, useValue: storage }],
+    });
+    const service = TestBed.inject(AuthService);
+    service.authenticate('avatar@example.com', 'Avatar Reader');
+
+    expect(service.updateAvatar('https://example.com/avatar.svg')).toBe(false);
+  });
 });
