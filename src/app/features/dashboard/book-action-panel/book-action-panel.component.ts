@@ -32,6 +32,7 @@ export class BookActionPanelComponent implements OnChanges {
   @Output() closed = new EventEmitter<void>();
 
   activeTab: PanelTab = 'progress';
+  private readonly tabOrder: readonly PanelTab[] = ['progress', 'edit', 'manage'];
   categories = BOOK_CATEGORIES;
   isClosing = false;
   pagesRead = 0;
@@ -48,6 +49,10 @@ export class BookActionPanelComponent implements OnChanges {
 
   get isReading(): boolean {
     return this.readingTimer.isRunning();
+  }
+
+  get canMinimize(): boolean {
+    return this.readingTimer.hasSession();
   }
 
   get formattedTime(): string {
@@ -81,11 +86,14 @@ export class BookActionPanelComponent implements OnChanges {
   }
 
   close(): void {
-    this.isClosing = true;
-    setTimeout(() => {
-      this.isClosing = false;
-      this.closed.emit();
-    }, 180);
+    this.readingTimer.dismiss();
+    this.finishClosing();
+  }
+
+  minimize(): void {
+    if (!this.canMinimize) return;
+    this.readingTimer.minimize();
+    this.finishClosing();
   }
 
   onOverlayClick(event: MouseEvent): void {
@@ -97,6 +105,26 @@ export class BookActionPanelComponent implements OnChanges {
   selectTab(tab: PanelTab): void {
     this.activeTab = tab;
     this.confirmDelete = false;
+  }
+
+  onTabKeydown(event: KeyboardEvent, currentTab: PanelTab): void {
+    const currentIndex = this.tabOrder.indexOf(currentTab);
+    let targetIndex: number | null = null;
+
+    if (event.key === 'ArrowRight') targetIndex = (currentIndex + 1) % this.tabOrder.length;
+    else if (event.key === 'ArrowLeft')
+      targetIndex = (currentIndex - 1 + this.tabOrder.length) % this.tabOrder.length;
+    else if (event.key === 'Home') targetIndex = 0;
+    else if (event.key === 'End') targetIndex = this.tabOrder.length - 1;
+
+    if (targetIndex === null) return;
+
+    event.preventDefault();
+    this.selectTab(this.tabOrder[targetIndex]);
+
+    const tabList = (event.currentTarget as HTMLElement).closest('[role="tablist"]');
+    const tabs = tabList?.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+    tabs?.item(targetIndex).focus();
   }
 
   toggleTimer(): void {
@@ -155,6 +183,13 @@ export class BookActionPanelComponent implements OnChanges {
     this.confirmDelete = false;
   }
 
+  private finishClosing(): void {
+    this.isClosing = true;
+    setTimeout(() => {
+      this.isClosing = false;
+      this.closed.emit();
+    }, 180);
+  }
   private syncEditFields(): void {
     if (!this.book) return;
     this.editTitle = this.book.title;

@@ -290,9 +290,17 @@ export class DashboardComponent implements OnDestroy {
   });
 
   openReadingManager(): void {
+    this.readingTimer.restore();
     const book = this.activeTimerBook();
     if (book) this.selectBookForModal(book);
   }
+  onBookCardKeydown(event: KeyboardEvent, book: Book): void {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+
+    event.preventDefault();
+    this.selectBookForModal(book);
+  }
+
   selectBookForModal(book: Book): void {
     this.selectedBook.set({ ...book });
   }

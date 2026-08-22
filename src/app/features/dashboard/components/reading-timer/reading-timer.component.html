@@ -1,34 +1,36 @@
-<aside class="reading-clock" [class.running]="timer.isRunning()">
-  <button
-    class="clock-shell"
-    type="button"
-    (click)="openManager()"
-    [disabled]="!hasActiveBook()"
-    [attr.aria-label]="
-      hasActiveBook()
-        ? 'Abrir gerenciamento da leitura. Tempo: ' + timer.formattedTime()
-        : 'Adicione um livro para iniciar uma leitura'
-    "
-  >
-    <span class="clock-topline">
-      @if (timer.isRunning()) {
-        <i class="status-dot" aria-hidden="true"></i>
-      }
-      {{ timer.isRunning() ? 'Lendo' : 'Leitura' }}
-    </span>
+@if (timer.isMinimized() && timer.hasSession()) {
+  <aside class="reading-clock" [class.running]="timer.isRunning()">
+    <button
+      class="clock-shell"
+      type="button"
+      (click)="openManager()"
+      [disabled]="!hasActiveBook()"
+      [attr.aria-label]="
+        hasActiveBook()
+          ? 'Abrir gerenciamento da leitura. Tempo: ' + timer.formattedTime()
+          : 'Adicione um livro para iniciar uma leitura'
+      "
+    >
+      <span class="clock-topline">
+        @if (timer.isRunning()) {
+          <i class="status-dot" aria-hidden="true"></i>
+        }
+        {{ timer.isRunning() ? 'Lendo' : 'Leitura' }}
+      </span>
 
-    <span class="flip-display" aria-hidden="true">
-      <span class="digit-pair">
-        @for (digit of minuteDigits(); track $index) {
-          <span class="flip-card">{{ digit }}</span>
-        }
+      <span class="flip-display" aria-hidden="true">
+        <span class="digit-pair">
+          @for (digit of minuteDigits(); track $index) {
+            <span class="flip-card">{{ digit }}</span>
+          }
+        </span>
+        <span class="time-separator"><i></i><i></i></span>
+        <span class="digit-pair">
+          @for (digit of secondDigits(); track $index) {
+            <span class="flip-card">{{ digit }}</span>
+          }
+        </span>
       </span>
-      <span class="time-separator"><i></i><i></i></span>
-      <span class="digit-pair">
-        @for (digit of secondDigits(); track $index) {
-          <span class="flip-card">{{ digit }}</span>
-        }
-      </span>
-    </span>
-  </button>
-</aside>
+    </button>
+  </aside>
+}
