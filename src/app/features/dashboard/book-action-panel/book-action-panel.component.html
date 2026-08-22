@@ -3,14 +3,17 @@
     class="modal-overlay"
     [class.closing]="isClosing"
     (click)="onOverlayClick($event)"
-    role="dialog"
-    aria-modal="true"
-    [attr.aria-label]="'Ações para o livro ' + book.title"
-    cdkTrapFocus
-    [cdkTrapFocusAutoCapture]="true"
-    [attr.aria-label]="book.title"
+    role="presentation"
   >
-    <div class="book-modal" [class.closing]="isClosing">
+    <div
+      class="book-modal"
+      [class.closing]="isClosing"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="book-action-title"
+      cdkTrapFocus
+      [cdkTrapFocusAutoCapture]="true"
+    >
       <div class="book-spine"></div>
 
       <div class="modal-body">
@@ -28,7 +31,7 @@
           </div>
 
           <div class="book-meta">
-            <h3>{{ book.title }}</h3>
+            <h3 id="book-action-title">{{ book.title }}</h3>
             <p class="author">{{ book.author }}</p>
             <span class="cat-badge">{{ book.category }}</span>
           </div>
@@ -48,35 +51,67 @@
         <div class="book-right">
           <div class="modal-tabs" role="tablist">
             <button
+              id="book-tab-progress"
               class="mtab"
+              type="button"
               [class.active]="activeTab === 'progress'"
               (click)="selectTab('progress')"
+              (keydown)="onTabKeydown($event, 'progress')"
               role="tab"
+              aria-controls="book-panel-progress"
+              [attr.aria-selected]="activeTab === 'progress'"
+              [attr.tabindex]="activeTab === 'progress' ? 0 : -1"
+              cdkFocusInitial
             >
-              <img src="assets/icon_progress.png" alt="Progresso" class="edit-icon" /> Progresso
+              <img src="assets/icon_progress.png" alt="" aria-hidden="true" class="edit-icon" />
+              Progresso
             </button>
             <button
+              id="book-tab-edit"
               class="mtab"
+              type="button"
               [class.active]="activeTab === 'edit'"
               (click)="selectTab('edit')"
+              (keydown)="onTabKeydown($event, 'edit')"
               role="tab"
+              aria-controls="book-panel-edit"
+              [attr.aria-selected]="activeTab === 'edit'"
+              [attr.tabindex]="activeTab === 'edit' ? 0 : -1"
             >
-              <img src="assets/icon_edit.png" alt="Editar" class="edit-icon" /> Editar
+              <img src="assets/icon_edit.png" alt="" aria-hidden="true" class="edit-icon" />
+              Editar
             </button>
             <button
+              id="book-tab-manage"
               class="mtab"
+              type="button"
               [class.active]="activeTab === 'manage'"
               (click)="selectTab('manage')"
+              (keydown)="onTabKeydown($event, 'manage')"
               role="tab"
+              aria-controls="book-panel-manage"
+              [attr.aria-selected]="activeTab === 'manage'"
+              [attr.tabindex]="activeTab === 'manage' ? 0 : -1"
             >
-              <img src="assets/icon_geren.png" alt="Gerenciar" class="edit-icon" /> Gerenciar
+              <img src="assets/icon_geren.png" alt="" aria-hidden="true" class="edit-icon" />
+              Gerenciar
             </button>
           </div>
 
           @if (activeTab === 'progress') {
-            <div class="tab-body" role="tabpanel">
+            <div
+              id="book-panel-progress"
+              class="tab-body"
+              role="tabpanel"
+              aria-labelledby="book-tab-progress"
+            >
               <div class="timer-block">
-                <span class="timer-display">{{ formattedTime }}</span>
+                <span
+                  class="timer-display"
+                  role="timer"
+                  [attr.aria-label]="'Tempo de leitura: ' + formattedTime"
+                  >{{ formattedTime }}</span
+                >
                 <div class="timer-actions">
                   <button class="btn" (click)="toggleTimer()">
                     {{
@@ -91,8 +126,15 @@
                     <button class="btn ghost" (click)="resetTimer()">Cancelar</button>
                   }
                 </div>
+                <button
+                  class="timer-help"
+                  type="button"
+                  aria-describedby="timer-help-tooltip"
+                  aria-label="Como minimizar o cronômetro"
+                >
+                  <span aria-hidden="true">?</span>
+                </button>
               </div>
-
               <div class="field">
                 <label class="flabel" for="progress-pages"
                   >Páginas lidas agora <span class="req">*</span></label
@@ -122,7 +164,12 @@
           }
 
           @if (activeTab === 'edit') {
-            <div class="tab-body" role="tabpanel">
+            <div
+              id="book-panel-edit"
+              class="tab-body"
+              role="tabpanel"
+              aria-labelledby="book-tab-edit"
+            >
               <div class="field">
                 <label class="flabel" for="edit-book-title"
                   >Título <span class="req">*</span></label
@@ -172,7 +219,12 @@
           }
 
           @if (activeTab === 'manage') {
-            <div class="tab-body" role="tabpanel">
+            <div
+              id="book-panel-manage"
+              class="tab-body"
+              role="tabpanel"
+              aria-labelledby="book-tab-manage"
+            >
               <div class="manage-item">
                 <div class="manage-text">
                   <h4>Mover para biblioteca</h4>
@@ -225,7 +277,44 @@
         </div>
       </div>
 
-      <button class="close-x" (click)="close()" aria-label="Fechar modal">✕</button>
+      <span id="timer-help-tooltip" class="timer-tooltip" role="tooltip">
+        <svg
+          class="thought-cloud"
+          viewBox="0 0 280 130"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M45 115C26 115 14 102 20 87C4 77 8 55 25 47C19 29 38 13 57 20C69 3 96 4 108 20C126 5 153 8 161 25C181 9 207 16 210 35C232 31 250 50 242 68C258 82 248 104 229 106C219 122 192 123 179 112C162 126 136 123 124 111C106 125 80 122 69 110C60 116 52 116 45 115Z"
+          />
+        </svg>
+        <span class="thought-copy">
+          <strong>Quer continuar lendo?</strong>
+          <span><b>—</b> minimiza e mantém o tempo.</span>
+          <span><b>✕</b> encerra e zera a sessão.</span>
+        </span>
+        <i class="thought-dot thought-dot-large" aria-hidden="true"></i>
+        <i class="thought-dot thought-dot-small" aria-hidden="true"></i>
+      </span>
+
+      <button
+        class="minimize-x"
+        type="button"
+        (click)="minimize()"
+        [disabled]="!canMinimize"
+        [attr.aria-label]="canMinimize ? 'Minimizar cronômetro' : 'Inicie a leitura para minimizar'"
+        title="Minimizar cronômetro"
+      >
+        —
+      </button>
+      <button
+        class="close-x"
+        type="button"
+        (click)="close()"
+        aria-label="Fechar e encerrar a sessão de leitura"
+      >
+        ✕
+      </button>
     </div>
   </div>
 }

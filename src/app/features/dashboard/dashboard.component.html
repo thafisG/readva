@@ -104,6 +104,10 @@
                   class="current-book-layout clickable-book"
                   [class.active-progress]="selectedBook()?.id === book.id"
                   (click)="selectBookForModal(book)"
+                  (keydown)="onBookCardKeydown($event, book)"
+                  role="button"
+                  tabindex="0"
+                  [attr.aria-label]="'Gerenciar ' + book.title + ', de ' + book.author"
                   title="Clique para gerenciar"
                 >
                   <img [src]="book.coverUrl" [alt]="'Capa de ' + book.title" class="book-cover" />

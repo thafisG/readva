@@ -4,7 +4,11 @@ import { DestroyRef, Injectable, computed, inject, signal } from '@angular/core'
 export class ReadingTimerService {
   readonly elapsedSeconds = signal(0);
   readonly isRunning = signal(false);
+  readonly isMinimized = signal(false);
   readonly activeBookId = signal<string | null>(null);
+  readonly hasSession = computed(
+    () => this.activeBookId() !== null && (this.isRunning() || this.elapsedSeconds() > 0),
+  );
   readonly formattedTime = computed(() => this.format(this.elapsedSeconds()));
 
   private startedAt: number | null = null;
@@ -40,8 +44,20 @@ export class ReadingTimerService {
     this.pause();
     this.elapsedSeconds.set(0);
     this.activeBookId.set(null);
+    this.isMinimized.set(false);
   }
 
+  minimize(): void {
+    if (this.hasSession()) this.isMinimized.set(true);
+  }
+
+  restore(): void {
+    this.isMinimized.set(false);
+  }
+
+  dismiss(): void {
+    this.reset();
+  }
   private sync(): void {
     if (this.startedAt === null) return;
     this.elapsedSeconds.set(Math.floor((Date.now() - this.startedAt) / 1000));
