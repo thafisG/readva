@@ -92,23 +92,38 @@ Mais detalhes: [guia do backend](backend/README.md).
 
 ## Banco e ambientes
 
-| Perfil | Banco      | Finalidade                                   |
-| ------ | ---------- | -------------------------------------------- |
-| `dev`  | H2 arquivo | desenvolvimento local com dados persistentes |
-| `test` | H2 memória | testes isolados, descartados após a execução |
-| `prod` | PostgreSQL | ambiente real configurado por variáveis      |
+| Perfil | Banco      | Finalidade                                    |
+| ------ | ---------- | --------------------------------------------- |
+| `dev`  | H2 arquivo | desenvolvimento local com dados persistentes  |
+| `test` | H2 memória | testes isolados, descartados após a execução  |
+| `e2e`  | H2 memória | jornadas completas executadas pelo Playwright |
+| `prod` | PostgreSQL | ambiente real configurado por variáveis       |
 
-O Flyway é a única fonte de alteração do esquema. A migração inicial cria leitores, atividades de leitura, metas diárias, dias de ofensiva e conclusões de missões. O Hibernate usa `ddl-auto: validate`, portanto valida as entidades sem modificar tabelas silenciosamente.
+O Flyway é a única fonte de alteração do esquema. A migração inicial cria leitores, atividades de leitura, metas diárias, dias de ofensiva e conclusões de missões; a segunda adiciona as credenciais dos leitores. O Hibernate usa `ddl-auto: validate`, portanto valida as entidades sem modificar tabelas silenciosamente.
 
 Configurações importantes:
 
 - `backend/src/main/resources/application.yml`: propriedades compartilhadas;
 - `backend/src/main/resources/application-dev.yml`: H2 local;
+- `backend/src/main/resources/application-e2e.yml`: H2 isolado dos testes E2E;
 - `backend/src/test/resources/application-test.yml`: H2 dos testes;
 - `backend/src/main/resources/application-prod.yml`: PostgreSQL;
 - `backend/src/main/resources/db/migration`: histórico de migrações Flyway.
 
-## API inicial
+## Autenticação e sessão
+
+- o primeiro acesso é feito pela opção **Criar conta**, com nome, e-mail e senha de 8 a 72 caracteres;
+- a senha é enviada à API e armazenada somente como hash; ela nunca é salva no `localStorage`;
+- o servidor mantém a autenticação em um cookie de sessão `HttpOnly`, com duração de 12 horas;
+- o Angular obtém e envia o token CSRF automaticamente nas operações protegidas;
+- o `authGuard` consulta a sessão no backend antes de liberar as rotas pessoais;
+- o logout encerra a sessão no servidor e limpa o estado local da interface.
+
+Quem já utilizava a versão local deve criar uma conta usando o mesmo e-mail. Os dados ainda armazenados no navegador continuam associados a esse endereço.
+
+Durante o desenvolvimento, o Angular encaminha `/api` para `http://127.0.0.1:8080` por meio de `proxy.conf.json`. Por isso, backend e frontend precisam estar ativos.
+
+## API atual
 
 | Método | Endpoint                             | Responsabilidade          |
 | ------ | ------------------------------------ | ------------------------- |
@@ -153,7 +168,7 @@ cd backend
 .\mvnw.cmd test
 ```
 
-A suíte E2E cobre autenticação e as jornadas completas de leitura, meta e desafio. Os testes do backend validam cadastro, hash da senha, sessão, CSRF, autorização, persistência no H2 e migrações Flyway.
+A suíte E2E inicia o backend com um H2 temporário, inicia o Angular e cobre autenticação e as jornadas completas de leitura, meta e desafio. Os testes do backend validam cadastro, hash da senha, sessão, CSRF, autorização, persistência no H2 e migrações Flyway.
 
 ## Arquitetura
 
@@ -176,10 +191,11 @@ Cada domínio do backend separa suas responsabilidades:
 - `web`: controllers e contratos HTTP;
 - `shared`: erros e respostas comuns sem regras de negócio específicas.
 
-O fluxo básico é:
+Os fluxos atuais são:
 
 ```text
-Angular → API REST → aplicação → repository → JPA/Hibernate → banco
+Autenticação: Angular → API REST → Spring Security → JPA/Hibernate → banco
+Jornada de leitura: Angular → serviços de domínio → localStorage (migração em andamento)
 ```
 
 Detalhes adicionais: [arquitetura](docs/architecture.md), [persistência local](docs/storage-schema.md), [acessibilidade](docs/accessibility.md) e [backend](backend/README.md).
@@ -189,9 +205,16 @@ Detalhes adicionais: [arquitetura](docs/architecture.md), [persistência local](
 - apenas a autenticação já está integrada ao Angular;
 - ainda não existe sincronização dos dados de leitura entre dispositivos;
 - parte dos dados continua limitada ao navegador;
+- ainda não existem recuperação de senha nem verificação de e-mail;
 - Open Library, Google Books e capas remotas podem ficar indisponíveis;
-- o feed social ainda usa dados locais determinísticos;
-- permanecem avisos de orçamento em estilos grandes e um aviso CommonJS de `html2canvas`.
+- o feed social ainda usa dados locais determinísticos.
+
+## Solução de problemas
+
+- inicie o backend antes do frontend para que o login consiga validar a sessão;
+- se o login informar que o servidor está indisponível, confirme `http://localhost:8080` e reinicie o `ng serve` após mudanças no proxy;
+- o console H2 utiliza usuário `sa`, senha vazia e a URL JDBC exibida pelo backend;
+- Kubernetes e arquivo `kubeconfig` não são necessários para executar o Readva localmente.
 
 ## Próximos passos
 
