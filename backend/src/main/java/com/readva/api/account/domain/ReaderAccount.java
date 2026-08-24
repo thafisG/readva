@@ -23,6 +23,9 @@ public class ReaderAccount {
     @Column(name = "normalized_email", nullable = false, unique = true, length = 254)
     private String normalizedEmail;
 
+    @Column(name = "password_hash", length = 255)
+    private String passwordHash;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -31,12 +34,13 @@ public class ReaderAccount {
 
     protected ReaderAccount() {}
 
-    public ReaderAccount(String displayName, String email) {
+    public ReaderAccount(String displayName, String email, String passwordHash) {
         Instant now = Instant.now();
         this.id = UUID.randomUUID();
         this.displayName = displayName.trim();
         this.email = email.trim();
         this.normalizedEmail = normalizeEmail(email);
+        this.passwordHash = passwordHash;
         this.createdAt = now;
         this.updatedAt = now;
     }
@@ -48,5 +52,7 @@ public class ReaderAccount {
     public UUID getId() { return id; }
     public String getDisplayName() { return displayName; }
     public String getEmail() { return email; }
+    public String getNormalizedEmail() { return normalizedEmail; }
+    public String getPasswordHash() { return passwordHash; }
     public Instant getCreatedAt() { return createdAt; }
 }

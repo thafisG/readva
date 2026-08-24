@@ -532,7 +532,7 @@ export class DashboardComponent implements OnDestroy {
   }
 
   handleLogout(): void {
-    this.authService.logout();
+    void this.authService.logout();
   }
 
   loadSuggestions(): void {

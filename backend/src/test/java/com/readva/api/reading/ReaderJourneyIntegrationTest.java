@@ -11,6 +11,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,10 +21,12 @@ import org.springframework.transaction.annotation.Transactional;
 class ReaderJourneyIntegrationTest {
     @Autowired private ReaderAccountService readerAccountService;
     @Autowired private ReadingActivityService readingActivityService;
+    @Autowired private PasswordEncoder passwordEncoder;
 
     @Test
     void persistsAReaderAndTheirReadingActivity() {
-        ReaderAccount reader = readerAccountService.create("Thais", "THAIS@example.com");
+        ReaderAccount reader = readerAccountService.create(
+                "Thais", "THAIS@example.com", passwordEncoder.encode("Leitura@123"));
         readingActivityService.record(
                 reader.getId(),
                 "open-library:OL123W",

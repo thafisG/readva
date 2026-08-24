@@ -12,6 +12,12 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
+  servlet:
+    session:
+      timeout: 12h
+      cookie:
+        http-only: true
+        same-site: lax
 
 readva:
   web:

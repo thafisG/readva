@@ -2,13 +2,11 @@
 
 O Readva é uma plataforma de leitura que transforma o hábito de ler em uma jornada visual e motivadora. O leitor acompanha seu progresso, mantém uma biblioteca pessoal, participa de desafios, personaliza o perfil e recebe incentivo da Moka, a mascote do projeto.
 
-O repositório possui um frontend Angular e uma base de backend Spring Boot. O backend já persiste leitores e atividades em H2, mas a integração do Angular com a API será feita gradualmente; durante essa transição, parte dos dados ainda permanece no `localStorage`.
-
-> O login atual é demonstrativo, sem senha e sem autenticação segura. Nunca armazene senhas ou segredos no `localStorage`.
+O repositório possui um frontend Angular e um backend Spring Boot. O cadastro e o login já usam a API e uma sessão HTTP; os demais domínios estão sendo migrados gradualmente e parte dos dados de leitura ainda permanece no `localStorage`.
 
 ## Principais funcionalidades
 
-- cadastro e sessão local por nome e e-mail;
+- cadastro e login por e-mail e senha, com sessão validada pelo backend;
 - perfil com estatísticas, metas, conquistas e avatar personalizável;
 - avatar no dashboard usado como atalho para o perfil;
 - busca de livros e capas em catálogos externos;
@@ -47,7 +45,7 @@ O feed social é demonstrativo. As recomendações não utilizam inteligência a
 ### Backend
 
 - Java 21 e Spring Boot 4;
-- Spring Web MVC e Bean Validation;
+- Spring Web MVC, Bean Validation e Spring Security;
 - Spring Data JPA e Hibernate;
 - Flyway para migrações versionadas;
 - H2 em desenvolvimento e testes;
@@ -64,22 +62,22 @@ As versões do frontend estão declaradas em `package.json` e `.nvmrc`. Não é 
 
 ## Como executar
 
-### 1. Frontend
+### 1. Backend
 
-No diretório raiz:
-
-```powershell
-npm ci
-npm start
-```
-
-### 2. Backend
-
-Em outro terminal:
+Em um terminal:
 
 ```powershell
 cd backend
 .\mvnw.cmd spring-boot:run
+```
+
+### 2. Frontend
+
+Em outro terminal, no diretório raiz:
+
+```powershell
+npm ci
+npm start
 ```
 
 | Serviço    | Endereço                           |
@@ -114,12 +112,16 @@ Configurações importantes:
 
 | Método | Endpoint                             | Responsabilidade          |
 | ------ | ------------------------------------ | ------------------------- |
-| POST   | `/api/readers`                       | criar um leitor           |
+| GET    | `/api/auth/csrf`                     | preparar a proteção CSRF  |
+| POST   | `/api/auth/register`                 | criar conta e sessão      |
+| POST   | `/api/auth/login`                    | autenticar e criar sessão |
+| GET    | `/api/auth/session`                  | consultar a sessão atual  |
+| POST   | `/api/auth/logout`                   | encerrar a sessão         |
 | GET    | `/api/readers/{readerId}`            | consultar um leitor       |
 | POST   | `/api/readers/{readerId}/activities` | registrar uma leitura     |
 | GET    | `/api/readers/{readerId}/activities` | listar leituras do leitor |
 
-O Angular ainda não consome esses endpoints. A troca da persistência local pela API será incremental para permitir a importação segura dos dados que já existem no navegador.
+O Angular já consome os endpoints de autenticação. A troca da persistência dos demais domínios pela API será incremental para permitir a importação segura dos dados existentes no navegador.
 
 ## Rotas do frontend
 
@@ -129,9 +131,9 @@ O Angular ainda não consome esses endpoints. A troca da persistência local pel
 | `/biblioteca` | Biblioteca pessoal                   |
 | `/desafios`   | Missões, XP e conquistas             |
 | `/perfil`     | Perfil, estatísticas, metas e avatar |
-| `/login`      | Entrada e criação local do leitor    |
+| `/login`      | Login e criação da conta             |
 
-As rotas pessoais são protegidas pelo `authGuard` demonstrativo.
+As rotas pessoais são protegidas pelo `authGuard`, que valida a sessão no servidor.
 
 ## Qualidade e testes
 
@@ -151,7 +153,7 @@ cd backend
 .\mvnw.cmd test
 ```
 
-A suíte E2E cobre as jornadas completas de leitura, meta e desafio. O teste de integração do backend cria um leitor, registra uma atividade, consulta o dado no H2 e valida a migração Flyway.
+A suíte E2E cobre autenticação e as jornadas completas de leitura, meta e desafio. Os testes do backend validam cadastro, hash da senha, sessão, CSRF, autorização, persistência no H2 e migrações Flyway.
 
 ## Arquitetura
 
@@ -184,8 +186,8 @@ Detalhes adicionais: [arquitetura](docs/architecture.md), [persistência local](
 
 ## Limitações atuais
 
-- o backend ainda não está integrado ao Angular;
-- não existe autenticação real nem sincronização entre dispositivos;
+- apenas a autenticação já está integrada ao Angular;
+- ainda não existe sincronização dos dados de leitura entre dispositivos;
 - parte dos dados continua limitada ao navegador;
 - Open Library, Google Books e capas remotas podem ficar indisponíveis;
 - o feed social ainda usa dados locais determinísticos;
@@ -193,11 +195,11 @@ Detalhes adicionais: [arquitetura](docs/architecture.md), [persistência local](
 
 ## Próximos passos
 
-1. migrar usuário e perfil do `localStorage` para a API;
+1. migrar perfil e avatar do `localStorage` para a API;
 2. importar atividades existentes sem perder o histórico do leitor;
-3. persistir ofensiva, metas e missões no backend;
-4. implementar autenticação e autorização reais;
-5. conectar biblioteca e feed social a dados persistentes;
-6. trocar o banco de produção por PostgreSQL quando o ambiente estiver disponível.
+3. persistir biblioteca, ofensiva, metas e missões no backend;
+4. conectar o feed social a dados persistentes;
+5. adicionar recuperação de senha e verificação de e-mail;
+6. ativar PostgreSQL no ambiente de produção.
 
 As ilustrações e animações existentes em `public/` fazem parte da identidade visual do projeto.
