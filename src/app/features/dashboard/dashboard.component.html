@@ -33,6 +33,9 @@
           <button routerLink="/desafios" routerLinkActive="active" class="nav-button">
             <mat-icon>track_changes</mat-icon>
             <span>Desafios e Metas</span>
+            @if (hasUnseenMissions()) {
+              <span class="nav-new-badge">Novo</span>
+            }
           </button>
 
           <button routerLink="/perfil" routerLinkActive="active" class="nav-button">
@@ -156,12 +159,17 @@
     (action)="handlePanelAction($event)"
     (closed)="closeModal()"
   ></app-book-action-panel>
-  <app-moka
-    [mood]="currentMokaMood()"
-    [celebration]="currentMokaCelebration()"
-    (coffeeChanged)="onCoffeeChanged($event)"
-    (coffeeConfirmed)="onCoffeeConfirmed($event)"
-  ></app-moka>
+  <app-moka [mood]="currentMokaMood()" [celebration]="currentMokaSpotlightCelebration()"></app-moka>
+  <app-moka-goal-celebration
+    [celebration]="currentMokaGoalCelebration()"
+    (dismissed)="dismissMokaGoalCelebration()"
+  />
+  @if (coffeeToast()) {
+    <app-moka-coffee-check-in
+      (confirmed)="onCoffeeConfirmed($event)"
+      (dismissed)="dismissCoffeeCheckIn()"
+    />
+  }
   <app-reading-timer
     [hasActiveBook]="activeTimerBook() !== null"
     (manageRequested)="openReadingManager()"

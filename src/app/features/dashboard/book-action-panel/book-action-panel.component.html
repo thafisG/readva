@@ -277,6 +277,47 @@
         </div>
       </div>
 
+      @if (showTimerCloseConfirmation) {
+        <div
+          class="timer-close-confirmation-overlay"
+          role="presentation"
+          (click)="cancelTimerClose()"
+        >
+          <section
+            class="timer-close-confirmation"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="timer-close-title"
+            aria-describedby="timer-close-description"
+            cdkTrapFocus
+            [cdkTrapFocusAutoCapture]="true"
+            (click)="$event.stopPropagation()"
+          >
+            <div class="timer-close-icon" aria-hidden="true">
+              <img src="assets/icon_triste.gif" alt="" />
+            </div>
+            <h3 id="timer-close-title">Encerrar esta leitura?</h3>
+            <p id="timer-close-description">
+              Seu tempo de <strong>{{ formattedTime }}</strong> ainda não foi registrado. Ao
+              encerrar, o cronômetro será zerado e esse progresso será perdido.
+            </p>
+            <footer class="timer-close-actions">
+              <button
+                class="timer-close-secondary"
+                type="button"
+                cdkFocusInitial
+                (click)="cancelTimerClose()"
+              >
+                Continuar lendo
+              </button>
+              <button class="timer-close-danger" type="button" (click)="confirmTimerClose()">
+                Encerrar e zerar
+              </button>
+            </footer>
+          </section>
+        </div>
+      }
+
       <span id="timer-help-tooltip" class="timer-tooltip" role="tooltip">
         <svg
           class="thought-cloud"
@@ -291,7 +332,7 @@
         <span class="thought-copy">
           <strong>Quer continuar lendo?</strong>
           <span><b>—</b> minimiza e mantém o tempo.</span>
-          <span><b>✕</b> encerra e zera a sessão.</span>
+          <span><b>✕</b> pede confirmação para encerrar.</span>
         </span>
         <i class="thought-dot thought-dot-large" aria-hidden="true"></i>
         <i class="thought-dot thought-dot-small" aria-hidden="true"></i>
@@ -311,7 +352,7 @@
         class="close-x"
         type="button"
         (click)="close()"
-        aria-label="Fechar e encerrar a sessão de leitura"
+        aria-label="Fechar gerenciamento da leitura"
       >
         ✕
       </button>

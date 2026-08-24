@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: Readva API
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+
+server:
+  port: ${SERVER_PORT:8080}
+
+readva:
+  web:
+    allowed-origin: ${READVA_WEB_ORIGIN:http://localhost:4200}

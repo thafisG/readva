@@ -46,6 +46,8 @@ export class BookActionPanelComponent implements OnChanges {
   editCategory = '';
 
   confirmDelete = false;
+  showTimerCloseConfirmation = false;
+  private resumeTimerAfterCloseCancel = false;
 
   get isReading(): boolean {
     return this.readingTimer.isRunning();
@@ -71,7 +73,12 @@ export class BookActionPanelComponent implements OnChanges {
   }
 
   @HostListener('document:keydown.escape')
-  onEscape() {
+  onEscape(): void {
+    if (!this.book || this.isClosing) return;
+    if (this.showTimerCloseConfirmation) {
+      this.cancelTimerClose();
+      return;
+    }
     this.close();
   }
 
@@ -80,12 +87,31 @@ export class BookActionPanelComponent implements OnChanges {
       this.syncEditFields();
       if (this.readingTimer.activeBookId() !== this.book.id) this.resetProgressForm();
       this.confirmDelete = false;
+      this.showTimerCloseConfirmation = false;
+      this.resumeTimerAfterCloseCancel = false;
       this.isClosing = false;
       this.activeTab = 'progress';
     }
   }
 
   close(): void {
+    if (this.canMinimize) {
+      this.openTimerCloseConfirmation();
+      return;
+    }
+    this.readingTimer.dismiss();
+    this.finishClosing();
+  }
+
+  cancelTimerClose(): void {
+    this.showTimerCloseConfirmation = false;
+    if (this.resumeTimerAfterCloseCancel && this.book) this.readingTimer.start(this.book.id);
+    this.resumeTimerAfterCloseCancel = false;
+  }
+
+  confirmTimerClose(): void {
+    this.showTimerCloseConfirmation = false;
+    this.resumeTimerAfterCloseCancel = false;
     this.readingTimer.dismiss();
     this.finishClosing();
   }
@@ -181,6 +207,13 @@ export class BookActionPanelComponent implements OnChanges {
     if (!this.book) return;
     this.action.emit({ type: 'delete', bookId: this.book.id });
     this.confirmDelete = false;
+  }
+
+  private openTimerCloseConfirmation(): void {
+    if (this.showTimerCloseConfirmation) return;
+    this.resumeTimerAfterCloseCancel = this.isReading;
+    this.readingTimer.pause();
+    this.showTimerCloseConfirmation = true;
   }
 
   private finishClosing(): void {

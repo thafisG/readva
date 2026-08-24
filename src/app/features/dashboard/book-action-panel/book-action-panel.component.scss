@@ -444,6 +444,123 @@
   }
 }
 
+.timer-close-confirmation-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(28, 25, 23, 0.52);
+  animation: fadeIn 0.15s ease;
+}
+
+.timer-close-confirmation {
+  width: min(400px, 100%);
+  padding: 28px;
+  border: 1px solid #dbeaf5;
+  border-radius: 20px;
+  background: #fbfdff;
+  box-shadow: 0 22px 60px rgba(29, 62, 86, 0.22);
+  text-align: center;
+
+  h3 {
+    margin: 12px 0 8px;
+    color: #274f6d;
+    font-size: 1.05rem;
+  }
+
+  p {
+    margin: 0;
+    color: #657d8f;
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+
+  strong {
+    color: #315a78;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.timer-close-icon {
+  display: grid;
+  place-items: center;
+
+  img {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+  }
+}
+
+.timer-close-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding-top: 20px;
+}
+
+.timer-close-secondary,
+.timer-close-danger {
+  min-height: 40px;
+  padding: 8px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.timer-close-secondary {
+  border: 1px solid #cddfeb;
+  background: #ffffff;
+  color: #526f87;
+
+  &:hover {
+    background: #edf7ff;
+  }
+}
+
+.timer-close-danger {
+  border: 0;
+  background: #b94848;
+  color: #ffffff;
+
+  &:hover {
+    background: #a43f3f;
+  }
+}
+
+.timer-close-secondary:focus-visible,
+.timer-close-danger:focus-visible {
+  outline: 2px solid #3976a6;
+  outline-offset: 2px;
+}
+
+@media (max-width: 420px) {
+  .timer-close-confirmation-overlay {
+    align-items: end;
+    padding: 0;
+  }
+
+  .timer-close-confirmation {
+    width: 100%;
+    padding: 24px 16px max(20px, env(safe-area-inset-bottom));
+    border-radius: 20px 20px 0 0;
+  }
+
+  .timer-close-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+  }
+
+  .timer-close-secondary,
+  .timer-close-danger {
+    width: 100%;
+  }
+}
+
 .confirm-actions {
   display: flex;
   gap: 8px;

@@ -20,6 +20,11 @@ import type { BookActionEvent } from './book-action-panel/book-action-panel.comp
 import { BookActionPanelComponent } from './book-action-panel/book-action-panel.component';
 import type { MokaCelebration, MokaMood } from '../moka/moka.component';
 import { MokaComponent } from '../moka/moka.component';
+import { MokaCoffeeCheckInComponent } from '../moka/components/moka-coffee-check-in/moka-coffee-check-in.component';
+import {
+  MokaGoalCelebrationComponent,
+  isGoalCelebration,
+} from '../moka/components/moka-goal-celebration/moka-goal-celebration.component';
 import { DashboardPreferencesService } from './services/dashboard-preferences.service';
 import { A11yModule } from '@angular/cdk/a11y';
 import { RecommendationsComponent } from './components/recommendations/recommendations.component';
@@ -65,6 +70,8 @@ import { ReadingTimerService } from './services/reading-timer.service';
     ReadingTimerComponent,
     MatIconModule,
     MokaComponent,
+    MokaCoffeeCheckInComponent,
+    MokaGoalCelebrationComponent,
     RecommendationsComponent,
     SocialPanelComponent,
     A11yModule,
@@ -92,6 +99,7 @@ export class DashboardComponent implements OnDestroy {
   private preferences = inject(DashboardPreferencesService);
   private summaryCardExport = inject(SummaryCardExportService);
   private readingTimer = inject(ReadingTimerService);
+  readonly hasUnseenMissions = this.challengesService.hasUnseenMissions;
 
   public deletingActivity = signal<ReadingActivity | null>(null);
   public editingActivity = signal<ReadingActivity | null>(null);
@@ -112,10 +120,14 @@ export class DashboardComponent implements OnDestroy {
   public mokaToast = signal<MokaMood | null>(null);
   public mokaCelebration = signal<MokaCelebration | null>(null);
   private mokaCelebrationSequence = 0;
-  private coffeeToast = signal(false);
+  readonly coffeeToast = signal(false);
+  readonly coffeeCheckInPending = signal(false);
 
   private mokaFeedbackTimer: ReturnType<typeof setTimeout> | null = null;
   private mokaToastTimer: ReturnType<typeof setTimeout> | null = null;
+  private coffeeCheckInTimer: ReturnType<typeof setTimeout> | null = null;
+  private pendingFirstPostCelebration = false;
+  private pendingGoalCelebrationMood: MokaMood | null = null;
 
   public editComment = '';
   public editDetail = '';
@@ -139,13 +151,14 @@ export class DashboardComponent implements OnDestroy {
   ngOnDestroy() {
     if (this.mokaFeedbackTimer) clearTimeout(this.mokaFeedbackTimer);
     if (this.mokaToastTimer) clearTimeout(this.mokaToastTimer);
+    if (this.coffeeCheckInTimer) clearTimeout(this.coffeeCheckInTimer);
   }
 
   /**
    * Welcome e sleepy agora são disparados como toasts explícitos e
    * temporizados (igual completed-book, mission etc), e não mais como
    * fallback do currentMokaMood(). Isso evita que eles "roubem" a cena
-   * de outro mood ativo (ex: o balão do café) quando esse mood termina.
+   * de outro mood ativo quando esse mood termina.
    * Só um dos dois dispara por sessão pra não colidir.
    */
   private initMoka(): void {
@@ -198,8 +211,17 @@ export class DashboardComponent implements OnDestroy {
     }, 5000);
   }
 
-  private triggerCoffeeToast(): void {
-    this.coffeeToast.set(true);
+  private scheduleCoffeeCheckIn(delay: number): void {
+    if (this.coffeeCheckInTimer) clearTimeout(this.coffeeCheckInTimer);
+    const goalCelebration = this.currentMokaGoalCelebration();
+    this.pendingGoalCelebrationMood = goalCelebration?.mood ?? null;
+    this.mokaCelebration.set(null);
+    this.challengesService.dismissJustUnlocked();
+    this.coffeeCheckInPending.set(true);
+    this.coffeeCheckInTimer = setTimeout(() => {
+      this.coffeeToast.set(true);
+      this.coffeeCheckInTimer = null;
+    }, delay);
   }
 
   get showStreakMoka(): boolean {
@@ -207,14 +229,17 @@ export class DashboardComponent implements OnDestroy {
     return streak > 0 && streak % 7 === 0;
   }
 
-  onCoffeeChanged(count: number): void {
-    void count;
-  }
-
   onCoffeeConfirmed(count: number): void {
     const total = this.preferences.addCoffee(count);
     this.manualCoffeeCount.set(total);
+    this.dismissCoffeeCheckIn();
+  }
+
+  dismissCoffeeCheckIn(): void {
     this.coffeeToast.set(false);
+    this.coffeeCheckInPending.set(false);
+    this.releaseFirstPostCelebration();
+    this.releasePendingGoalCelebration();
   }
 
   private loadDailyProgress(): UserProgress {
@@ -245,13 +270,38 @@ export class DashboardComponent implements OnDestroy {
     });
     return reachedGoal;
   }
-  private maybeFireStreakAndConfetti(): void {
+  private queueFirstPostCelebration(): void {
     if (this.preferences.isFirstPostToday()) return;
     this.preferences.markFirstPostToday();
+    this.pendingFirstPostCelebration = true;
+  }
+
+  private releaseFirstPostCelebration(): void {
+    if (!this.pendingFirstPostCelebration) return;
+    this.pendingFirstPostCelebration = false;
     this.streakComponent?.markTodayRead();
 
     const streak = this.streakComponent?.streakCount() ?? this.userProgress().currentStreak;
     this.challengesService.onStreakDay(streak);
+  }
+
+  private releasePendingGoalCelebration(): void {
+    const mood = this.pendingGoalCelebrationMood;
+    if (!mood) return;
+    this.pendingGoalCelebrationMood = null;
+    this.mokaCelebration.set({ id: ++this.mokaCelebrationSequence, mood });
+    if (this.mokaFeedbackTimer) clearTimeout(this.mokaFeedbackTimer);
+    this.mokaFeedbackTimer = setTimeout(() => {
+      this.mokaFeedback.set(null);
+      this.mokaCelebration.set(null);
+    }, 3600);
+  }
+
+  dismissMokaGoalCelebration(): void {
+    this.mokaCelebration.set(null);
+    if (isGoalCelebration(this.challengesService.celebration())) {
+      this.challengesService.dismissJustUnlocked();
+    }
   }
 
   openSummaryModal(): void {
@@ -319,7 +369,6 @@ export class DashboardComponent implements OnDestroy {
 
     this.loadGlobalFeed();
     setTimeout(() => this.loadSuggestions(), 0);
-    setTimeout(() => this.triggerCoffeeToast(), 600);
   }
 
   handlePanelAction(event: BookActionEvent): void {
@@ -348,13 +397,10 @@ export class DashboardComponent implements OnDestroy {
 
     if (this.updateDailyReadingMinutes(minutesRead)) this.showFeedback('goal');
 
-    this.maybeFireStreakAndConfetti();
+    this.queueFirstPostCelebration();
     this.loadGlobalFeed();
-
-    const updated = this.bookService.myCurrentBook().find((b) => b.id === event.bookId);
-    if (updated) this.selectedBook.set({ ...updated });
-
-    setTimeout(() => this.triggerCoffeeToast(), 800);
+    this.closeModal();
+    this.scheduleCoffeeCheckIn(800);
   }
 
   private onSaveEdit(event: Extract<BookActionEvent, { type: 'save-edit' }>): void {
@@ -419,7 +465,6 @@ export class DashboardComponent implements OnDestroy {
 
     this.closeEditModal();
     this.loadGlobalFeed();
-    setTimeout(() => this.triggerCoffeeToast(), 400);
   }
   confirmDeleteActivity(activity: ReadingActivity): void {
     this.deletingActivity.set(activity);
@@ -513,12 +558,20 @@ export class DashboardComponent implements OnDestroy {
   currentMokaCelebration = computed<MokaCelebration | null>(
     () => this.mokaCelebration() ?? this.challengesService.celebration(),
   );
+  currentMokaGoalCelebration = computed<MokaCelebration | null>(() => {
+    if (this.coffeeCheckInPending()) return null;
+    const celebration = this.currentMokaCelebration();
+    return isGoalCelebration(celebration) ? celebration : null;
+  });
+  currentMokaSpotlightCelebration = computed<MokaCelebration | null>(() => {
+    if (this.coffeeCheckInPending()) return null;
+    const celebration = this.currentMokaCelebration();
+    return isGoalCelebration(celebration) ? null : celebration;
+  });
 
   currentMokaMood = computed<MokaMood | null>(() => {
     if (this.mokaToast()) return this.mokaToast()!;
     if (this.mokaFeedback()) return this.mokaFeedback()!;
-    if (this.coffeeToast()) return 'coffee';
-
     if (this.dailyGoalProgress() >= 100) return 'goal';
     if (this.bookService.myCurrentBook().length === 0) return 'empty-library';
     if (this.activeTab() === 'global' && this.userService.following().length === 0) return 'love';
