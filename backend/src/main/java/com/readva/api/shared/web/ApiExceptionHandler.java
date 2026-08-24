@@ -1,6 +1,8 @@
 package com.readva.api.shared.web;
 
 import com.readva.api.shared.domain.ConflictException;
+import com.readva.api.shared.domain.ForbiddenException;
+import com.readva.api.shared.domain.InvalidCredentialsException;
 import com.readva.api.shared.domain.InvalidRequestException;
 import com.readva.api.shared.domain.ResourceNotFoundException;
 import java.time.Instant;
@@ -22,6 +24,16 @@ public class ApiExceptionHandler {
     @ExceptionHandler(ConflictException.class)
     ResponseEntity<ApiErrorResponse> handleConflict(ConflictException exception) {
         return response(HttpStatus.CONFLICT, exception.getMessage(), Map.of());
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    ResponseEntity<ApiErrorResponse> handleForbidden(ForbiddenException exception) {
+        return response(HttpStatus.FORBIDDEN, exception.getMessage(), Map.of());
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    ResponseEntity<ApiErrorResponse> handleInvalidCredentials(InvalidCredentialsException exception) {
+        return response(HttpStatus.UNAUTHORIZED, exception.getMessage(), Map.of());
     }
 
     @ExceptionHandler(InvalidRequestException.class)

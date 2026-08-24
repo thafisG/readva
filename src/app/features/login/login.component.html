@@ -1,7 +1,7 @@
-<div class="login-wrapper">
-  <div class="login-split">
-    <div class="login-left">
-      <img src="assets/ilustra1.jpg" alt="Ambiente de leitura" class="login-bg" />
+<main class="login-wrapper">
+  <section class="login-split" aria-labelledby="auth-title">
+    <div class="login-left" aria-hidden="true">
+      <img src="assets/ilustra1.jpg" alt="" class="login-bg" />
       <div class="login-left-overlay">
         <h2>Sua jornada de<br />leitura começa aqui.</h2>
         <p>Registre, acompanhe e compartilhe<br />cada livro que você lê.</p>
@@ -10,48 +10,113 @@
 
     <div class="login-right">
       <div class="login-logo">
-        <img [src]="utilsService.logoReadva" alt="Logo Readva" class="logo-icon" />
+        <img [src]="utilsService.logoReadva" alt="Readva" class="logo-icon" />
       </div>
 
-      <div class="login-header">
-        <h1>{{ showNameField ? 'Criar sua conta' : 'Bem-vindo de volta' }}</h1>
-        <p>
-          {{ showNameField ? 'Primeiro acesso detectado' : 'Digite seu e-mail para continuar' }}
-        </p>
-      </div>
-
-      <div class="form-grid">
-        <input
-          [(ngModel)]="loginEmail"
-          placeholder="Seu e-mail"
-          class="premium-input"
-          type="email"
-          [disabled]="showNameField"
-        />
-
-        @if (showNameField) {
-          <div class="register-notice">
-            <span class="notice-emoji">👋</span>
-            Percebemos que é seu primeiro acesso! Como quer ser chamado?
-          </div>
-          <input
-            [(ngModel)]="loginName"
-            placeholder="Seu nome completo"
-            class="premium-input"
-            type="text"
-            (keyup.enter)="handleLogin()"
-          />
-        }
-
-        <button (click)="handleLogin()" class="premium-btn">
-          {{ showNameField ? 'Criar conta e entrar' : 'Continuar' }}
+      <div class="auth-switch" role="tablist" aria-label="Acesso à conta">
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="mode === 'login'"
+          [class.active]="mode === 'login'"
+          (click)="setMode('login')"
+        >
+          Entrar
+        </button>
+        <button
+          type="button"
+          role="tab"
+          [attr.aria-selected]="mode === 'register'"
+          [class.active]="mode === 'register'"
+          (click)="setMode('register')"
+        >
+          Criar conta
         </button>
       </div>
 
-      <p class="footer-terms">
-        Ao continuar, você concorda com os
-        <a href="#">Termos de uso</a> e <a href="#">Política de privacidade</a>.
-      </p>
+      <div class="login-header">
+        <h1 id="auth-title">{{ mode === 'register' ? 'Crie sua conta' : 'Bem-vindo de volta' }}</h1>
+        <p>
+          {{
+            mode === 'register'
+              ? 'Seus dados serão protegidos por uma senha.'
+              : 'Entre com o e-mail e a senha da sua conta.'
+          }}
+        </p>
+      </div>
+
+      <form class="form-grid" (ngSubmit)="handleSubmit()">
+        @if (mode === 'register') {
+          <label for="auth-name">Como você quer ser chamado?</label>
+          <input
+            id="auth-name"
+            [(ngModel)]="name"
+            name="name"
+            class="premium-input"
+            type="text"
+            autocomplete="name"
+            maxlength="100"
+            required
+          />
+        }
+
+        <label for="auth-email">E-mail</label>
+        <input
+          id="auth-email"
+          [(ngModel)]="email"
+          name="email"
+          class="premium-input"
+          type="email"
+          autocomplete="email"
+          maxlength="254"
+          required
+        />
+
+        <label for="auth-password">Senha</label>
+        <input
+          id="auth-password"
+          [(ngModel)]="password"
+          name="password"
+          class="premium-input"
+          type="password"
+          [autocomplete]="mode === 'register' ? 'new-password' : 'current-password'"
+          minlength="8"
+          maxlength="72"
+          required
+        />
+
+        @if (mode === 'register') {
+          <p class="password-hint">Use pelo menos 8 caracteres.</p>
+          <label for="auth-password-confirmation">Confirme a senha</label>
+          <input
+            id="auth-password-confirmation"
+            [(ngModel)]="passwordConfirmation"
+            name="passwordConfirmation"
+            class="premium-input"
+            type="password"
+            autocomplete="new-password"
+            minlength="8"
+            maxlength="72"
+            required
+          />
+        }
+
+        @if (errorMessage) {
+          <p class="auth-error" role="alert">{{ errorMessage }}</p>
+        }
+
+        <button type="submit" class="premium-btn" [disabled]="isSubmitting">
+          {{
+            isSubmitting
+              ? 'Só um instante…'
+              : mode === 'register'
+                ? 'Criar conta e entrar'
+                : 'Entrar'
+          }}
+        </button>
+      </form>
+
+      <p class="security-note">A senha é protegida no servidor e nunca é salva no navegador.</p>
     </div>
-  </div>
-</div>
+  </section>
+</main>

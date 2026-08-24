@@ -4,13 +4,14 @@ Backend do Readva em Spring Boot. Este módulo começa a retirar do navegador a 
 
 ## Responsabilidades atuais
 
-- criar e consultar leitores;
+- cadastrar, autenticar e consultar leitores;
+- proteger a API com sessão HTTP, CSRF e autorização por leitor;
 - registrar e listar atividades de leitura;
 - criar o esquema inicial de metas, ofensiva e missões;
 - versionar o banco com Flyway;
 - expor uma API REST para o Angular em `http://localhost:4200`.
 
-O Angular ainda usa o armazenamento local. A troca dos serviços do frontend pela API será feita de forma incremental, domínio por domínio, para preservar os dados existentes.
+O Angular já usa a API para autenticação. Os demais dados continuam em migração incremental, domínio por domínio.
 
 ## Requisitos
 
@@ -47,7 +48,8 @@ Os testes usam um H2 em memória separado. O teste de integração cria um leito
 ## Perfis
 
 - `dev`: H2 em arquivo e console habilitado;
-- `test`: H2 isolado em memória;
+- `test`: H2 isolado em memória para testes do backend;
+- `e2e`: H2 isolado em memória para testes completos do navegador;
 - `prod`: PostgreSQL configurado pelas variáveis `DATABASE_URL`, `DATABASE_USERNAME` e `DATABASE_PASSWORD`.
 
 O H2 é uma dependência de desenvolvimento e testes. O perfil de produção já está preparado para PostgreSQL.
@@ -56,17 +58,22 @@ O H2 é uma dependência de desenvolvimento e testes. O perfil de produção já
 
 | Método | Endpoint                             | Responsabilidade          |
 | ------ | ------------------------------------ | ------------------------- |
-| POST   | `/api/readers`                       | criar leitor              |
+| GET    | `/api/auth/csrf`                     | emitir cookie CSRF        |
+| POST   | `/api/auth/register`                 | criar conta e sessão      |
+| POST   | `/api/auth/login`                    | autenticar                |
+| GET    | `/api/auth/session`                  | consultar sessão          |
+| POST   | `/api/auth/logout`                   | encerrar sessão           |
 | GET    | `/api/readers/{readerId}`            | consultar leitor          |
 | POST   | `/api/readers/{readerId}/activities` | registrar uma leitura     |
 | GET    | `/api/readers/{readerId}/activities` | listar leituras do leitor |
 
-Exemplo de criação de leitor:
+Exemplo de cadastro:
 
 ```json
 {
   "displayName": "Thais",
-  "email": "thais@example.com"
+  "email": "thais@example.com",
+  "password": "uma-senha-com-8-ou-mais-caracteres"
 }
 ```
 

@@ -17,16 +17,23 @@ public class ReaderAccountService {
     }
 
     @Transactional
-    public ReaderAccount create(String displayName, String email) {
-        if (repository.existsByNormalizedEmail(ReaderAccount.normalizeEmail(email))) {
+    public ReaderAccount create(String displayName, String email, String passwordHash) {
+        String normalizedEmail = ReaderAccount.normalizeEmail(email);
+        if (repository.existsByNormalizedEmail(normalizedEmail)) {
             throw new ConflictException("Já existe um leitor cadastrado com este e-mail.");
         }
-        return repository.save(new ReaderAccount(displayName, email));
+        return repository.save(new ReaderAccount(displayName, email, passwordHash));
     }
 
     @Transactional(readOnly = true)
     public ReaderAccount findById(UUID id) {
         return repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Leitor não encontrado."));
+    }
+
+    @Transactional(readOnly = true)
+    public ReaderAccount findByEmail(String email) {
+        return repository.findByNormalizedEmail(ReaderAccount.normalizeEmail(email))
                 .orElseThrow(() -> new ResourceNotFoundException("Leitor não encontrado."));
     }
 }
