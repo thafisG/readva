@@ -25,16 +25,6 @@ const SPOTLIGHT_VARIANTS: Record<MokaMood, readonly SpotlightVariant[]> = {
       theme: 'amber',
     },
   ],
-  coffee: [
-    {
-      image: 'assets/moka/moka-coffee.png',
-      emoji: '☕',
-      badge: 'Pausa da Moka',
-      title: 'Café pronto, livro aberto!',
-      message: 'Respire fundo, encontre uma posição confortável e aproveite sua leitura.',
-      theme: 'amber',
-    },
-  ],
   streak: [
     {
       image: 'assets/moka/moka-streak.png',

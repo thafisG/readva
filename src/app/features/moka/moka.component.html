@@ -35,42 +35,9 @@
       <button class="bubble-close" (click)="dismiss()" aria-label="Fechar mensagem da Moka">
         ✕
       </button>
-
-      @if (isCoffeeMood()) {
-        <span class="bubble-emoji">{{ coffeeReaction().emoji }}</span>
-        <h4 class="moka-title">{{ coffeeReaction().title }}</h4>
-        <div class="coffee-counter">
-          <button
-            class="counter-btn minus"
-            (click)="decrementCoffee()"
-            [disabled]="coffeeCount() === 0"
-            aria-label="Remover café"
-          >
-            −
-          </button>
-          <div class="counter-display">
-            <span class="counter-cups">
-              @for (_ of [].constructor(coffeeCount()); track $index) {
-                <span class="cup-icon">☕</span>
-              }
-              @if (coffeeCount() === 0) {
-                <span class="counter-zero">nenhum ainda</span>
-              }
-            </span>
-            <span class="counter-number">{{ coffeeCount() }}</span>
-          </div>
-          <button class="counter-btn plus" (click)="incrementCoffee()" aria-label="Adicionar café">
-            +
-          </button>
-        </div>
-        @if (coffeeCount() > 0) {
-          <button class="confirm-coffee-btn" (click)="confirmCoffee()">Confirmar ☕</button>
-        }
-      } @else {
-        <span class="bubble-emoji">{{ config().emoji }}</span>
-        <h4 class="moka-title">{{ config().title }}</h4>
-        <p class="moka-message">{{ config().message }}</p>
-      }
+      <span class="bubble-emoji">{{ config().emoji }}</span>
+      <h4 class="moka-title">{{ config().title }}</h4>
+      <p class="moka-message">{{ config().message }}</p>
     </div>
   </div>
 
@@ -85,13 +52,8 @@
       <span class="presence-dot" aria-hidden="true"></span>
       <img [src]="config().image" [alt]="config().title" class="moka-img" />
       <span class="xp-badge" [ngClass]="'badge-' + config().theme">
-        @if (isCoffeeMood() && coffeeCount() > 0) {
-          {{ coffeeCount() }}☕
-        } @else {
-          {{ config().badge }}
-        }
+        {{ config().badge }}
       </span>
     </div>
   </button>
-  <span class="moka-presence-label">Moka está aqui</span>
 </div>

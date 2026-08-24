@@ -3,10 +3,13 @@
     <button class="back-btn" (click)="goBack()" aria-label="Voltar">
       <mat-icon>arrow_back</mat-icon>
     </button>
-    <h2>Desafios e Metas</h2>
+    <div>
+      <h2>Desafios e Metas</h2>
+      <p>Pequenos objetivos, uma jornada inteira.</p>
+    </div>
   </div>
 
-  <section class="level-card">
+  <section class="level-card" aria-label="Progresso de nível">
     <div class="level-badge">
       <span class="level-number">{{ challengesService.levelInfo().level }}</span>
       <span class="level-label">nível</span>
@@ -28,15 +31,74 @@
     </div>
   </section>
 
+  @let month = challengesService.monthlyStats();
+  <section class="monthly-card" aria-labelledby="monthly-progress-title">
+    <div class="monthly-heading">
+      <div>
+        <span class="monthly-eyebrow">Sua ofensiva</span>
+        <h3 id="monthly-progress-title">{{ month.monthLabel }}</h3>
+      </div>
+      <div class="monthly-streak" [class.active]="month.streakDays > 0">
+        <mat-icon>local_fire_department</mat-icon>
+        <strong>{{ month.streakDays }}</strong>
+        <span>{{ month.streakDays === 1 ? 'dia seguido' : 'dias seguidos' }}</span>
+      </div>
+    </div>
+
+    <div class="monthly-stats">
+      <div class="monthly-stat">
+        <strong>{{ month.completedMissions }}</strong>
+        <span>metas concluídas</span>
+      </div>
+      <div class="monthly-stat">
+        <strong>{{ month.activeDays }}</strong>
+        <span>dias ativos</span>
+      </div>
+      <div class="monthly-stat">
+        <strong>{{ month.progressPercent }}%</strong>
+        <span>do mês até hoje</span>
+      </div>
+    </div>
+
+    <div class="monthly-progress-copy">
+      <span>Progresso mensal</span>
+      <span>{{ month.completedMissions }} de {{ month.availableMissions }} metas</span>
+    </div>
+    <div
+      class="monthly-progress-track"
+      role="progressbar"
+      [attr.aria-valuenow]="month.progressPercent"
+      aria-valuemin="0"
+      aria-valuemax="100"
+    >
+      <div class="monthly-progress-fill" [style.width.%]="month.progressPercent"></div>
+    </div>
+    <p class="monthly-hint">
+      @if (month.streakDays > 0) {
+        Sua ofensiva está viva. Conclua uma meta amanhã para continuar.
+      } @else {
+        Conclua uma meta hoje para começar sua ofensiva do mês.
+      }
+    </p>
+  </section>
+
   <section class="missions-section">
-    <h3 class="section-title">Missões de hoje</h3>
+    <div class="missions-heading">
+      <h3 class="section-title">Missões de hoje</h3>
+      <span>Novas missões chegam amanhã</span>
+    </div>
     <div class="missions-list">
       @for (mission of challengesService.missions(); track mission.id) {
         <div class="mission-card" [class.completed]="mission.completed">
           <div class="mission-info">
             <div class="mission-top">
               <span class="mission-title">{{ mission.title }}</span>
-              <span class="mission-xp">+{{ mission.xpReward }} XP</span>
+              <div class="mission-rewards">
+                @if (isNewMission(mission.id)) {
+                  <span class="mission-new">Novo</span>
+                }
+                <span class="mission-xp">+{{ mission.xpReward }} XP</span>
+              </div>
             </div>
             <span class="mission-description">{{ mission.description }}</span>
             <div class="mission-bar-background">
@@ -50,7 +112,7 @@
             </span>
           </div>
           @if (mission.completed) {
-            <div class="mission-check">
+            <div class="mission-check" aria-label="Missão concluída">
               <mat-icon>check_circle</mat-icon>
             </div>
           }
@@ -86,21 +148,8 @@
   </section>
 </div>
 
-@if (challengesService.justUnlocked()) {
-  <div class="unlock-toast" (click)="dismissUnlockToast()">
-    <div class="unlock-toast-icon" [style.--badge-color]="challengesService.justUnlocked()!.color">
-      <mat-icon>{{ challengesService.justUnlocked()!.matIcon }}</mat-icon>
-    </div>
-    <div class="unlock-toast-text">
-      <span class="unlock-toast-label">Conquista desbloqueada!</span>
-      <span class="unlock-toast-title">{{ challengesService.justUnlocked()!.title }}</span>
-    </div>
-  </div>
-}
-
-<app-moka
-  [mood]="mokaMood()"
-  [celebration]="challengesService.celebration()"
-  (coffeeChanged)="onCoffeeChanged($event)"
-  (coffeeConfirmed)="onCoffeeConfirmed($event)"
-></app-moka>
+<app-moka [mood]="mokaMood()" [celebration]="spotlightCelebration()"></app-moka>
+<app-moka-goal-celebration
+  [celebration]="goalCelebration()"
+  (dismissed)="dismissGoalCelebration()"
+/>

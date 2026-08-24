@@ -319,74 +319,213 @@
   line-height: 1.3;
 }
 
-.unlock-toast {
-  position: fixed;
-  bottom: 28px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  background: #1c1917;
-  color: #fff;
-  border-radius: 18px;
-  padding: 14px 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
-  cursor: pointer;
-  z-index: 9999;
-  animation: slideUp 0.35s ease;
-  max-width: 340px;
-  width: calc(100vw - 32px);
+.challenges-header p {
+  margin: 3px 0 0;
+  color: #9c8880;
+  font-size: 0.78rem;
 }
 
-.unlock-toast-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--badge-color, #f1bf63) 28%, rgba(255, 255, 255, 0.06));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+.monthly-card {
+  padding: 22px;
+  border: 1px solid #dce8f5;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 92% 0, rgba(98, 151, 211, 0.18), transparent 36%),
+    linear-gradient(145deg, #f8fbff, #edf5ff);
+  box-shadow: 0 8px 28px rgba(54, 94, 139, 0.1);
+}
 
-  mat-icon {
-    font-size: 22px;
-    width: 22px;
-    height: 22px;
-    color: var(--badge-color, #f1bf63);
+.monthly-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+
+  h3 {
+    margin: 3px 0 0;
+    color: #253f60;
+    font-size: 1.45rem;
+    text-transform: capitalize;
   }
 }
 
-.unlock-toast-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.unlock-toast-label {
-  font-size: 0.68rem;
-  opacity: 0.7;
+.monthly-eyebrow {
+  color: #6683a4;
+  font-size: 0.67rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
 }
 
-.unlock-toast-title {
-  font-size: 0.9rem;
+.monthly-streak {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  column-gap: 5px;
+  padding: 9px 12px;
+  border: 1px solid #d8e5f2;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #8aa0b8;
+
+  mat-icon {
+    grid-row: 1 / 3;
+    color: inherit;
+  }
+
+  strong {
+    color: #496887;
+    font-size: 1.05rem;
+    line-height: 1;
+  }
+
+  span {
+    font-size: 0.65rem;
+  }
+
+  &.active {
+    border-color: #f2d6a7;
+    background: #fff9ee;
+    color: #dc8a24;
+
+    strong {
+      color: #a96118;
+    }
+  }
+}
+
+.monthly-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.monthly-stat {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: 13px;
+  border: 1px solid rgba(91, 129, 172, 0.12);
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.66);
+
+  strong {
+    color: #31577f;
+    font-size: 1.3rem;
+  }
+
+  span {
+    color: #7890aa;
+    font-size: 0.68rem;
+    line-height: 1.35;
+  }
+}
+
+.monthly-progress-copy {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 7px;
+  color: #607b99;
+  font-size: 0.72rem;
   font-weight: 700;
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(20px);
+.monthly-progress-track {
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(82, 122, 167, 0.14);
+}
+
+.monthly-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #5b8fc7, #75abd8);
+  transition: width 450ms ease;
+}
+
+.monthly-hint {
+  margin: 10px 0 0;
+  color: #7b91a8;
+  font-size: 0.72rem;
+}
+
+.missions-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+
+  .section-title {
+    margin: 0;
   }
-  to {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
+
+  > span {
+    color: #a89990;
+    font-size: 0.68rem;
   }
 }
 
+.mission-rewards {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mission-new {
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #e7f1ff;
+  color: #3c70ad;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  animation: new-badge-in 320ms cubic-bezier(0.22, 1.35, 0.36, 1);
+}
+
+@keyframes new-badge-in {
+  from {
+    transform: scale(0.55);
+    opacity: 0;
+  }
+}
 @media (max-width: 480px) {
+  .monthly-card {
+    padding: 18px;
+  }
+
+  .monthly-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .monthly-streak {
+    align-self: flex-start;
+  }
+
+  .monthly-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .missions-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .mission-top {
+    align-items: flex-start;
+  }
+
+  .mission-rewards {
+    align-items: flex-end;
+    flex-direction: column-reverse;
+  }
   .challenges-wrapper {
     padding: 16px 12px 40px;
   }

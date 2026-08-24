@@ -1,0 +1,65 @@
+<div class="coffee-check-in" role="presentation" (click)="dismiss()">
+  <section
+    class="coffee-card"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="coffee-check-in-title"
+    aria-describedby="coffee-check-in-description"
+    cdkTrapFocus
+    [cdkTrapFocusAutoCapture]="true"
+    (click)="$event.stopPropagation()"
+  >
+    <button class="coffee-close" type="button" (click)="dismiss()" aria-label="Agora não">✕</button>
+
+    <div class="coffee-art" aria-hidden="true">
+      <div class="coffee-glow"></div>
+      <span class="steam steam-one">⌁</span>
+      <span class="steam steam-two">⌁</span>
+      <img src="assets/moka/moka-coffee.png" alt="" />
+      <div class="serving-tray">
+        <span class="tray-cup cup-one"></span>
+        <span class="tray-cup cup-two"></span>
+        <span class="tray-cup cup-three"></span>
+        <span class="tray-base"></span>
+      </div>
+    </div>
+
+    <div class="coffee-copy">
+      <span class="coffee-eyebrow">Moka trouxe o café</span>
+      <h2 id="coffee-check-in-title">E o café, como está hoje?</h2>
+      <p id="coffee-check-in-description">
+        Você acabou de registrar uma leitura. Quantos cafés acompanharam esse momento?
+      </p>
+
+      <div class="coffee-counter" aria-live="polite">
+        <button
+          type="button"
+          class="counter-button"
+          (click)="decrement()"
+          [disabled]="coffeeCount() === 0"
+          aria-label="Remover um café"
+        >
+          −
+        </button>
+        <div class="counter-value">
+          <strong>{{ coffeeCount() }}</strong>
+          <span>{{ coffeeCount() === 1 ? 'café' : 'cafés' }}</span>
+        </div>
+        <button
+          type="button"
+          class="counter-button counter-button-add"
+          (click)="increment()"
+          [disabled]="coffeeCount() === 9"
+          aria-label="Adicionar um café"
+        >
+          +
+        </button>
+      </div>
+
+      <button type="button" class="coffee-confirm" (click)="confirm()" cdkFocusInitial>
+        {{ coffeeCount() === 0 ? 'Hoje foi sem café' : 'Registrar café' }}
+      </button>
+      <button type="button" class="coffee-later" (click)="dismiss()">Agora não</button>
+    </div>
+  </section>
+</div>

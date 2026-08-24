@@ -23,9 +23,29 @@ test.describe('Jornadas principais do leitor', () => {
     await page.clock.fastForward(65_000);
     await expect(dialog.getByRole('timer')).toHaveText('01:05');
 
+    await dialog.getByRole('button', { name: 'Fechar gerenciamento da leitura' }).click();
+    const closeConfirmation = page.getByRole('alertdialog', {
+      name: 'Encerrar esta leitura?',
+    });
+    await expect(closeConfirmation).toContainText('01:05');
+    await closeConfirmation.getByRole('button', { name: 'Continuar lendo' }).click();
+    await expect(closeConfirmation).toBeHidden();
+    await expect(dialog.getByRole('button', { name: 'Pausar' })).toBeVisible();
+
     await dialog.getByLabel('Páginas lidas agora').fill('12');
     await dialog.getByLabel('Comentário').fill('Leitura excelente');
     await dialog.getByRole('button', { name: 'Publicar atividade' }).click();
+    await expect(dialog).toBeHidden();
+
+    await page.clock.fastForward(800);
+    const coffeeDialog = page.getByRole('dialog', { name: 'E o café, como está hoje?' });
+    await expect(coffeeDialog).toBeVisible();
+    await expect(page.locator('.confetti-canvas')).toHaveCount(0);
+    await coffeeDialog.getByRole('button', { name: 'Hoje foi sem café' }).click();
+
+    await expect(coffeeDialog).toBeHidden();
+    await expect(dialog).toBeHidden();
+    await expect(page.locator('.confetti-canvas')).toBeVisible();
 
     const activity = page.locator('.premium-activity-card').filter({ hasText: title }).first();
     await expect(activity).toContainText('Leu mais 12 páginas');
@@ -61,7 +81,16 @@ test.describe('Jornadas principais do leitor', () => {
     await dialog.getByRole('button', { name: 'Publicar atividade' }).click();
 
     await expect(page.locator('.goal-val')).toContainText('5 / 5 min');
-    await expect(page.locator('.moka-spotlight')).toContainText('Meta alcançada');
+    await expect(page.locator('.moka-spotlight')).toHaveCount(0);
+
+    await page.clock.fastForward(800);
+    const coffeeDialog = page.getByRole('dialog', { name: 'E o café, como está hoje?' });
+    await expect(coffeeDialog).toBeVisible();
+    await expect(coffeeDialog.locator('.counter-value strong')).toHaveText('0');
+    await expect(coffeeDialog.locator('.counter-value span')).toHaveText('cafés');
+    await expect(page.locator('.moka-spotlight')).toHaveCount(0);
+    await coffeeDialog.getByRole('button', { name: 'Hoje foi sem café' }).click();
+    await expect(coffeeDialog).toBeHidden();
   });
 
   test('conclui o desafio de iniciar um livro e persiste XP e conquista', async ({ page }) => {
@@ -75,7 +104,9 @@ test.describe('Jornadas principais do leitor', () => {
 
     await startReading(page, 'Livro do Desafio');
     await dismissMokaSpotlight(page);
-    await page.getByRole('button', { name: 'Desafios e Metas' }).click();
+    const challengesNav = page.getByRole('button', { name: /Desafios e Metas/ });
+    await expect(challengesNav.locator('.nav-new-badge')).toHaveText('Novo');
+    await challengesNav.click();
 
     const completedMission = page.locator('.mission-card').filter({ hasText: 'Novo começo' });
     await expect(completedMission).toHaveClass(/completed/);
@@ -84,5 +115,12 @@ test.describe('Jornadas principais do leitor', () => {
 
     const achievement = page.locator('.achievement-badge').filter({ hasText: 'Primeira missão' });
     await expect(achievement).toHaveClass(/unlocked/);
+    await expect(completedMission.locator('.mission-new')).toHaveText('Novo');
+
+    const monthlyTotal = page.locator('.monthly-stat').filter({ hasText: 'metas concluídas' });
+    await expect(monthlyTotal.locator('strong')).toHaveText('1');
+
+    await page.getByRole('button', { name: 'Voltar' }).click();
+    await expect(page.locator('.nav-new-badge')).toHaveCount(0);
   });
 });

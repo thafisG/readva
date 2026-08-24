@@ -1,0 +1,15 @@
+@if (visible()) {
+  <button
+    type="button"
+    class="moka-goal-pop"
+    (click)="dismiss()"
+    aria-label="Meta concluída! Moka está comemorando"
+  >
+    <span class="celebration-burst" aria-hidden="true"></span>
+    <span class="spark spark-one" aria-hidden="true">✦</span>
+    <span class="spark spark-two" aria-hidden="true">★</span>
+    <span class="spark spark-three" aria-hidden="true">●</span>
+    <img [src]="image()" alt="" />
+    <span class="sr-only" role="status">Meta concluída! Moka está comemorando.</span>
+  </button>
+}

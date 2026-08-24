@@ -72,6 +72,26 @@
   }
 }
 
+.nav-new-badge {
+  margin-left: auto;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: #e8f2ff;
+  color: #3d71aa;
+  font-size: 0.59rem;
+  font-weight: 800;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  animation: nav-badge-in 280ms cubic-bezier(0.22, 1.35, 0.36, 1);
+}
+
+@keyframes nav-badge-in {
+  from {
+    transform: scale(0.55);
+    opacity: 0;
+  }
+}
+
 .nav-separator {
   height: 1px;
   background: #f0e8e0;
@@ -867,6 +887,26 @@ $themes: (
     flex: 0 0 auto;
     white-space: nowrap;
   }
+  .nav-new-badge {
+    margin-left: auto;
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: #e8f2ff;
+    color: #3d71aa;
+    font-size: 0.59rem;
+    font-weight: 800;
+    letter-spacing: 0.035em;
+    text-transform: uppercase;
+    animation: nav-badge-in 280ms cubic-bezier(0.22, 1.35, 0.36, 1);
+  }
+
+  @keyframes nav-badge-in {
+    from {
+      transform: scale(0.55);
+      opacity: 0;
+    }
+  }
+
   .nav-separator {
     width: 1px;
     height: auto;

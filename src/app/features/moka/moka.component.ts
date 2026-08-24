@@ -7,14 +7,12 @@ import {
   effect,
   inject,
   input,
-  output,
   signal,
   untracked,
 } from '@angular/core';
 
 export type MokaMood =
   | 'welcome'
-  | 'coffee'
   | 'streak'
   | 'goal'
   | 'empty-library'
@@ -46,14 +44,6 @@ export const MOKA_CONFIG: Record<MokaMood, MokaConfig> = {
     title: 'Oii!',
     message: 'Moka acabou de preparar um café fresquinho para a próxima leitura.',
     theme: 'cream',
-  },
-  coffee: {
-    image: 'assets/moka/moka-coffee.png',
-    emoji: '☕',
-    badge: '☕',
-    title: 'Quantos cafés hoje?',
-    message: '',
-    theme: 'amber',
   },
   streak: {
     image: 'assets/moka/moka-streak.png',
@@ -121,19 +111,6 @@ export const MOKA_CONFIG: Record<MokaMood, MokaConfig> = {
   },
 };
 
-const COFFEE_REACTIONS: Record<number, { title: string; emoji: string }> = {
-  0: { title: 'Quantos cafés hoje?', emoji: '☕' },
-  1: { title: 'Um cafezinho, combinado!', emoji: '☕' },
-  2: { title: 'Dois! Boa energia!', emoji: '☕☕' },
-  3: { title: 'Três? Você tá voando!', emoji: '🚀' },
-  4: { title: 'Quatro... tá bom, tá bom.', emoji: '😅' },
-  5: { title: 'Moka tá preocupado.', emoji: '😰' },
-};
-
-function getCoffeeReaction(count: number) {
-  return COFFEE_REACTIONS[Math.min(count, 5)] ?? COFFEE_REACTIONS[5];
-}
-
 const CELEBRATION_MOODS = new Set<MokaMood>([
   'streak',
   'goal',
@@ -156,12 +133,8 @@ function isCelebrationMood(mood: MokaMood): boolean {
 export class MokaComponent {
   readonly mood = input<MokaMood | null>(null);
   readonly celebration = input<MokaCelebration | null>(null);
-  readonly coffeeChanged = output<number>();
-  readonly coffeeConfirmed = output<number>();
 
   readonly config = computed(() => MOKA_CONFIG[this.mood() ?? 'welcome']);
-  readonly isCoffeeMood = computed(() => this.mood() === 'coffee');
-  readonly coffeeReaction = computed(() => getCoffeeReaction(this.coffeeCount()));
 
   readonly visible = signal(true);
   readonly showBubble = signal(false);
@@ -169,7 +142,6 @@ export class MokaComponent {
   readonly isCelebrating = signal(false);
   readonly spotlightVisible = signal(false);
   readonly spotlightConfig = signal<MokaConfig>(MOKA_CONFIG.goal);
-  readonly coffeeCount = signal(0);
 
   private readonly spotlightOccurrences = new Map<MokaMood, number>();
   private previousMood: MokaMood | null = null;
@@ -192,7 +164,6 @@ export class MokaComponent {
         if (mood === this.previousMood) return;
         this.previousMood = mood;
         this.showBubble.set(false);
-        this.coffeeCount.set(0);
       });
     });
 
@@ -246,23 +217,6 @@ export class MokaComponent {
       this.isWiggling.set(true);
       this.wiggleTimer = setTimeout(() => this.isWiggling.set(false), 600);
     }, 10);
-  }
-
-  incrementCoffee(): void {
-    this.coffeeCount.update((count) => count + 1);
-    this.coffeeChanged.emit(this.coffeeCount());
-    this.triggerWiggle();
-  }
-
-  decrementCoffee(): void {
-    this.coffeeCount.update((count) => Math.max(0, count - 1));
-    this.coffeeChanged.emit(this.coffeeCount());
-  }
-
-  confirmCoffee(): void {
-    this.coffeeConfirmed.emit(this.coffeeCount());
-    this.coffeeCount.set(0);
-    this.showBubble.set(false);
   }
 
   private triggerCelebration(): void {

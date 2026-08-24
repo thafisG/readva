@@ -70,9 +70,7 @@ $themes: (
   .moka-floating,
   .moka-bubble-wrap,
   .bubble-emoji,
-  .xp-badge,
-  .cup-icon,
-  .confirm-coffee-btn {
+  .xp-badge {
     animation: none !important;
     transition: opacity 0.15s ease !important;
   }
@@ -176,135 +174,6 @@ $themes: (
   font-size: 0.78rem;
   margin: 0;
   line-height: 1.65;
-}
-
-.coffee-counter {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 2px;
-}
-
-.counter-display {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(0, 0, 0, 0.07);
-  border-radius: 14px;
-  padding: 8px 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  min-height: 54px;
-  justify-content: center;
-}
-
-.counter-cups {
-  font-size: 1rem;
-  line-height: 1.3;
-  text-align: center;
-  display: block;
-  min-height: 22px;
-  letter-spacing: 1px;
-}
-
-.cup-icon {
-  display: inline-block;
-  animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.counter-zero {
-  font-size: 0.7rem;
-  color: #b8a89e;
-  font-style: italic;
-}
-
-.counter-number {
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: #c47a20;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-
-  &::before {
-    content: '×';
-    margin-right: 2px;
-  }
-}
-
-.counter-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 2px solid;
-  background: transparent;
-  font-size: 1.2rem;
-  font-weight: 700;
-  line-height: 1;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
-  flex-shrink: 0;
-
-  &.plus {
-    border-color: #c47a20;
-    color: #c47a20;
-
-    &:hover {
-      background: #c47a20;
-      color: #fff;
-      transform: scale(1.12);
-    }
-    &:active {
-      transform: scale(0.92);
-    }
-  }
-
-  &.minus {
-    border-color: #d4c4b8;
-    color: #b8a89e;
-
-    &:hover:not(:disabled) {
-      border-color: #9c8880;
-      color: #7b7168;
-      transform: scale(1.08);
-    }
-    &:disabled {
-      opacity: 0.35;
-      cursor: not-allowed;
-    }
-    &:active:not(:disabled) {
-      transform: scale(0.92);
-    }
-  }
-}
-
-.confirm-coffee-btn {
-  margin-top: 10px;
-  width: 100%;
-  padding: 7px 0;
-  border-radius: 14px;
-  border: none;
-  background: #c47a20;
-  color: #fff;
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1);
-  animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-
-  &:hover {
-    background: #a8620f;
-    transform: scale(1.03);
-  }
-
-  &:active {
-    transform: scale(0.97);
-  }
 }
 
 .moka-btn {
@@ -442,9 +311,7 @@ $themes: (
   .moka-avatar,
   .moka-bubble-wrap,
   .bubble-emoji,
-  .xp-badge,
-  .cup-icon,
-  .confirm-coffee-btn {
+  .xp-badge {
     animation: none !important;
     transition: opacity 0.15s ease !important;
   }
@@ -488,21 +355,6 @@ $themes: (
   border-radius: 50%;
   background: #57a873;
   animation: presencePulse 2s ease-out infinite;
-}
-
-.moka-presence-label {
-  align-self: center;
-  margin-top: -2px;
-  padding: 4px 9px;
-  border: 1px solid #eaded4;
-  border-radius: 20px;
-  background: rgba(255, 253, 251, 0.92);
-  color: #8c7565;
-  box-shadow: 0 3px 10px rgba(86, 61, 46, 0.08);
-  font-size: 0.58rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  pointer-events: none;
 }
 
 // Large, automatic motivational appearance

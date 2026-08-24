@@ -1,0 +1,142 @@
+:host {
+  position: fixed;
+  right: clamp(16px, 4vw, 42px);
+  bottom: clamp(16px, 4vw, 34px);
+  z-index: 1110;
+  pointer-events: none;
+}
+
+.moka-goal-pop {
+  position: relative;
+  display: grid;
+  width: clamp(150px, 19vw, 230px);
+  aspect-ratio: 1;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+  animation: goal-pop-in 320ms cubic-bezier(0.22, 1.35, 0.36, 1);
+
+  img {
+    position: relative;
+    z-index: 2;
+    width: 82%;
+    height: 82%;
+    object-fit: contain;
+    filter: drop-shadow(0 14px 15px rgba(63, 48, 37, 0.2));
+    animation: moka-jump 760ms cubic-bezier(0.22, 1.2, 0.36, 1) infinite;
+  }
+
+  &:focus-visible {
+    outline: 3px solid #4b7fbe;
+    outline-offset: 4px;
+    border-radius: 50%;
+  }
+}
+
+.celebration-burst {
+  position: absolute;
+  inset: 14%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 223, 128, 0.78), rgba(255, 255, 255, 0) 68%);
+  animation: burst-pulse 900ms ease-in-out infinite;
+}
+
+.spark {
+  position: absolute;
+  z-index: 3;
+  color: #f0ad3c;
+  font-size: clamp(1rem, 2vw, 1.7rem);
+  animation: spark-dance 1s ease-in-out infinite;
+}
+
+.spark-one {
+  top: 12%;
+  left: 12%;
+}
+
+.spark-two {
+  top: 5%;
+  right: 14%;
+  animation-delay: -320ms;
+}
+
+.spark-three {
+  right: 5%;
+  bottom: 24%;
+  animation-delay: -640ms;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes goal-pop-in {
+  from {
+    transform: translateY(45px) scale(0.55) rotate(-8deg);
+    opacity: 0;
+  }
+}
+
+@keyframes moka-jump {
+  0%,
+  100% {
+    transform: translateY(4px) rotate(-2deg);
+  }
+  48% {
+    transform: translateY(-22px) rotate(3deg) scale(1.04);
+  }
+}
+
+@keyframes burst-pulse {
+  0%,
+  100% {
+    transform: scale(0.82);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes spark-dance {
+  0%,
+  100% {
+    transform: translateY(3px) rotate(-8deg) scale(0.8);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translateY(-8px) rotate(12deg) scale(1.15);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  :host {
+    right: 8px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+  }
+
+  .moka-goal-pop {
+    width: 145px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .moka-goal-pop,
+  .moka-goal-pop img,
+  .celebration-burst,
+  .spark {
+    animation: none !important;
+  }
+}
