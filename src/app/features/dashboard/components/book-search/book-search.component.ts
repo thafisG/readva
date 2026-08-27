@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Output, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Subject, catchError, debounceTime, distinctUntilChanged, of, switchMap, tap } from 'rxjs';
+import { Subject, catchError, debounceTime, of, switchMap, tap } from 'rxjs';
 import type { BookSearchResult } from '../../../../core/models/book.model';
 import { BookSearchService } from '../../services/book-search.service';
 
@@ -32,7 +32,6 @@ export class BookSearchComponent {
     this.queryChanges
       .pipe(
         debounceTime(350),
-        distinctUntilChanged(),
         switchMap((query) => {
           if (query.length < 2) {
             this.resetResults();
