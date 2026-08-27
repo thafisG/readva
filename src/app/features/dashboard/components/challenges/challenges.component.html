@@ -148,7 +148,11 @@
   </section>
 </div>
 
-<app-moka [mood]="mokaMood()" [celebration]="spotlightCelebration()"></app-moka>
+<app-moka
+  [mood]="mokaMood()"
+  [celebration]="spotlightCelebration()"
+  [companionSuppressed]="goalCelebration() !== null"
+></app-moka>
 <app-moka-goal-celebration
   [celebration]="goalCelebration()"
   (dismissed)="dismissGoalCelebration()"

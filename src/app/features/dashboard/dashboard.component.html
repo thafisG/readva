@@ -159,7 +159,11 @@
     (action)="handlePanelAction($event)"
     (closed)="closeModal()"
   ></app-book-action-panel>
-  <app-moka [mood]="currentMokaMood()" [celebration]="currentMokaSpotlightCelebration()"></app-moka>
+  <app-moka
+    [mood]="currentMokaMood()"
+    [celebration]="currentMokaSpotlightCelebration()"
+    [companionSuppressed]="currentMokaGoalCelebration() !== null || coffeeToast()"
+  ></app-moka>
   <app-moka-goal-celebration
     [celebration]="currentMokaGoalCelebration()"
     (dismissed)="dismissMokaGoalCelebration()"
