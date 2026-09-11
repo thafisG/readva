@@ -12,7 +12,9 @@ export interface ReadingActivity {
   bookCategory?: string;
   category?: string;
   detail: string;
+  occurredOn?: string;
   createdAt?: string;
+  updatedAt?: string;
   timestamp: string;
   likes: number;
   commentsCount: number;

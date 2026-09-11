@@ -29,31 +29,48 @@
   </div>
 }
 
-<div class="moka-floating" [class.visible]="visible()">
-  <div class="moka-bubble-wrap" [class.visible]="showBubble()">
-    <div class="moka-bubble" [ngClass]="'theme-' + config().theme">
-      <button class="bubble-close" (click)="dismiss()" aria-label="Fechar mensagem da Moka">
-        ✕
-      </button>
-      <span class="bubble-emoji">{{ config().emoji }}</span>
-      <h4 class="moka-title">{{ config().title }}</h4>
-      <p class="moka-message">{{ config().message }}</p>
-    </div>
-  </div>
-
-  <button
-    class="moka-btn"
-    [class.wiggle]="isWiggling()"
-    (click)="toggleBubble()"
-    [attr.aria-label]="'Ouvir a Moka: ' + config().title"
-    [attr.aria-expanded]="showBubble()"
+@if (visible()) {
+  <div
+    class="moka-floating visible"
+    [class.dragging]="dragging()"
+    [style.--moka-drag-x]="dragOffsetX() + 'px'"
   >
-    <div class="moka-avatar">
-      <span class="presence-dot" aria-hidden="true"></span>
-      <img [src]="config().image" [alt]="config().title" class="moka-img" />
-      <span class="xp-badge" [ngClass]="'badge-' + config().theme">
-        {{ config().badge }}
-      </span>
+    <div class="moka-bubble-wrap" [class.visible]="showBubble()">
+      <div class="moka-bubble" [ngClass]="'theme-' + config().theme">
+        <button class="bubble-close" (click)="dismiss()" aria-label="Fechar mensagem da Moka">
+          ✕
+        </button>
+        <span class="bubble-emoji">{{ config().emoji }}</span>
+        <h4 class="moka-title">{{ config().title }}</h4>
+        <p class="moka-message">{{ config().message }}</p>
+      </div>
     </div>
-  </button>
-</div>
+
+    <button
+      class="moka-btn"
+      [class.wiggle]="isWiggling()"
+      (click)="handleCompanionClick()"
+      (dblclick)="hideCompanion()"
+      (pointerdown)="startCompanionDrag($event)"
+      (pointermove)="moveCompanionDrag($event)"
+      (pointerup)="finishCompanionDrag($event)"
+      (pointercancel)="cancelCompanionDrag()"
+      (keydown.escape)="hideCompanion()"
+      [attr.aria-label]="
+        'Ouvir a Moka: ' +
+        config().title +
+        '. Arraste para o lado ou clique duas vezes para ocultar.'
+      "
+      [attr.aria-expanded]="showBubble()"
+      title="Arraste para o lado ou clique duas vezes para ocultar"
+    >
+      <div class="moka-avatar">
+        <span class="presence-dot" aria-hidden="true"></span>
+        <img [src]="config().image" [alt]="config().title" class="moka-img" />
+        <span class="xp-badge" [ngClass]="'badge-' + config().theme">
+          {{ config().badge }}
+        </span>
+      </div>
+    </button>
+  </div>
+}

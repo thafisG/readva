@@ -13,6 +13,6 @@ export const BOOKS_API_CONFIG = new InjectionToken<BooksApiConfig>('BOOKS_API_CO
     openLibraryUrl: 'https://openlibrary.org/search.json',
     openLibraryCoversUrl: 'https://covers.openlibrary.org/b/id',
     googleBooksUrl: 'https://www.googleapis.com/books/v1/volumes',
-    requestTimeoutMs: 8000,
+    requestTimeoutMs: 15000,
   }),
 });

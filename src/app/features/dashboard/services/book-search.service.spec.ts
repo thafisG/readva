@@ -24,7 +24,12 @@ describe('BookSearchService', () => {
       .expectOne((request) => request.url.includes('openlibrary.org'))
       .flush({
         docs: [
-          { title: 'Duna', author_name: ['Frank Herbert'], cover_i: 42 },
+          {
+            title: 'Duna',
+            author_name: ['Frank Herbert'],
+            cover_i: 42,
+            subject: null as unknown as string[],
+          },
           { title: 'Sem autor' },
         ],
       });

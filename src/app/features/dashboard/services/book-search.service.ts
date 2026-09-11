@@ -37,7 +37,9 @@ export class BookSearchService {
     return this.http.get<OpenLibrarySearchResponse>(this.config.openLibraryUrl, { params }).pipe(
       timeout(this.config.requestTimeoutMs),
       map((response) =>
-        (response.docs ?? []).filter(this.isValidDoc).map((doc) => this.toResult(doc)),
+        (Array.isArray(response.docs) ? response.docs : [])
+          .filter(this.isValidDoc)
+          .map((doc) => this.toResult(doc)),
       ),
     );
   }
@@ -60,8 +62,12 @@ export class BookSearchService {
     Array.isArray(doc.author_name) &&
     typeof doc.author_name[0] === 'string';
 
-  private mapCategory(subjects: string[] = []): string {
-    const normalized = subjects.map((subject) => subject.toLowerCase());
+  private mapCategory(subjects: string[] | undefined): string {
+    const normalized = Array.isArray(subjects)
+      ? subjects
+          .filter((subject) => typeof subject === 'string')
+          .map((subject) => subject.toLowerCase())
+      : [];
     return (
       CATEGORY_MAP.find(([key]) => normalized.some((subject) => subject.includes(key)))?.[1] ??
       'Ficção'

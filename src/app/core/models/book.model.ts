@@ -10,6 +10,7 @@ export interface Book {
   category: string;
   status?: BookStatus;
   createdAt?: string;
+  updatedAt?: string;
   completedAt?: string;
 }
 

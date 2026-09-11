@@ -98,31 +98,38 @@ export class StreakChallengeComponent implements OnInit, OnDestroy, AfterViewChe
     const { marked: nowMarked, streak } = this.streakService.toggleToday();
     this.todayMarked.set(nowMarked);
 
-    this.animating.set(true);
-    clearTimeout(this.animTimeout);
-    this.animTimeout = setTimeout(() => this.animating.set(false), 400);
-
     this.streakCount.set(streak);
-
-    if (nowMarked) {
-      this.showConfetti.set(true);
-      this.confettiRunning = false;
-      clearTimeout(this.confettiTimeout);
-      this.confettiTimeout = setTimeout(() => {
-        this.showConfetti.set(false);
-        this.confettiRunning = false;
-        this.cdr.markForCheck();
-      }, this.CONFETTI_DURATION);
-    } else {
+    if (nowMarked) this.celebrateRead();
+    else {
       this.showConfetti.set(false);
       this.confettiRunning = false;
     }
-
     this.buildWeekDays();
   }
 
   markTodayRead() {
-    if (!this.todayMarked()) this.toggleToday();
+    if (!this.streakService.isTodayMarked()) {
+      this.toggleToday();
+      return;
+    }
+    this.todayMarked.set(true);
+    this.streakCount.set(this.streakService.currentStreak());
+    this.celebrateRead();
+    this.buildWeekDays();
+  }
+
+  private celebrateRead(): void {
+    this.animating.set(true);
+    clearTimeout(this.animTimeout);
+    this.animTimeout = setTimeout(() => this.animating.set(false), 400);
+    this.showConfetti.set(true);
+    this.confettiRunning = false;
+    clearTimeout(this.confettiTimeout);
+    this.confettiTimeout = setTimeout(() => {
+      this.showConfetti.set(false);
+      this.confettiRunning = false;
+      this.cdr.markForCheck();
+    }, this.CONFETTI_DURATION);
   }
 
   openShareCard() {

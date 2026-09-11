@@ -6,25 +6,33 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 public record ReadingActivityResponse(
-        UUID id,
+        String id,
         UUID readerId,
         String bookReference,
         String bookTitle,
+        String bookAuthor,
+        String bookCategory,
+        String actionType,
         int pagesRead,
         int minutesRead,
         String note,
         LocalDate occurredOn,
-        Instant createdAt) {
+        Instant createdAt,
+        Instant updatedAt) {
     public static ReadingActivityResponse from(ReadingActivity activity) {
         return new ReadingActivityResponse(
-                activity.getId(),
+                activity.getClientId(),
                 activity.getReaderId(),
                 activity.getBookReference(),
                 activity.getBookTitle(),
+                activity.getBookAuthor(),
+                activity.getBookCategory(),
+                activity.getActionType().apiValue(),
                 activity.getPagesRead(),
                 activity.getMinutesRead(),
                 activity.getNote(),
                 activity.getOccurredOn(),
-                activity.getCreatedAt());
+                activity.getCreatedAt(),
+                activity.getUpdatedAt());
     }
 }

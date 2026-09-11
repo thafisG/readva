@@ -10,6 +10,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
+import { MokaPresenceService } from './moka-presence.service';
 
 export type MokaMood =
   | 'welcome'
@@ -133,14 +134,22 @@ function isCelebrationMood(mood: MokaMood): boolean {
 export class MokaComponent {
   readonly mood = input<MokaMood | null>(null);
   readonly celebration = input<MokaCelebration | null>(null);
+  readonly companionSuppressed = input(false);
+
+  private readonly presence = inject(MokaPresenceService);
 
   readonly config = computed(() => MOKA_CONFIG[this.mood() ?? 'welcome']);
 
-  readonly visible = signal(true);
   readonly showBubble = signal(false);
   readonly isWiggling = signal(false);
   readonly isCelebrating = signal(false);
   readonly spotlightVisible = signal(false);
+  readonly dragging = signal(false);
+  readonly dragOffsetX = signal(0);
+  readonly visible = computed(
+    () =>
+      !this.companionSuppressed() && !this.spotlightVisible() && !this.presence.isCompanionHidden(),
+  );
   readonly spotlightConfig = signal<MokaConfig>(MOKA_CONFIG.goal);
 
   private readonly spotlightOccurrences = new Map<MokaMood, number>();
@@ -150,9 +159,17 @@ export class MokaComponent {
   private bubbleTimer: ReturnType<typeof setTimeout> | null = null;
   private celebrationTimer: ReturnType<typeof setTimeout> | null = null;
   private spotlightTimer: ReturnType<typeof setTimeout> | null = null;
+  private activePointerId: number | null = null;
+  private dragStartX = 0;
+  private dragStartY = 0;
+  private hasDragged = false;
+  private suppressNextClick = false;
 
   private readonly BUBBLE_DURATION = 4200;
   private readonly SPOTLIGHT_DURATION = 6200;
+  private readonly DRAG_START_DISTANCE = 6;
+  private readonly DRAG_DISMISS_DISTANCE = 56;
+  private readonly MAX_DRAG_OFFSET = 96;
 
   constructor() {
     const destroyRef = inject(DestroyRef);
@@ -210,6 +227,62 @@ export class MokaComponent {
     this.showBubble.set(false);
   }
 
+  hideCompanion(): void {
+    this.dismiss();
+    this.presence.hideCompanion();
+  }
+
+  handleCompanionClick(): void {
+    if (this.suppressNextClick) {
+      this.suppressNextClick = false;
+      return;
+    }
+    this.toggleBubble();
+  }
+
+  startCompanionDrag(event: PointerEvent): void {
+    if (event.button !== 0) return;
+    this.dismiss();
+    this.activePointerId = event.pointerId;
+    this.dragStartX = event.clientX;
+    this.dragStartY = event.clientY;
+    this.hasDragged = false;
+    this.dragging.set(true);
+    const target = event.currentTarget as HTMLElement;
+    target.setPointerCapture?.(event.pointerId);
+  }
+
+  moveCompanionDrag(event: PointerEvent): void {
+    if (event.pointerId !== this.activePointerId) return;
+    const horizontalDistance = event.clientX - this.dragStartX;
+    const verticalDistance = event.clientY - this.dragStartY;
+    if (
+      Math.abs(horizontalDistance) < this.DRAG_START_DISTANCE ||
+      Math.abs(horizontalDistance) <= Math.abs(verticalDistance)
+    ) {
+      return;
+    }
+    this.hasDragged = true;
+    event.preventDefault();
+    this.dragOffsetX.set(
+      Math.max(-this.MAX_DRAG_OFFSET, Math.min(this.MAX_DRAG_OFFSET, horizontalDistance)),
+    );
+  }
+
+  finishCompanionDrag(event: PointerEvent): void {
+    if (event.pointerId !== this.activePointerId) return;
+    const shouldHide =
+      this.hasDragged && Math.abs(this.dragOffsetX()) >= this.DRAG_DISMISS_DISTANCE;
+    this.suppressNextClick = this.hasDragged;
+    this.resetDrag();
+    if (shouldHide) this.hideCompanion();
+  }
+
+  cancelCompanionDrag(): void {
+    this.suppressNextClick = this.hasDragged;
+    this.resetDrag();
+  }
+
   triggerWiggle(): void {
     if (this.wiggleTimer) clearTimeout(this.wiggleTimer);
     this.isWiggling.set(false);
@@ -217,6 +290,13 @@ export class MokaComponent {
       this.isWiggling.set(true);
       this.wiggleTimer = setTimeout(() => this.isWiggling.set(false), 600);
     }, 10);
+  }
+
+  private resetDrag(): void {
+    this.activePointerId = null;
+    this.hasDragged = false;
+    this.dragging.set(false);
+    this.dragOffsetX.set(0);
   }
 
   private triggerCelebration(): void {
