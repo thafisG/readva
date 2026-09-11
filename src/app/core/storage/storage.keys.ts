@@ -5,6 +5,8 @@ export const STORAGE_KEYS = {
   books: 'books',
   history: 'history',
   activities: 'activities',
+  deletedBooks: 'deleted-books',
+  deletedActivities: 'deleted-activities',
   following: 'following',
   challenges: 'challenges',
   streak: 'streak',

@@ -203,6 +203,9 @@ function progressForMission(missionId: string, totals: DailyReadingTotals): numb
 }
 
 function activityDateKey(activity: ReadingActivity): string | null {
+  if (activity.occurredOn && /^\d{4}-\d{2}-\d{2}$/.test(activity.occurredOn)) {
+    return activity.occurredOn;
+  }
   const date = new Date(activity.createdAt || activity.timestamp);
   if (Number.isNaN(date.getTime())) return null;
   return toDateKey(date);

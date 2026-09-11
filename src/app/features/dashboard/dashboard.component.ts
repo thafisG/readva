@@ -1,5 +1,14 @@
 import type { OnDestroy } from '@angular/core';
-import { Component, inject, signal, ViewChild, computed, HostListener } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  HostListener,
+  inject,
+  signal,
+  untracked,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, RouterLinkActive } from '@angular/router';
@@ -138,6 +147,10 @@ export class DashboardComponent implements OnDestroy {
 
   constructor() {
     this.userProgress.set(this.loadDailyProgress());
+    effect(() => {
+      const minutesRead = this.bookService.todayMinutesRead();
+      untracked(() => this.reconcileDailyMinutes(minutesRead));
+    });
     this.loadSuggestions();
 
     const email = this.authService.currentUser()?.email || 'guest';
@@ -254,6 +267,14 @@ export class DashboardComponent implements OnDestroy {
 
   private saveDailyProgress(progress: UserProgress): void {
     this.preferences.saveProgress(progress);
+  }
+
+  private reconcileDailyMinutes(minutesRead: number): void {
+    const progress = this.userProgress();
+    if (progress.dailyMinutesRead === minutesRead) return;
+    const updated = { ...progress, dailyMinutesRead: minutesRead };
+    this.userProgress.set(updated);
+    this.saveDailyProgress(updated);
   }
 
   private updateDailyReadingMinutes(delta: number): boolean {

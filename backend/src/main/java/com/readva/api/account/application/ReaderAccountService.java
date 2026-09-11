@@ -22,7 +22,7 @@ public class ReaderAccountService {
         if (repository.existsByNormalizedEmail(normalizedEmail)) {
             throw new ConflictException("Já existe um leitor cadastrado com este e-mail.");
         }
-        return repository.save(new ReaderAccount(displayName, email, passwordHash));
+        return repository.saveAndFlush(new ReaderAccount(displayName, email, passwordHash));
     }
 
     @Transactional(readOnly = true)

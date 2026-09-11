@@ -1,10 +1,12 @@
 import { Injectable, inject, signal } from '@angular/core';
 import type { ReadingGoals } from '../../../core/models/profile-statistics.model';
+import { ChallengesService } from '../../dashboard/services/challenges.service';
 import { DashboardPreferencesService } from '../../dashboard/services/dashboard-preferences.service';
 
 @Injectable()
 export class ProfileGoalsService {
   private readonly preferences = inject(DashboardPreferencesService);
+  private readonly challenges = inject(ChallengesService);
   private readonly goalsState = signal<ReadingGoals>(this.preferences.getReadingGoals());
 
   readonly goals = this.goalsState.asReadonly();
@@ -24,6 +26,7 @@ export class ProfileGoalsService {
       dailyMinutesRead: 0,
     });
     this.preferences.saveProgress({ ...progress, dailyGoalMinutes: sanitized.dailyMinutes });
+    void this.challenges.saveGoals(sanitized);
   }
 
   private clamp(value: number, minimum: number, maximum: number): number {

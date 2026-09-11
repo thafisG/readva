@@ -6,12 +6,13 @@ Backend do Readva em Spring Boot. Este módulo começa a retirar do navegador a 
 
 - cadastrar, autenticar e consultar leitores;
 - proteger a API com sessão HTTP, CSRF e autorização por leitor;
-- registrar e listar atividades de leitura;
-- criar o esquema inicial de metas, ofensiva e missões;
+- persistir, importar, editar e excluir atividades de leitura;
+- persistir, importar, atualizar e excluir livros da biblioteca pessoal;
+- persistir metas, ofensiva, missões diárias, XP e conquistas;
 - versionar o banco com Flyway;
 - expor uma API REST para o Angular em `http://localhost:4200`.
 
-O Angular já usa a API para autenticação. Os demais dados continuam em migração incremental, domínio por domínio.
+O Angular usa a API para autenticação, biblioteca, histórico de leitura e gamificação. Perfil, avatar e feed continuam em migração incremental, domínio por domínio.
 
 ## Requisitos
 
@@ -43,7 +44,7 @@ O banco local é persistido em `backend/data` quando o comando é executado dent
 .\mvnw.cmd test
 ```
 
-Os testes usam um H2 em memória separado. O teste de integração cria um leitor, registra uma leitura e consulta o dado persistido.
+Os testes usam um H2 em memória separado. A suíte cobre autenticação, CRUD da biblioteca e das atividades, importações idempotentes, cálculo transacional da gamificação, fuso horário, múltiplos dispositivos e isolamento dos dados entre leitores.
 
 ## Perfis
 
@@ -54,18 +55,33 @@ Os testes usam um H2 em memória separado. O teste de integração cria um leito
 
 O H2 é uma dependência de desenvolvimento e testes. O perfil de produção já está preparado para PostgreSQL.
 
-## Endpoints iniciais
+## Endpoints atuais
 
-| Método | Endpoint                             | Responsabilidade          |
-| ------ | ------------------------------------ | ------------------------- |
-| GET    | `/api/auth/csrf`                     | emitir cookie CSRF        |
-| POST   | `/api/auth/register`                 | criar conta e sessão      |
-| POST   | `/api/auth/login`                    | autenticar                |
-| GET    | `/api/auth/session`                  | consultar sessão          |
-| POST   | `/api/auth/logout`                   | encerrar sessão           |
-| GET    | `/api/readers/{readerId}`            | consultar leitor          |
-| POST   | `/api/readers/{readerId}/activities` | registrar uma leitura     |
-| GET    | `/api/readers/{readerId}/activities` | listar leituras do leitor |
+| Método | Endpoint                                                  | Responsabilidade          |
+| ------ | --------------------------------------------------------- | ------------------------- |
+| GET    | `/api/auth/csrf`                                          | emitir cookie CSRF        |
+| POST   | `/api/auth/register`                                      | criar conta e sessão      |
+| POST   | `/api/auth/login`                                         | autenticar                |
+| GET    | `/api/auth/session`                                       | consultar sessão          |
+| POST   | `/api/auth/logout`                                        | encerrar sessão           |
+| GET    | `/api/readers/{readerId}`                                 | consultar leitor          |
+| POST   | `/api/readers/{readerId}/activities`                      | registrar uma leitura     |
+| GET    | `/api/readers/{readerId}/activities`                      | listar leituras do leitor |
+| PUT    | `/api/readers/{readerId}/activities/{id}`                 | criar ou editar leitura   |
+| POST   | `/api/readers/{readerId}/activities/import`               | importar histórico local  |
+| DELETE | `/api/readers/{readerId}/activities/{id}`                 | excluir uma leitura       |
+| GET    | `/api/readers/{readerId}/books`                           | listar a biblioteca       |
+| PUT    | `/api/readers/{readerId}/books/{id}`                      | criar ou atualizar livro  |
+| POST   | `/api/readers/{readerId}/books/import`                    | importar cache local      |
+| DELETE | `/api/readers/{readerId}/books/{id}`                      | excluir um livro          |
+| GET    | `/api/readers/{readerId}/gamification`                    | consultar gamificação     |
+| PUT    | `/api/readers/{readerId}/gamification/goals`              | atualizar metas           |
+| POST   | `/api/readers/{readerId}/gamification/import`             | importar estado local     |
+| PUT    | `/api/readers/{readerId}/gamification/streak-days/{date}` | marcar dia                |
+| DELETE | `/api/readers/{readerId}/gamification/streak-days/{date}` | desmarcar dia             |
+| POST   | `/api/readers/{readerId}/gamification/missions/seen`      | confirmar missões vistas  |
+
+Os identificadores públicos de livros e atividades são gerados no cliente e preservados no servidor. Assim, a primeira sincronização importa dados do navegador de maneira idempotente, sem criar duplicatas. Criar, editar ou excluir uma atividade também ajusta o progresso do livro e reconcilia ofensiva e missões na mesma transação; a importação histórica não soma páginas nem XP novamente. O fuso do leitor define eventos noturnos e datas de livros, enquanto `occurredOn` mantém a data original da sessão.
 
 Exemplo de cadastro:
 

@@ -1,7 +1,10 @@
 import { DestroyRef, Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import { calculateLevel, localDateKey } from '../../../core/domain/gamification.rules';
 import type { ReadingActivity } from '../../../core/models/activity.model';
 import type { Achievement, Mission } from '../../../core/models/gamification.model';
+import type { ReadingGoals } from '../../../core/models/profile-statistics.model';
+import type { UserSession } from '../../../core/models/user.model';
 import { STORAGE_KEYS } from '../../../core/storage/storage.keys';
 import { StorageService } from '../../../core/storage/storage.service';
 import type { MokaCelebration, MokaMood } from '../../moka/moka.component';
@@ -13,6 +16,10 @@ import {
   reconcileDailyMissions,
 } from '../domain/challenge-progress.rules';
 import { AuthService } from './auth.service';
+import {
+  ReaderGamificationApiService,
+  type ReaderGamificationState,
+} from './reader-gamification-api.service';
 import { ReadingStreakService } from './reading-streak.service';
 
 interface ChallengesState {
@@ -31,6 +38,7 @@ export class ChallengesService {
   private readonly storage = inject(StorageService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly readingStreak = inject(ReadingStreakService);
+  private readonly api = inject(ReaderGamificationApiService);
   private readonly totalXp = signal(0);
   private readonly missionState = signal<Mission[]>([]);
   private readonly achievementState = signal<Achievement[]>([]);
@@ -43,6 +51,7 @@ export class ChallengesService {
   private readonly justUnlockedMoodState = signal<MokaMood | null>(null);
   private readonly celebrationState = signal<MokaCelebration | null>(null);
   private celebrationSequence = 0;
+  private syncVersion = 0;
 
   readonly missions = this.missionState.asReadonly();
   readonly achievements = this.achievementState.asReadonly();
@@ -70,8 +79,12 @@ export class ChallengesService {
 
   constructor() {
     effect(() => {
-      const email = this.auth.currentUser()?.email ?? 'guest';
-      untracked(() => this.loadForUser(email));
+      const user = this.auth.currentUser();
+      untracked(() => {
+        this.loadForUser(user?.email ?? 'guest');
+        const version = ++this.syncVersion;
+        if (user?.id) void this.synchronize(user, version);
+      });
     });
     this.destroyRef.onDestroy(() => {
       if (this.unlockTimer) clearTimeout(this.unlockTimer);
@@ -118,14 +131,113 @@ export class ChallengesService {
   }
 
   markMissionUpdatesSeen(): void {
-    if (this.unseenMissionKeysState().length === 0) return;
+    const keys = this.unseenMissionKeysState();
+    if (keys.length === 0) return;
     this.unseenMissionKeysState.set([]);
     this.persist();
+    const readerId = this.auth.currentUser()?.id;
+    if (!readerId) return;
+    void firstValueFrom(this.api.markMissionsSeen(readerId, keys))
+      .then((state) => this.applyServerState(state))
+      .catch(() => undefined);
+  }
+
+  async refreshFromServer(): Promise<void> {
+    const user = this.auth.currentUser();
+    if (!user?.id) return;
+    const version = ++this.syncVersion;
+    try {
+      const state = await firstValueFrom(this.api.get(user.id));
+      if (version === this.syncVersion) this.applyServerState(state);
+    } catch {
+      // O cache local continua funcional enquanto a API estiver indisponível.
+    }
+  }
+
+  async saveGoals(goals: ReadingGoals): Promise<void> {
+    const user = this.auth.currentUser();
+    if (!user?.id) return;
+    const version = ++this.syncVersion;
+    try {
+      const state = await firstValueFrom(
+        this.api.saveGoals(user.id, goals, this.browserTimeZone()),
+      );
+      if (version === this.syncVersion) this.applyServerState(state);
+    } catch {
+      // As metas permanecem no cache e serão importadas na próxima sincronização.
+    }
   }
 
   resetDailyMissions(): void {
     this.missionState.set(createDailyMissions(localDateKey(new Date())));
     this.persist();
+  }
+
+  reconcilePersistedActivities(): void {
+    const email = this.auth.currentUser()?.email ?? 'guest';
+    this.loadForUser(email);
+    this.readingStreak.reconcilePersistedActivities();
+  }
+
+  private async synchronize(user: UserSession, version: number): Promise<void> {
+    try {
+      let state = await firstValueFrom(this.api.get(user.id!));
+      if (version !== this.syncVersion) return;
+      if (!state.localMigrationCompleted) {
+        state = await firstValueFrom(
+          this.api.importLegacy(user.id!, {
+            goals: this.readingGoals(user.email),
+            timeZone: this.browserTimeZone(),
+            totalXp: this.totalXp(),
+            markedDays: this.readingStreak.getMarkedDays(),
+            missionHistory: this.missionHistoryState(),
+            unseenMissionKeys: this.unseenMissionKeysState(),
+            achievementIds: this.achievementState()
+              .filter((achievement) => achievement.unlocked)
+              .map((achievement) => achievement.id),
+            rewardedBookIds: [...this.rewardedBookIds],
+          }),
+        );
+      }
+      if (version === this.syncVersion) this.applyServerState(state);
+    } catch {
+      // A experiência offline usa o estado local até a próxima tentativa autenticada.
+    }
+  }
+
+  private applyServerState(state: ReaderGamificationState): void {
+    const serverMissions = new Map(state.missions.map((mission) => [mission.id, mission]));
+    this.totalXp.set(Math.max(0, state.totalXp));
+    this.missionState.set(
+      createDailyMissions(state.missionsDay).map((mission) => ({
+        ...mission,
+        ...(serverMissions.get(mission.id) ?? {}),
+      })),
+    );
+    const unlockedIds = new Set(state.achievementIds);
+    this.achievementState.set(
+      this.defaultAchievements().map((achievement) => ({
+        ...achievement,
+        unlocked: unlockedIds.has(achievement.id),
+      })),
+    );
+    this.rewardedBookIds = new Set(state.rewardedBookIds);
+    this.missionHistoryState.set(this.normalizeHistory(state.missionHistory));
+    this.unseenMissionKeysState.set([...state.unseenMissionKeys]);
+    this.readingStreak.replaceFromServer(state.markedDays);
+    this.storage.writeUser('reading-goals', this.auth.currentUser()?.email ?? 'guest', state.goals);
+    this.persist();
+  }
+
+  private readingGoals(email: string): ReadingGoals {
+    return this.storage.readUser<ReadingGoals>('reading-goals', email, {
+      dailyMinutes: 60,
+      monthlyBooks: 2,
+    });
+  }
+
+  private browserTimeZone(): string {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
   }
 
   private updateMission(id: string, rawDelta: number): void {

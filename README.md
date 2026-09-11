@@ -2,7 +2,7 @@
 
 O Readva é uma plataforma de leitura que transforma o hábito de ler em uma jornada visual e motivadora. O leitor acompanha seu progresso, mantém uma biblioteca pessoal, participa de desafios, personaliza o perfil e recebe incentivo da Moka, a mascote do projeto.
 
-O repositório possui um frontend Angular e um backend Spring Boot. O cadastro e o login já usam a API e uma sessão HTTP; os demais domínios estão sendo migrados gradualmente e parte dos dados de leitura ainda permanece no `localStorage`.
+O repositório possui um frontend Angular e um backend Spring Boot. Cadastro, login, biblioteca, histórico de leitura e gamificação usam a API; o `localStorage` funciona como cache resiliente e mantém os domínios que continuam em migração.
 
 ## Principais funcionalidades
 
@@ -99,7 +99,7 @@ Mais detalhes: [guia do backend](backend/README.md).
 | `e2e`  | H2 memória | jornadas completas executadas pelo Playwright |
 | `prod` | PostgreSQL | ambiente real configurado por variáveis       |
 
-O Flyway é a única fonte de alteração do esquema. A migração inicial cria leitores, atividades de leitura, metas diárias, dias de ofensiva e conclusões de missões; a segunda adiciona as credenciais dos leitores. O Hibernate usa `ddl-auto: validate`, portanto valida as entidades sem modificar tabelas silenciosamente.
+O Flyway é a única fonte de alteração do esquema. A migração inicial cria leitores, atividades de leitura, metas diárias, dias de ofensiva e conclusões de missões; a segunda adiciona as credenciais dos leitores; a terceira cria a biblioteca pessoal; e a quarta prepara o histórico de leitura para sincronização idempotente; e a quinta persiste metas, ofensiva, missões, XP, conquistas e o controle da migração local. O Hibernate usa `ddl-auto: validate`, portanto valida as entidades sem modificar tabelas silenciosamente.
 
 Configurações importantes:
 
@@ -125,18 +125,31 @@ Durante o desenvolvimento, o Angular encaminha `/api` para `http://127.0.0.1:808
 
 ## API atual
 
-| Método | Endpoint                             | Responsabilidade          |
-| ------ | ------------------------------------ | ------------------------- |
-| GET    | `/api/auth/csrf`                     | preparar a proteção CSRF  |
-| POST   | `/api/auth/register`                 | criar conta e sessão      |
-| POST   | `/api/auth/login`                    | autenticar e criar sessão |
-| GET    | `/api/auth/session`                  | consultar a sessão atual  |
-| POST   | `/api/auth/logout`                   | encerrar a sessão         |
-| GET    | `/api/readers/{readerId}`            | consultar um leitor       |
-| POST   | `/api/readers/{readerId}/activities` | registrar uma leitura     |
-| GET    | `/api/readers/{readerId}/activities` | listar leituras do leitor |
+| Método | Endpoint                                                  | Responsabilidade          |
+| ------ | --------------------------------------------------------- | ------------------------- |
+| GET    | `/api/auth/csrf`                                          | preparar a proteção CSRF  |
+| POST   | `/api/auth/register`                                      | criar conta e sessão      |
+| POST   | `/api/auth/login`                                         | autenticar e criar sessão |
+| GET    | `/api/auth/session`                                       | consultar a sessão atual  |
+| POST   | `/api/auth/logout`                                        | encerrar a sessão         |
+| GET    | `/api/readers/{readerId}`                                 | consultar um leitor       |
+| POST   | `/api/readers/{readerId}/activities`                      | registrar uma leitura     |
+| GET    | `/api/readers/{readerId}/activities`                      | listar leituras do leitor |
+| PUT    | `/api/readers/{readerId}/activities/{id}`                 | criar ou editar leitura   |
+| POST   | `/api/readers/{readerId}/activities/import`               | importar histórico local  |
+| DELETE | `/api/readers/{readerId}/activities/{id}`                 | excluir uma leitura       |
+| GET    | `/api/readers/{readerId}/books`                           | listar a biblioteca       |
+| PUT    | `/api/readers/{readerId}/books/{id}`                      | criar ou atualizar livro  |
+| POST   | `/api/readers/{readerId}/books/import`                    | importar cache local      |
+| DELETE | `/api/readers/{readerId}/books/{id}`                      | excluir um livro          |
+| GET    | `/api/readers/{readerId}/gamification`                    | consultar gamificação     |
+| PUT    | `/api/readers/{readerId}/gamification/goals`              | atualizar metas           |
+| POST   | `/api/readers/{readerId}/gamification/import`             | importar estado local     |
+| PUT    | `/api/readers/{readerId}/gamification/streak-days/{date}` | marcar dia                |
+| DELETE | `/api/readers/{readerId}/gamification/streak-days/{date}` | desmarcar dia             |
+| POST   | `/api/readers/{readerId}/gamification/missions/seen`      | confirmar missões vistas  |
 
-O Angular já consome os endpoints de autenticação. A troca da persistência dos demais domínios pela API será incremental para permitir a importação segura dos dados existentes no navegador.
+O Angular consome autenticação, biblioteca, histórico de leitura e gamificação pela API. Ao entrar, os serviços exibem seus caches imediatamente e conciliam o servidor. A primeira sincronização importa o estado legado de gamificação uma única vez, com marcador persistido no banco. Cada leitura recalcula metas, missões e ofensiva na mesma transação; `occurredOn` preserva o dia correto mesmo entre dispositivos em fusos diferentes.
 
 ## Rotas do frontend
 
@@ -195,16 +208,18 @@ Os fluxos atuais são:
 
 ```text
 Autenticação: Angular → API REST → Spring Security → JPA/Hibernate → banco
-Jornada de leitura: Angular → serviços de domínio → localStorage (migração em andamento)
+Biblioteca: Angular → cache local + API REST → domínio library → JPA/Hibernate → banco
+Atividades: Angular → cache local + API REST → domínio reading → JPA/Hibernate → banco
+Gamificação: leitura/livro → transação de domínio → JDBC + banco → cache local sincronizado
 ```
 
 Detalhes adicionais: [arquitetura](docs/architecture.md), [persistência local](docs/storage-schema.md), [acessibilidade](docs/accessibility.md) e [backend](backend/README.md).
 
 ## Limitações atuais
 
-- apenas a autenticação já está integrada ao Angular;
-- ainda não existe sincronização dos dados de leitura entre dispositivos;
-- parte dos dados continua limitada ao navegador;
+- autenticação, biblioteca, atividades e gamificação já estão integradas; perfil e avatar ainda não;
+- feed social, cafés e algumas preferências visuais continuam locais;
+- ainda existe cache local por compatibilidade offline e migração incremental;
 - ainda não existem recuperação de senha nem verificação de e-mail;
 - Open Library, Google Books e capas remotas podem ficar indisponíveis;
 - o feed social ainda usa dados locais determinísticos.
@@ -219,10 +234,9 @@ Detalhes adicionais: [arquitetura](docs/architecture.md), [persistência local](
 ## Próximos passos
 
 1. migrar perfil e avatar do `localStorage` para a API;
-2. importar atividades existentes sem perder o histórico do leitor;
-3. persistir biblioteca, ofensiva, metas e missões no backend;
-4. conectar o feed social a dados persistentes;
-5. adicionar recuperação de senha e verificação de e-mail;
-6. ativar PostgreSQL no ambiente de produção.
+2. conectar o feed social a dados persistentes;
+3. adicionar recuperação de senha e verificação de e-mail;
+4. testar concorrência real com PostgreSQL;
+5. ativar PostgreSQL no ambiente de produção.
 
 As ilustrações e animações existentes em `public/` fazem parte da identidade visual do projeto.
