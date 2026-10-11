@@ -176,3 +176,20 @@ p {
   height: 15px;
   font-size: 15px;
 }
+
+.bio {
+  max-width: 460px;
+  color: #68584f;
+  white-space: normal;
+}
+
+.email {
+  margin-top: 3px;
+  font-size: 0.72rem;
+}
+
+.profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

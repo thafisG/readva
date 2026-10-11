@@ -1,6 +1,12 @@
 <div class="profile-page">
   <main class="profile-content">
-    <app-profile-header (customizeAvatar)="avatarBuilderOpen.set(true)" />
+    <app-profile-header
+      (customizeAvatar)="avatarBuilderOpen.set(true)"
+      (editProfile)="identityEditorOpen.set(true)"
+    />
+    @if (profileError()) {
+      <p class="profile-error" role="alert">{{ profileError() }}</p>
+    }
     @let stats = profileStatistics.statistics();
     <app-stats-overview [stats]="stats" />
     <section class="insights-grid">
@@ -11,8 +17,22 @@
     </section>
   </main>
 </div>
-@if (avatarBuilderOpen()) {
-  <app-avatar-builder (saved)="saveAvatar($event)" (cancelled)="closeAvatarBuilder()" />
-}
 
 <app-moka [mood]="mokaMood()" />
+
+@if (avatarBuilderOpen()) {
+  <app-avatar-builder
+    [initialConfig]="auth.currentUser()?.avatarConfig ?? null"
+    (saved)="saveAvatar($event)"
+    (cancelled)="closeEditors()"
+  />
+}
+
+@if (identityEditorOpen()) {
+  <app-profile-identity-editor
+    [initialName]="auth.currentUser()?.name || 'Leitor'"
+    [initialBio]="auth.currentUser()?.bio || ''"
+    (saved)="saveIdentity($event)"
+    (cancelled)="closeEditors()"
+  />
+}

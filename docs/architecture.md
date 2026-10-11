@@ -19,11 +19,12 @@ O dashboard permanece um coordenador enquanto é dividido incrementalmente. Reco
 3. `BookService` coordena a jornada; `ReadingActivityService` mantém histórico e fila offline. Atividades sincronizam antes da biblioteca, preservando corretamente ajustes offline de páginas.
 4. versões locais e remotas são conciliadas por `updatedAt`; importações e exclusões são idempotentes.
 5. o backend reconcilia metas, missões, XP, conquistas e ofensiva na mesma transação da atividade; o frontend atualiza o cache com o agregado retornado.
-6. `StorageService` lê envelopes versionados e migra chaves legadas sem apagar a origem.
-7. componentes emitem intenções; serviços aplicam validação e persistem.
+6. `AuthService` hidrata a sessão com o perfil remoto; a API guarda a configuração do avatar e o navegador gera o SVG.
+7. `StorageService` lê envelopes versionados e migra chaves legadas sem apagar a origem.
+8. componentes emitem intenções; serviços aplicam validação e persistem.
 
 ## Backend atual
 
-O Spring Boot é organizado por domínio e camadas `domain`, `application`, `infrastructure` e `web`. Autenticação, biblioteca e histórico de leitura já são persistentes. O Flyway cria leitores, credenciais, atividades, estruturas de gamificação e a biblioteca pessoal; o Hibernate apenas valida esse esquema.
+O Spring Boot é organizado por domínio e camadas `domain`, `application`, `infrastructure` e `web`. Autenticação, biblioteca, histórico de leitura, gamificação e perfil já são persistentes. O Flyway cria leitores, credenciais, atividades, estruturas de gamificação e a biblioteca pessoal; o Hibernate apenas valida esse esquema.
 
-O navegador mantém biblioteca, atividades e gamificação como cache resiliente, enquanto a API é a fonte persistente. A migração local da gamificação é idempotente e registrada no banco. O próximo limite de migração é perfil/avatar, seguido pelo feed social.
+O navegador mantém biblioteca, atividades, gamificação e perfil como cache resiliente, enquanto a API é a fonte persistente. As migrações locais de gamificação e perfil são idempotentes e registradas no banco. O próximo limite de migração é o feed social.

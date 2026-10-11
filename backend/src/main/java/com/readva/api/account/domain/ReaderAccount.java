@@ -49,6 +49,11 @@ public class ReaderAccount {
         return email.trim().toLowerCase(Locale.ROOT);
     }
 
+    public void updateDisplayName(String displayName) {
+        this.displayName = displayName.trim();
+        this.updatedAt = Instant.now();
+    }
+
     public UUID getId() { return id; }
     public String getDisplayName() { return displayName; }
     public String getEmail() { return email; }

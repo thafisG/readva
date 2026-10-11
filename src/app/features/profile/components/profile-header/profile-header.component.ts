@@ -13,6 +13,7 @@ import { ChallengesService } from '../../../dashboard/services/challenges.servic
 })
 export class ProfileHeaderComponent {
   readonly customizeAvatar = output<void>();
+  readonly editProfile = output<void>();
   readonly auth = inject(AuthService);
   readonly challenges = inject(ChallengesService);
 }

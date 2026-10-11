@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { createAvatarDataUrl, DEFAULT_AVATAR_CONFIG } from '../../../core/domain/avatar-svg.rules';
 import type { StoragePort } from '../../../core/storage/storage.port';
 import { STORAGE_PORT } from '../../../core/storage/storage.port';
 import { STORAGE_KEYS } from '../../../core/storage/storage.keys';
@@ -53,8 +54,8 @@ describe('AuthService', () => {
     expect(service.currentUser()).toBeNull();
   });
 
-  it('restores the server session and preserves a cached avatar', async () => {
-    const avatar = 'data:image/svg+xml;charset=UTF-8,%3Csvg%3E%3C%2Fsvg%3E';
+  it('restores the server session and migrates a cached avatar only once', async () => {
+    const avatar = createAvatarDataUrl(DEFAULT_AVATAR_CONFIG);
     storage.setItem(
       STORAGE_KEYS.users,
       JSON.stringify([{ email: 'reader@example.com', name: 'Old name', avatar }]),
@@ -62,13 +63,20 @@ describe('AuthService', () => {
 
     const initialization = service.ensureInitialized();
     http.expectOne('/api/auth/csrf').flush({ token: 'csrf' });
-    await Promise.resolve();
-    await Promise.resolve();
+    await settleRequests();
     http.expectOne('/api/auth/session').flush({
       id: 'reader-id',
       email: 'reader@example.com',
       displayName: 'Reader',
     });
+    await settleRequests();
+    http
+      .expectOne('/api/readers/reader-id/profile')
+      .flush(profileState({ localMigrationCompleted: false, avatar: null }));
+    await settleRequests();
+    const migration = http.expectOne('/api/readers/reader-id/profile/import');
+    expect(migration.request.body.avatar).toEqual(DEFAULT_AVATAR_CONFIG);
+    migration.flush(profileState({ avatar: DEFAULT_AVATAR_CONFIG }));
 
     expect(await initialization).toBe(true);
     expect(service.currentUser()).toEqual({
@@ -76,14 +84,15 @@ describe('AuthService', () => {
       email: 'reader@example.com',
       name: 'Reader',
       avatar,
+      avatarConfig: DEFAULT_AVATAR_CONFIG,
+      bio: '',
     });
   });
 
   it('registers through the API and stores no password locally', async () => {
     const registration = service.register('Nova Leitora', 'NOVA@example.com', 'SenhaSegura123');
     http.expectOne('/api/auth/csrf').flush({ token: 'csrf' });
-    await Promise.resolve();
-    await Promise.resolve();
+    await settleRequests();
 
     const request = http.expectOne('/api/auth/register');
     expect(request.request.method).toBe('POST');
@@ -93,31 +102,82 @@ describe('AuthService', () => {
       password: 'SenhaSegura123',
     });
     request.flush({ id: 'new-id', email: 'nova@example.com', displayName: 'Nova Leitora' });
-    await Promise.resolve();
-    await Promise.resolve();
+    await settleRequests();
     http.expectOne('/api/auth/csrf').flush({ token: 'renewed' });
+    await settleRequests();
+    http.expectOne('/api/readers/new-id/profile').flush(
+      profileState({
+        readerId: 'new-id',
+        displayName: 'Nova Leitora',
+        email: 'nova@example.com',
+        localMigrationCompleted: true,
+      }),
+    );
 
     expect((await registration).id).toBe('new-id');
     expect(storage.getItem(STORAGE_KEYS.activeSession)).not.toContain('SenhaSegura123');
     expect(storage.getItem(STORAGE_KEYS.users)).not.toContain('SenhaSegura123');
   });
 
-  it('updates only safe avatar data for an authenticated reader', async () => {
+  it('persists only a validated avatar configuration', async () => {
     const initialization = service.ensureInitialized();
     http.expectOne('/api/auth/csrf').flush({ token: 'csrf' });
-    await Promise.resolve();
-    await Promise.resolve();
+    await settleRequests();
     http.expectOne('/api/auth/session').flush({
       id: 'reader-id',
       email: 'avatar@example.com',
       displayName: 'Avatar Reader',
     });
+    await settleRequests();
+    http
+      .expectOne('/api/readers/reader-id/profile')
+      .flush(profileState({ email: 'avatar@example.com', displayName: 'Avatar Reader' }));
     await initialization;
 
-    const avatar = 'data:image/svg+xml;charset=UTF-8,%3Csvg%3E%3C%2Fsvg%3E';
-    expect(service.updateAvatar(avatar)).toBe(true);
-    expect(service.currentUser()?.avatar).toBe(avatar);
-    expect(service.findUser('avatar@example.com')?.avatar).toBe(avatar);
-    expect(service.updateAvatar('https://example.com/avatar.svg')).toBe(false);
+    const saving = service.updateAvatar(DEFAULT_AVATAR_CONFIG);
+    const saveRequest = http.expectOne('/api/readers/reader-id/profile');
+    expect(saveRequest.request.method).toBe('PUT');
+    expect(saveRequest.request.body.avatar).toEqual(DEFAULT_AVATAR_CONFIG);
+    saveRequest.flush(
+      profileState({
+        email: 'avatar@example.com',
+        displayName: 'Avatar Reader',
+        avatar: DEFAULT_AVATAR_CONFIG,
+      }),
+    );
+
+    expect(await saving).toBe(true);
+    expect(service.currentUser()?.avatar).toBe(createAvatarDataUrl(DEFAULT_AVATAR_CONFIG));
   });
+
+  it('replaces an HTML parsing error with an actionable login message', async () => {
+    const login = service.login('reader@example.com', 'Leitura@123');
+    http.expectOne('/api/auth/csrf').flush({ token: 'csrf' });
+    await settleRequests();
+    http.expectOne('/api/auth/login').flush('<!doctype html>', {
+      status: 200,
+      statusText: 'OK',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    await expect(login).rejects.toThrow('A API respondeu em um formato inválido');
+  });
+
+  function profileState(overrides: Record<string, unknown> = {}) {
+    return {
+      readerId: 'reader-id',
+      displayName: 'Reader',
+      email: 'reader@example.com',
+      bio: null,
+      avatar: null,
+      localMigrationCompleted: true,
+      updatedAt: '2026-09-10T12:00:00Z',
+      ...overrides,
+    };
+  }
+
+  async function settleRequests(): Promise<void> {
+    await Promise.resolve();
+    await Promise.resolve();
+  }
 });

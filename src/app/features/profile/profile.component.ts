@@ -1,8 +1,13 @@
 import { Component, HostListener, computed, inject, signal } from '@angular/core';
-import { MokaComponent, type MokaMood } from '../moka/moka.component';
+import type { AvatarConfig } from '../../core/models/avatar.model';
 import { AuthService } from '../dashboard/services/auth.service';
+import { MokaComponent, type MokaMood } from '../moka/moka.component';
 import { AvatarBuilderComponent } from './components/avatar-builder/avatar-builder.component';
 import { CategoryBreakdownComponent } from './components/category-breakdown/category-breakdown.component';
+import {
+  ProfileIdentityEditorComponent,
+  type ProfileIdentityChanges,
+} from './components/profile-identity-editor/profile-identity-editor.component';
 import { ProfileHeaderComponent } from './components/profile-header/profile-header.component';
 import { ReadingGoalsComponent } from './components/reading-goals/reading-goals.component';
 import { RecentAchievementsComponent } from './components/recent-achievements/recent-achievements.component';
@@ -22,6 +27,7 @@ import { ProfileStatisticsService } from './services/profile-statistics.service'
     CategoryBreakdownComponent,
     RecentAchievementsComponent,
     AvatarBuilderComponent,
+    ProfileIdentityEditorComponent,
     MokaComponent,
   ],
   templateUrl: './profile.component.html',
@@ -29,9 +35,11 @@ import { ProfileStatisticsService } from './services/profile-statistics.service'
   providers: [ProfileGoalsService],
 })
 export class ProfileComponent {
-  private readonly auth = inject(AuthService);
+  readonly auth = inject(AuthService);
   readonly profileStatistics = inject(ProfileStatisticsService);
   readonly avatarBuilderOpen = signal(false);
+  readonly identityEditorOpen = signal(false);
+  readonly profileError = signal('');
   readonly mokaMood = computed<MokaMood>(() => {
     const statistics = this.profileStatistics.statistics();
     if (statistics.currentStreak >= 7) return 'streak';
@@ -40,11 +48,27 @@ export class ProfileComponent {
   });
 
   @HostListener('document:keydown.escape')
-  closeAvatarBuilder(): void {
+  closeEditors(): void {
     this.avatarBuilderOpen.set(false);
+    this.identityEditorOpen.set(false);
+    this.profileError.set('');
   }
 
-  saveAvatar(avatar: string): void {
-    if (this.auth.updateAvatar(avatar)) this.avatarBuilderOpen.set(false);
+  async saveAvatar(config: AvatarConfig): Promise<void> {
+    this.profileError.set('');
+    if (await this.auth.updateAvatar(config)) {
+      this.avatarBuilderOpen.set(false);
+      return;
+    }
+    this.profileError.set('Não foi possível salvar o avatar. Verifique se o backend está ativo.');
+  }
+
+  async saveIdentity(changes: ProfileIdentityChanges): Promise<void> {
+    this.profileError.set('');
+    if (await this.auth.updateProfile(changes.displayName, changes.bio)) {
+      this.identityEditorOpen.set(false);
+      return;
+    }
+    this.profileError.set('Não foi possível salvar o perfil. Tente novamente.');
   }
 }

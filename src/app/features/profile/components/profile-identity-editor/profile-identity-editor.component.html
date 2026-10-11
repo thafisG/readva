@@ -1,0 +1,56 @@
+<div class="editor-backdrop" (click)="cancelled.emit()">
+  <section
+    class="editor-card"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="profile-editor-title"
+    cdkTrapFocus
+    [cdkTrapFocusAutoCapture]="true"
+    (click)="$event.stopPropagation()"
+  >
+    <header>
+      <div>
+        <span>Seu cantinho na Readva</span>
+        <h2 id="profile-editor-title">Editar perfil</h2>
+      </div>
+      <button type="button" class="icon-button" aria-label="Fechar" (click)="cancelled.emit()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </header>
+
+    <label>
+      Nome público
+      <input
+        name="displayName"
+        required
+        minlength="2"
+        maxlength="100"
+        autocomplete="name"
+        [(ngModel)]="displayName"
+      />
+    </label>
+
+    <label>
+      Bio <span>{{ bio.length }}/280</span>
+      <textarea
+        name="bio"
+        maxlength="280"
+        rows="4"
+        placeholder="Conte um pouco sobre você e suas leituras."
+        [(ngModel)]="bio"
+      ></textarea>
+    </label>
+
+    <footer>
+      <button type="button" class="secondary" (click)="cancelled.emit()">Cancelar</button>
+      <button
+        type="button"
+        class="primary"
+        [disabled]="displayName.trim().length < 2"
+        (click)="save()"
+      >
+        Salvar perfil
+      </button>
+    </footer>
+  </section>
+</div>

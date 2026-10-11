@@ -2,7 +2,7 @@
 
 O Readva é uma plataforma de leitura que transforma o hábito de ler em uma jornada visual e motivadora. O leitor acompanha seu progresso, mantém uma biblioteca pessoal, participa de desafios, personaliza o perfil e recebe incentivo da Moka, a mascote do projeto.
 
-O repositório possui um frontend Angular e um backend Spring Boot. Cadastro, login, biblioteca, histórico de leitura e gamificação usam a API; o `localStorage` funciona como cache resiliente e mantém os domínios que continuam em migração.
+O repositório possui um frontend Angular e um backend Spring Boot. Cadastro, login, biblioteca, histórico de leitura, gamificação e perfil usam a API; o `localStorage` funciona como cache resiliente e mantém os domínios que continuam em migração.
 
 ## Principais funcionalidades
 
@@ -99,7 +99,7 @@ Mais detalhes: [guia do backend](backend/README.md).
 | `e2e`  | H2 memória | jornadas completas executadas pelo Playwright |
 | `prod` | PostgreSQL | ambiente real configurado por variáveis       |
 
-O Flyway é a única fonte de alteração do esquema. A migração inicial cria leitores, atividades de leitura, metas diárias, dias de ofensiva e conclusões de missões; a segunda adiciona as credenciais dos leitores; a terceira cria a biblioteca pessoal; e a quarta prepara o histórico de leitura para sincronização idempotente; e a quinta persiste metas, ofensiva, missões, XP, conquistas e o controle da migração local. O Hibernate usa `ddl-auto: validate`, portanto valida as entidades sem modificar tabelas silenciosamente.
+O Flyway é a única fonte de alteração do esquema. A migração inicial cria leitores, atividades de leitura, metas diárias, dias de ofensiva e conclusões de missões; a segunda adiciona as credenciais dos leitores; a terceira cria a biblioteca pessoal; e a quarta prepara o histórico de leitura para sincronização idempotente; a quinta persiste metas, ofensiva, missões, XP, conquistas e o controle da migração local; e a sexta cria o perfil persistente, com bio, configuração segura do avatar e migração local idempotente. O Hibernate usa `ddl-auto: validate`, portanto valida as entidades sem modificar tabelas silenciosamente.
 
 Configurações importantes:
 
@@ -148,8 +148,11 @@ Durante o desenvolvimento, o Angular encaminha `/api` para `http://127.0.0.1:808
 | PUT    | `/api/readers/{readerId}/gamification/streak-days/{date}` | marcar dia                |
 | DELETE | `/api/readers/{readerId}/gamification/streak-days/{date}` | desmarcar dia             |
 | POST   | `/api/readers/{readerId}/gamification/missions/seen`      | confirmar missões vistas  |
+| GET    | `/api/readers/{readerId}/profile`                         | consultar perfil          |
+| PUT    | `/api/readers/{readerId}/profile`                         | atualizar nome/bio/avatar |
+| POST   | `/api/readers/{readerId}/profile/import`                  | importar perfil local     |
 
-O Angular consome autenticação, biblioteca, histórico de leitura e gamificação pela API. Ao entrar, os serviços exibem seus caches imediatamente e conciliam o servidor. A primeira sincronização importa o estado legado de gamificação uma única vez, com marcador persistido no banco. Cada leitura recalcula metas, missões e ofensiva na mesma transação; `occurredOn` preserva o dia correto mesmo entre dispositivos em fusos diferentes.
+O Angular consome autenticação, biblioteca, histórico de leitura, gamificação e perfil pela API. Ao entrar, os serviços exibem seus caches imediatamente e conciliam o servidor. A primeira sincronização importa os estados legados de gamificação e perfil uma única vez, com marcadores persistidos no banco. O avatar é salvo como escolhas validadas e o SVG é gerado com segurança no navegador. Cada leitura recalcula metas, missões e ofensiva na mesma transação; `occurredOn` preserva o dia correto mesmo entre dispositivos em fusos diferentes.
 
 ## Rotas do frontend
 
@@ -185,6 +188,16 @@ A suíte E2E inicia o backend com um H2 temporário, inicia o Angular e cobre au
 
 ## Arquitetura
 
+O Readva adota uma **arquitetura em camadas organizada por domínio, com inspiração hexagonal**. Essa definição é mais precisa do que chamar o projeto apenas de MVC: o Spring Web MVC fornece os controllers da API REST, mas a aplicação não possui views no backend, pois a interface é responsabilidade do Angular.
+
+A separação por `domain`, `application`, `infrastructure` e `web` mantém regras de negócio, casos de uso, persistência e HTTP em responsabilidades distintas. O fluxo principal segue esta direção:
+
+```text
+Angular → controller REST → caso de uso → domínio → repository → banco
+```
+
+A arquitetura hexagonal não é aplicada de forma estrita: algumas entidades ainda usam anotações JPA e os casos de uso dependem diretamente dos repositories do Spring. Essa escolha é intencional nesta fase do produto. Ela preserva limites de domínio e testabilidade sem introduzir portas e adaptadores extras antes de existir complexidade que justifique esse custo. Conforme integrações ou persistências alternativas surgirem, esses limites permitem extrair interfaces de porta de forma incremental, sem reestruturar todo o sistema.
+
 ### Frontend
 
 - `src/app/core/models`: contratos separados por domínio;
@@ -211,13 +224,14 @@ Autenticação: Angular → API REST → Spring Security → JPA/Hibernate → b
 Biblioteca: Angular → cache local + API REST → domínio library → JPA/Hibernate → banco
 Atividades: Angular → cache local + API REST → domínio reading → JPA/Hibernate → banco
 Gamificação: leitura/livro → transação de domínio → JDBC + banco → cache local sincronizado
+Perfil: sessão autenticada → API de perfil → JPA/Hibernate → banco → Signal da sessão
 ```
 
 Detalhes adicionais: [arquitetura](docs/architecture.md), [persistência local](docs/storage-schema.md), [acessibilidade](docs/accessibility.md) e [backend](backend/README.md).
 
 ## Limitações atuais
 
-- autenticação, biblioteca, atividades e gamificação já estão integradas; perfil e avatar ainda não;
+- autenticação, biblioteca, atividades, gamificação, perfil e avatar já estão integrados;
 - feed social, cafés e algumas preferências visuais continuam locais;
 - ainda existe cache local por compatibilidade offline e migração incremental;
 - ainda não existem recuperação de senha nem verificação de e-mail;
@@ -233,10 +247,9 @@ Detalhes adicionais: [arquitetura](docs/architecture.md), [persistência local](
 
 ## Próximos passos
 
-1. migrar perfil e avatar do `localStorage` para a API;
-2. conectar o feed social a dados persistentes;
-3. adicionar recuperação de senha e verificação de e-mail;
-4. testar concorrência real com PostgreSQL;
-5. ativar PostgreSQL no ambiente de produção.
+1. conectar o feed social a dados persistentes;
+2. adicionar recuperação de senha e verificação de e-mail;
+3. testar concorrência real com PostgreSQL;
+4. ativar PostgreSQL no ambiente de produção.
 
 As ilustrações e animações existentes em `public/` fazem parte da identidade visual do projeto.

@@ -70,3 +70,45 @@ function accessoryShape(accessory: AvatarConfig['accessory']): string {
   };
   return shapes[accessory];
 }
+
+export function isAvatarConfig(value: unknown): value is AvatarConfig {
+  if (typeof value !== 'object' || value === null) return false;
+  const candidate = value as Record<string, unknown>;
+  return (
+    ['light', 'warm', 'tan', 'deep'].includes(String(candidate['skinTone'])) &&
+    ['short', 'curly', 'long', 'bun'].includes(String(candidate['hairStyle'])) &&
+    ['espresso', 'chestnut', 'golden', 'black'].includes(String(candidate['hairColor'])) &&
+    ['coffee', 'rose', 'sage', 'blue'].includes(String(candidate['shirtColor'])) &&
+    ['none', 'glasses', 'headphones', 'earrings'].includes(String(candidate['accessory']))
+  );
+}
+
+export function parseAvatarDataUrl(value: string): AvatarConfig | null {
+  if (!value.startsWith('data:image/svg+xml')) return null;
+  const separator = value.indexOf(',');
+  if (separator < 0) return null;
+  let svg: string;
+  try {
+    svg = decodeURIComponent(value.slice(separator + 1));
+  } catch {
+    return null;
+  }
+  const skinTones: AvatarConfig['skinTone'][] = ['light', 'warm', 'tan', 'deep'];
+  const hairStyles: AvatarConfig['hairStyle'][] = ['short', 'curly', 'long', 'bun'];
+  const hairColors: AvatarConfig['hairColor'][] = ['espresso', 'chestnut', 'golden', 'black'];
+  const shirtColors: AvatarConfig['shirtColor'][] = ['coffee', 'rose', 'sage', 'blue'];
+  const accessories: AvatarConfig['accessory'][] = ['none', 'glasses', 'headphones', 'earrings'];
+  for (const skinTone of skinTones) {
+    for (const hairStyle of hairStyles) {
+      for (const hairColor of hairColors) {
+        for (const shirtColor of shirtColors) {
+          for (const accessory of accessories) {
+            const config = { skinTone, hairStyle, hairColor, shirtColor, accessory };
+            if (createAvatarSvg(config) === svg) return config;
+          }
+        }
+      }
+    }
+  }
+  return null;
+}

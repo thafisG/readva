@@ -9,10 +9,11 @@ Backend do Readva em Spring Boot. Este módulo começa a retirar do navegador a 
 - persistir, importar, editar e excluir atividades de leitura;
 - persistir, importar, atualizar e excluir livros da biblioteca pessoal;
 - persistir metas, ofensiva, missões diárias, XP e conquistas;
+- persistir nome público, bio e configuração validada do avatar;
 - versionar o banco com Flyway;
 - expor uma API REST para o Angular em `http://localhost:4200`.
 
-O Angular usa a API para autenticação, biblioteca, histórico de leitura e gamificação. Perfil, avatar e feed continuam em migração incremental, domínio por domínio.
+O Angular usa a API para autenticação, biblioteca, histórico de leitura, gamificação e perfil. O feed continua em migração incremental, domínio por domínio.
 
 ## Requisitos
 
@@ -44,7 +45,7 @@ O banco local é persistido em `backend/data` quando o comando é executado dent
 .\mvnw.cmd test
 ```
 
-Os testes usam um H2 em memória separado. A suíte cobre autenticação, CRUD da biblioteca e das atividades, importações idempotentes, cálculo transacional da gamificação, fuso horário, múltiplos dispositivos e isolamento dos dados entre leitores.
+Os testes usam um H2 em memória separado. A suíte cobre autenticação, CRUD da biblioteca, atividades e perfil, importações idempotentes, cálculo transacional da gamificação, fuso horário, múltiplos dispositivos e isolamento dos dados entre leitores.
 
 ## Perfis
 
@@ -80,6 +81,9 @@ O H2 é uma dependência de desenvolvimento e testes. O perfil de produção já
 | PUT    | `/api/readers/{readerId}/gamification/streak-days/{date}` | marcar dia                |
 | DELETE | `/api/readers/{readerId}/gamification/streak-days/{date}` | desmarcar dia             |
 | POST   | `/api/readers/{readerId}/gamification/missions/seen`      | confirmar missões vistas  |
+| GET    | `/api/readers/{readerId}/profile`                         | consultar perfil          |
+| PUT    | `/api/readers/{readerId}/profile`                         | atualizar nome/bio/avatar |
+| POST   | `/api/readers/{readerId}/profile/import`                  | importar perfil local     |
 
 Os identificadores públicos de livros e atividades são gerados no cliente e preservados no servidor. Assim, a primeira sincronização importa dados do navegador de maneira idempotente, sem criar duplicatas. Criar, editar ou excluir uma atividade também ajusta o progresso do livro e reconcilia ofensiva e missões na mesma transação; a importação histórica não soma páginas nem XP novamente. O fuso do leitor define eventos noturnos e datas de livros, enquanto `occurredOn` mantém a data original da sessão.
 

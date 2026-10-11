@@ -1,4 +1,4 @@
-import { Component, computed, output, signal } from '@angular/core';
+import { Component, computed, effect, input, output, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import {
   createAvatarDataUrl,
@@ -28,7 +28,8 @@ interface AvatarOption<T> {
   styleUrl: './avatar-builder.component.scss',
 })
 export class AvatarBuilderComponent {
-  readonly saved = output<string>();
+  readonly initialConfig = input<AvatarConfig | null>(null);
+  readonly saved = output<AvatarConfig>();
   readonly cancelled = output<void>();
   readonly config = signal<AvatarConfig>({ ...DEFAULT_AVATAR_CONFIG });
   readonly previewUrl = computed(() => createAvatarDataUrl(this.config()));
@@ -64,11 +65,18 @@ export class AvatarBuilderComponent {
     { value: 'earrings', label: 'Brincos', icon: 'star' },
   ];
 
+  constructor() {
+    effect(() => {
+      const initial = this.initialConfig();
+      if (initial) this.config.set({ ...initial });
+    });
+  }
+
   update<K extends keyof AvatarConfig>(key: K, value: AvatarConfig[K]): void {
     this.config.update((current) => ({ ...current, [key]: value }));
   }
 
   save(): void {
-    this.saved.emit(this.previewUrl());
+    this.saved.emit({ ...this.config() });
   }
 }
