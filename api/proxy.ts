@@ -80,7 +80,10 @@ export default async function handler(
 
     const responseHeaders: Record<string, string | string[]> = {};
     upstream.headers.forEach((value, name) => {
-      if (!HOP_BY_HOP_HEADERS.has(name.toLowerCase()) && name.toLowerCase() !== 'set-cookie') {
+      if (
+        !HOP_BY_HOP_HEADERS.has(name.toLowerCase()) &&
+        !['content-encoding', 'set-cookie'].includes(name.toLowerCase())
+      ) {
         responseHeaders[name] = value;
       }
     });
