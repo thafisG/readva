@@ -56,6 +56,8 @@ Os testes usam um H2 em memória separado. A suíte cobre autenticação, CRUD d
 
 O H2 é uma dependência de desenvolvimento e testes. O perfil de produção já está preparado para PostgreSQL.
 
+Para a implantação gratuita com Vercel, Render e Supabase, use o Dockerfile da raiz e o Blueprint `render.yaml` para criar a API no Render Free. Configure no Render `DATABASE_URL` como `jdbc:postgresql://<host-do-session-pooler>:5432/postgres?sslmode=require`, usando o host real mostrado em **Connect → Session pooler** no Supabase, e configure `DATABASE_USERNAME`/`DATABASE_PASSWORD` com as credenciais exibidas ali. Configure `READVA_WEB_ORIGIN` com o domínio da Vercel. Após o primeiro deploy, copie a URL HTTPS gerada pelo Render para `READVA_API_URL` nas variáveis de ambiente da Vercel e faça um redeploy do frontend. Consulte [o guia de deploy gratuito](../docs/free-deployment.md) para a sequência completa.
+
 ## Endpoints atuais
 
 | Método | Endpoint                                                  | Responsabilidade          |

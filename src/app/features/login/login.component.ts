@@ -53,7 +53,7 @@ export class LoginComponent implements OnInit {
       }
       await this.navigateAfterAuthentication();
     } catch (error) {
-      this.errorMessage = error instanceof Error ? error.message : 'Não foi possível entrar.';
+      this.errorMessage = this.getLoginErrorMessage(error);
     } finally {
       this.isSubmitting = false;
     }
@@ -69,6 +69,14 @@ export class LoginComponent implements OnInit {
       return 'As senhas não coincidem.';
     }
     return '';
+  }
+
+  private getLoginErrorMessage(error: unknown): string {
+    const message = error instanceof Error ? error.message : '';
+    if (message.includes("Unexpected token '<'") || message.includes('<!doctype')) {
+      return 'Não consegui falar com a API. Inicie o backend na porta 8080 e reinicie o frontend para atualizar o proxy.';
+    }
+    return message || 'Não foi possível entrar.';
   }
 
   private async navigateAfterAuthentication(): Promise<void> {

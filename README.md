@@ -123,6 +123,10 @@ Quem já utilizava a versão local deve criar uma conta usando o mesmo e-mail. O
 
 Durante o desenvolvimento, o Angular encaminha `/api` para `http://127.0.0.1:8080` por meio de `proxy.conf.json`. Por isso, backend e frontend precisam estar ativos.
 
+Na implantação gratuita, a Vercel hospeda o frontend, `api/[...path].ts` encaminha `/api/*`, o Render Free executa o Spring via Docker e o Supabase Free fornece PostgreSQL. O Readva usa o [projeto Supabase próprio](https://supabase.com/dashboard/project/zartvhiknyzunkoylbpl), separado do projeto Root embora possa ficar na mesma organização. O arquivo `render.yaml` prepara o serviço da API sem criar banco pago. No Supabase, use a conexão **Session pooler** (compatível com redes IPv4), configurando no Render `DATABASE_URL` como URL JDBC (`jdbc:postgresql://<host>:<porta>/<banco>?sslmode=require`), além do usuário e senha desse projeto. Configure `READVA_WEB_ORIGIN` com a URL exata do site Vercel e, depois que o Render gerar a URL HTTPS da API, configure essa origem em `READVA_API_URL` na Vercel. O passo a passo está em [docs/free-deployment.md](docs/free-deployment.md).
+
+Os planos gratuitos têm limites: o serviço Render pode dormir após 15 minutos sem tráfego e levar cerca de um minuto para acordar; projetos Supabase Free podem ser pausados após uma semana de baixa atividade e incluem 500 MB de banco. São adequados para manter este projeto sem cobrança, com pausas ocasionais e sem garantia de disponibilidade contínua.
+
 ## API atual
 
 | Método | Endpoint                                                  | Responsabilidade          |

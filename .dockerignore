@@ -1,0 +1,9 @@
+.git
+.angular
+node_modules
+dist
+out-tsc
+playwright-report
+test-results
+backend/target
+backend/data
