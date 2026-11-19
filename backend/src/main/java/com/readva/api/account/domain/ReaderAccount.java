@@ -54,6 +54,11 @@ public class ReaderAccount {
         this.updatedAt = Instant.now();
     }
 
+    public void updatePasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+        this.updatedAt = Instant.now();
+    }
+
     public UUID getId() { return id; }
     public String getDisplayName() { return displayName; }
     public String getEmail() { return email; }

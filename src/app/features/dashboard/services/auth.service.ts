@@ -78,6 +78,30 @@ export class AuthService {
     }
   }
 
+  async requestPasswordReset(email: string): Promise<void> {
+    try {
+      await this.refreshCsrfToken();
+      await firstValueFrom(
+        this.http.post('/api/auth/password-reset', {
+          email: email.trim().toLowerCase(),
+        }),
+      );
+    } catch (error) {
+      throw new Error(this.errorMessage(error), { cause: error });
+    }
+  }
+
+  async confirmPasswordReset(token: string, password: string): Promise<void> {
+    try {
+      await this.refreshCsrfToken();
+      await firstValueFrom(
+        this.http.post('/api/auth/password-reset/confirm', { token, password }),
+      );
+    } catch (error) {
+      throw new Error(this.errorMessage(error), { cause: error });
+    }
+  }
+
   findUser(email: string): UserSession | undefined {
     const normalizedEmail = email.trim().toLowerCase();
     return this.loadUsers().find((user) => user.email === normalizedEmail);
@@ -290,7 +314,8 @@ export class AuthService {
       if (error.status === 0) {
         return 'Não foi possível acessar o servidor. Confirme se o backend está iniciado.';
       }
-      const apiMessage = (error.error as { message?: unknown } | null)?.message;
+      const apiError = error.error as { message?: unknown; detail?: unknown } | null;
+      const apiMessage = apiError?.message ?? apiError?.detail;
       if (typeof apiMessage === 'string' && apiMessage.trim()) return apiMessage;
       if (error.status === 401) return 'E-mail ou senha inválidos.';
     }

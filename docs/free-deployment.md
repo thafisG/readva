@@ -25,7 +25,22 @@ O Spring executa as migrações Flyway ao iniciar. Não rode as migrações manu
 1. No projeto `readva` da Vercel, abra **Settings → Environment Variables**.
 2. Crie `READVA_API_URL` com a origem HTTPS do Render, sem `/api` e sem barra final.
 3. Habilite pelo menos o ambiente **Production** e faça um novo deploy para aplicar a variável.
-4. A função `api/[...path].ts` encaminha as rotas `/api/*` para esse domínio e mantém o navegador no mesmo domínio da Vercel, preservando cookies de sessão e CSRF.
+4. O rewrite do `vercel.json` encaminha as rotas `/api/*` para a função `api/proxy.ts` e mantém o navegador no mesmo domínio da Vercel, preservando cookies de sessão e CSRF.
+
+## 4. Habilitar recuperação de senha por e-mail
+
+A recuperação fica desabilitada até configurar um servidor SMTP. No Render, adicione as variáveis abaixo usando as credenciais do provedor de e-mail. Não coloque esses valores no repositório.
+
+| Variável | Valor |
+| --- | --- |
+| `PASSWORD_RESET_ENABLED` | `true` |
+| `MAIL_HOST` | Host SMTP do provedor |
+| `MAIL_PORT` | Porta SMTP, geralmente `587` |
+| `MAIL_USERNAME` | Usuário SMTP |
+| `MAIL_PASSWORD` | Senha ou chave SMTP |
+| `MAIL_FROM` | Endereço remetente verificado pelo provedor |
+
+`READVA_WEB_ORIGIN` também precisa apontar para `https://readva.vercel.app`. Os links de redefinição expiram em 20 minutos e só podem ser usados uma vez. Se o SMTP não estiver configurado, o formulário informa que a recuperação está indisponível.
 
 ## Limites do plano sem custo
 

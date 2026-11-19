@@ -175,6 +175,49 @@
   font-size: 0.7rem;
 }
 
+.auth-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.auth-links-end {
+  justify-content: flex-end;
+  margin-top: -2px;
+}
+
+.account-prompt {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 16px 0 0;
+  color: #8f7c72;
+  font-size: 0.76rem;
+}
+
+.text-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #3567a6;
+  font: inherit;
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+
+  &:hover {
+    color: #244e85;
+  }
+
+  &:focus-visible {
+    border-radius: 3px;
+    outline: 3px solid rgba(62, 114, 179, 0.3);
+    outline-offset: 3px;
+  }
+}
+
 .auth-error {
   margin: 6px 0 0;
   padding: 10px 12px;
@@ -182,6 +225,17 @@
   border-radius: 10px;
   background: #fff4f3;
   color: #8a3430;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.auth-success {
+  margin: 6px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #c9e5d2;
+  border-radius: 10px;
+  background: #f1fbf4;
+  color: #2b6940;
   font-size: 0.76rem;
   line-height: 1.45;
 }

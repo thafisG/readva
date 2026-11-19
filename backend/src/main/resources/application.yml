@@ -22,3 +22,6 @@ server:
 readva:
   web:
     allowed-origin: ${READVA_WEB_ORIGIN:http://localhost:4200}
+  password-reset:
+    enabled: ${PASSWORD_RESET_ENABLED:false}
+    from: ${MAIL_FROM:}

@@ -7,6 +7,7 @@ O repositório possui um frontend Angular e um backend Spring Boot. Cadastro, lo
 ## Principais funcionalidades
 
 - cadastro e login por e-mail e senha, com sessão validada pelo backend;
+- link de cadastro para quem ainda não tem conta e recuperação de senha por e-mail;
 - perfil com estatísticas, metas, conquistas e avatar personalizável;
 - avatar no dashboard usado como atalho para o perfil;
 - busca de livros e capas em catálogos externos;
@@ -99,7 +100,7 @@ Mais detalhes: [guia do backend](backend/README.md).
 | `e2e`  | H2 memória | jornadas completas executadas pelo Playwright |
 | `prod` | PostgreSQL | ambiente real configurado por variáveis       |
 
-O Flyway é a única fonte de alteração do esquema. A migração inicial cria leitores, atividades de leitura, metas diárias, dias de ofensiva e conclusões de missões; a segunda adiciona as credenciais dos leitores; a terceira cria a biblioteca pessoal; e a quarta prepara o histórico de leitura para sincronização idempotente; a quinta persiste metas, ofensiva, missões, XP, conquistas e o controle da migração local; e a sexta cria o perfil persistente, com bio, configuração segura do avatar e migração local idempotente. O Hibernate usa `ddl-auto: validate`, portanto valida as entidades sem modificar tabelas silenciosamente.
+O Flyway é a única fonte de alteração do esquema. A migração inicial cria leitores, atividades de leitura, metas diárias, dias de ofensiva e conclusões de missões; a segunda adiciona as credenciais dos leitores; a terceira cria a biblioteca pessoal; a quarta prepara o histórico de leitura para sincronização idempotente; a quinta persiste metas, ofensiva, missões, XP, conquistas e o controle da migração local; a sexta cria o perfil persistente, com bio, configuração segura do avatar e migração local idempotente; e a sétima cria os tokens de redefinição de senha. O Hibernate usa `ddl-auto: validate`, portanto valida as entidades sem modificar tabelas silenciosamente.
 
 Configurações importantes:
 
@@ -119,11 +120,15 @@ Configurações importantes:
 - o `authGuard` consulta a sessão no backend antes de liberar as rotas pessoais;
 - o logout encerra a sessão no servidor e limpa o estado local da interface.
 
+Na tela de login, **Criar cadastro** abre o formulário de registro. **Esqueci minha senha** solicita por e-mail um link com token aleatório, de uso único, válido por 20 minutos. O banco guarda somente o hash do token, e a resposta não confirma se o e-mail existe. Depois de abrir o link, a pessoa escolhe uma nova senha e pode entrar normalmente.
+
+O envio de e-mail fica desabilitado até configurar SMTP no Render. Defina `PASSWORD_RESET_ENABLED=true`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` e `MAIL_FROM`; mantenha `READVA_WEB_ORIGIN` apontando para o site da Vercel. Sem SMTP configurado, o formulário informa que a recuperação está indisponível. Veja [o guia de implantação](docs/free-deployment.md) para detalhes.
+
 Quem já utilizava a versão local deve criar uma conta usando o mesmo e-mail. Os dados ainda armazenados no navegador continuam associados a esse endereço.
 
 Durante o desenvolvimento, o Angular encaminha `/api` para `http://127.0.0.1:8080` por meio de `proxy.conf.json`. Por isso, backend e frontend precisam estar ativos.
 
-Na implantação gratuita, a Vercel hospeda o frontend, `api/[...path].ts` encaminha `/api/*`, o Render Free executa o Spring via Docker e o Supabase Free fornece PostgreSQL. O Readva usa o [projeto Supabase próprio](https://supabase.com/dashboard/project/zartvhiknyzunkoylbpl), separado do projeto Root embora possa ficar na mesma organização. O arquivo `render.yaml` prepara o serviço da API sem criar banco pago. No Supabase, use a conexão **Session pooler** (compatível com redes IPv4), configurando no Render `DATABASE_URL` como URL JDBC (`jdbc:postgresql://<host>:<porta>/<banco>?sslmode=require`), além do usuário e senha desse projeto. Configure `READVA_WEB_ORIGIN` com a URL exata do site Vercel e, depois que o Render gerar a URL HTTPS da API, configure essa origem em `READVA_API_URL` na Vercel. O passo a passo está em [docs/free-deployment.md](docs/free-deployment.md).
+Na implantação gratuita, a Vercel hospeda o frontend, `vercel.json` encaminha `/api/*` para `api/proxy.ts`, o Render Free executa o Spring via Docker e o Supabase Free fornece PostgreSQL. O Readva usa o [projeto Supabase próprio](https://supabase.com/dashboard/project/zartvhiknyzunkoylbpl), separado do projeto Root embora possa ficar na mesma organização. O arquivo `render.yaml` prepara o serviço da API sem criar banco pago. No Supabase, use a conexão **Session pooler** (compatível com redes IPv4), configurando no Render `DATABASE_URL` como URL JDBC (`jdbc:postgresql://<host>:<porta>/<banco>?sslmode=require`), além do usuário e senha desse projeto. Configure `READVA_WEB_ORIGIN` com a URL exata do site Vercel e, depois que o Render gerar a URL HTTPS da API, configure essa origem em `READVA_API_URL` na Vercel. O passo a passo está em [docs/free-deployment.md](docs/free-deployment.md).
 
 Os planos gratuitos têm limites: o serviço Render pode dormir após 15 minutos sem tráfego e levar cerca de um minuto para acordar; projetos Supabase Free podem ser pausados após uma semana de baixa atividade e incluem 500 MB de banco. São adequados para manter este projeto sem cobrança, com pausas ocasionais e sem garantia de disponibilidade contínua.
 
@@ -134,6 +139,8 @@ Os planos gratuitos têm limites: o serviço Render pode dormir após 15 minutos
 | GET    | `/api/auth/csrf`                                          | preparar a proteção CSRF  |
 | POST   | `/api/auth/register`                                      | criar conta e sessão      |
 | POST   | `/api/auth/login`                                         | autenticar e criar sessão |
+| POST   | `/api/auth/password-reset`                                | pedir link de recuperação |
+| POST   | `/api/auth/password-reset/confirm`                        | salvar senha nova         |
 | GET    | `/api/auth/session`                                       | consultar a sessão atual  |
 | POST   | `/api/auth/logout`                                        | encerrar a sessão         |
 | GET    | `/api/readers/{readerId}`                                 | consultar um leitor       |
@@ -166,7 +173,7 @@ O Angular consome autenticação, biblioteca, histórico de leitura, gamificaç�
 | `/biblioteca` | Biblioteca pessoal                   |
 | `/desafios`   | Missões, XP e conquistas             |
 | `/perfil`     | Perfil, estatísticas, metas e avatar |
-| `/login`      | Login e criação da conta             |
+| `/login`      | Login, cadastro e recuperação de senha |
 
 As rotas pessoais são protegidas pelo `authGuard`, que valida a sessão no servidor.
 
@@ -236,9 +243,10 @@ Detalhes adicionais: [arquitetura](docs/architecture.md), [persistência local](
 ## Limitações atuais
 
 - autenticação, biblioteca, atividades, gamificação, perfil e avatar já estão integrados;
+- a recuperação de senha já está implementada, mas depende das credenciais SMTP no Render para enviar e-mails;
 - feed social, cafés e algumas preferências visuais continuam locais;
 - ainda existe cache local por compatibilidade offline e migração incremental;
-- ainda não existem recuperação de senha nem verificação de e-mail;
+- ainda não existe verificação de e-mail;
 - Open Library, Google Books e capas remotas podem ficar indisponíveis;
 - o feed social ainda usa dados locais determinísticos.
 
@@ -252,8 +260,8 @@ Detalhes adicionais: [arquitetura](docs/architecture.md), [persistência local](
 ## Próximos passos
 
 1. conectar o feed social a dados persistentes;
-2. adicionar recuperação de senha e verificação de e-mail;
-3. testar concorrência real com PostgreSQL;
-4. ativar PostgreSQL no ambiente de produção.
+2. configurar o SMTP de produção para habilitar a recuperação de senha;
+3. adicionar verificação de e-mail e proteção contra solicitações repetidas de recuperação;
+4. testar concorrência real com PostgreSQL.
 
 As ilustrações e animações existentes em `public/` fazem parte da identidade visual do projeto.

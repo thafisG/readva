@@ -3,10 +3,12 @@ package com.readva.api.auth.web;
 import com.readva.api.account.application.ReaderAccountService;
 import com.readva.api.auth.application.AuthenticationService;
 import com.readva.api.auth.application.AuthenticationService.AuthenticatedReader;
+import com.readva.api.auth.passwordreset.PasswordResetService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.net.URI;
+import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -24,14 +26,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthenticationController {
     private final AuthenticationService authenticationService;
     private final ReaderAccountService readerAccountService;
+    private final PasswordResetService passwordResetService;
     private final SecurityContextRepository securityContextRepository;
 
     public AuthenticationController(
             AuthenticationService authenticationService,
             ReaderAccountService readerAccountService,
+            PasswordResetService passwordResetService,
             SecurityContextRepository securityContextRepository) {
         this.authenticationService = authenticationService;
         this.readerAccountService = readerAccountService;
+        this.passwordResetService = passwordResetService;
         this.securityContextRepository = securityContextRepository;
     }
 
@@ -60,6 +65,21 @@ public class AuthenticationController {
         AuthenticatedReader result = authenticationService.login(request.email(), request.password());
         saveSession(result.authentication(), httpRequest, httpResponse);
         return AuthenticatedReaderResponse.from(result.reader());
+    }
+
+    @PostMapping("/password-reset")
+    public ResponseEntity<Map<String, String>> requestPasswordReset(
+            @Valid @RequestBody PasswordResetRequest request) {
+        passwordResetService.requestReset(request.email());
+        return ResponseEntity.ok(Map.of(
+                "message", "Se o e-mail estiver cadastrado, você receberá as instruções para redefinir a senha."));
+    }
+
+    @PostMapping("/password-reset/confirm")
+    public ResponseEntity<Map<String, String>> confirmPasswordReset(
+            @Valid @RequestBody PasswordResetConfirmationRequest request) {
+        passwordResetService.confirmReset(request.token(), request.password());
+        return ResponseEntity.ok(Map.of("message", "Senha atualizada. Você já pode entrar com a nova senha."));
     }
 
     @GetMapping("/session")

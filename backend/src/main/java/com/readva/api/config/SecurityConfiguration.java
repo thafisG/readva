@@ -75,6 +75,8 @@ public class SecurityConfiguration {
                                 "/api/auth/csrf",
                                 "/api/auth/register",
                                 "/api/auth/login",
+                                "/api/auth/password-reset",
+                                "/api/auth/password-reset/confirm",
                                 "/h2-console/**")
                         .permitAll()
                         .anyRequest()

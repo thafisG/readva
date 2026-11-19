@@ -13,34 +13,50 @@
         <img [src]="utilsService.logoReadva" alt="Readva" class="logo-icon" />
       </div>
 
-      <div class="auth-switch" role="tablist" aria-label="Acesso à conta">
-        <button
-          type="button"
-          role="tab"
-          [attr.aria-selected]="mode === 'login'"
-          [class.active]="mode === 'login'"
-          (click)="setMode('login')"
-        >
-          Entrar
-        </button>
-        <button
-          type="button"
-          role="tab"
-          [attr.aria-selected]="mode === 'register'"
-          [class.active]="mode === 'register'"
-          (click)="setMode('register')"
-        >
-          Criar conta
-        </button>
-      </div>
+      @if (mode === 'login' || mode === 'register') {
+        <div class="auth-switch" role="tablist" aria-label="Acesso à conta">
+          <button
+            type="button"
+            role="tab"
+            [attr.aria-selected]="mode === 'login'"
+            [class.active]="mode === 'login'"
+            (click)="setMode('login')"
+          >
+            Entrar
+          </button>
+          <button
+            type="button"
+            role="tab"
+            [attr.aria-selected]="mode === 'register'"
+            [class.active]="mode === 'register'"
+            (click)="setMode('register')"
+          >
+            Criar conta
+          </button>
+        </div>
+      }
 
       <div class="login-header">
-        <h1 id="auth-title">{{ mode === 'register' ? 'Crie sua conta' : 'Bem-vindo de volta' }}</h1>
+        <h1 id="auth-title">
+          {{
+            mode === 'register'
+              ? 'Crie sua conta'
+              : mode === 'forgot'
+                ? 'Recupere sua senha'
+                : mode === 'reset'
+                  ? 'Escolha uma nova senha'
+                  : 'Bem-vindo de volta'
+          }}
+        </h1>
         <p>
           {{
             mode === 'register'
               ? 'Seus dados serão protegidos por uma senha.'
-              : 'Entre com o e-mail e a senha da sua conta.'
+              : mode === 'forgot'
+                ? 'Vamos enviar um link de recuperação para o seu e-mail.'
+                : mode === 'reset'
+                  ? 'Crie uma senha nova para voltar à sua leitura.'
+                  : 'Entre com o e-mail e a senha da sua conta.'
           }}
         </p>
       </div>
@@ -60,32 +76,44 @@
           />
         }
 
-        <label for="auth-email">E-mail</label>
-        <input
-          id="auth-email"
-          [(ngModel)]="email"
-          name="email"
-          class="premium-input"
-          type="email"
-          autocomplete="email"
-          maxlength="254"
-          required
-        />
+        @if (mode !== 'reset') {
+          <label for="auth-email">E-mail</label>
+          <input
+            id="auth-email"
+            [(ngModel)]="email"
+            name="email"
+            class="premium-input"
+            type="email"
+            autocomplete="email"
+            maxlength="254"
+            required
+          />
+        }
 
-        <label for="auth-password">Senha</label>
-        <input
-          id="auth-password"
-          [(ngModel)]="password"
-          name="password"
-          class="premium-input"
-          type="password"
-          [autocomplete]="mode === 'register' ? 'new-password' : 'current-password'"
-          minlength="8"
-          maxlength="72"
-          required
-        />
+        @if (mode !== 'forgot') {
+          <label for="auth-password">{{ mode === 'reset' ? 'Nova senha' : 'Senha' }}</label>
+          <input
+            id="auth-password"
+            [(ngModel)]="password"
+            name="password"
+            class="premium-input"
+            type="password"
+            [autocomplete]="mode === 'login' ? 'current-password' : 'new-password'"
+            minlength="8"
+            maxlength="72"
+            required
+          />
+        }
 
-        @if (mode === 'register') {
+        @if (mode === 'login') {
+          <div class="auth-links auth-links-end">
+            <button type="button" class="text-link" (click)="setMode('forgot')">
+              Esqueci minha senha
+            </button>
+          </div>
+        }
+
+        @if (mode === 'register' || mode === 'reset') {
           <p class="password-hint">Use pelo menos 8 caracteres.</p>
           <label for="auth-password-confirmation">Confirme a senha</label>
           <input
@@ -104,6 +132,9 @@
         @if (errorMessage) {
           <p class="auth-error" role="alert">{{ errorMessage }}</p>
         }
+        @if (feedbackMessage) {
+          <p class="auth-success" role="status">{{ feedbackMessage }}</p>
+        }
 
         <button type="submit" class="premium-btn" [disabled]="isSubmitting">
           {{
@@ -111,10 +142,31 @@
               ? 'Só um instante…'
               : mode === 'register'
                 ? 'Criar conta e entrar'
-                : 'Entrar'
+                : mode === 'forgot'
+                  ? resetRequestSent
+                    ? 'Enviar novamente'
+                    : 'Enviar link de recuperação'
+                  : mode === 'reset'
+                    ? 'Salvar nova senha'
+                    : 'Entrar'
           }}
         </button>
       </form>
+
+      @if (mode === 'login') {
+        <p class="account-prompt">
+          Ainda não tem conta?
+          <button type="button" class="text-link" (click)="setMode('register')">
+            Criar cadastro
+          </button>
+        </p>
+      } @else if (mode === 'forgot' || mode === 'reset') {
+        <p class="account-prompt">
+          <button type="button" class="text-link" (click)="setMode('login')">
+            Voltar para entrar
+          </button>
+        </p>
+      }
 
       <p class="security-note">A senha é protegida no servidor e nunca é salva no navegador.</p>
     </div>

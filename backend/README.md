@@ -5,6 +5,7 @@ Backend do Readva em Spring Boot. Este módulo começa a retirar do navegador a 
 ## Responsabilidades atuais
 
 - cadastrar, autenticar e consultar leitores;
+- enviar links temporários para redefinição de senha quando o SMTP estiver configurado;
 - proteger a API com sessão HTTP, CSRF e autorização por leitor;
 - persistir, importar, editar e excluir atividades de leitura;
 - persistir, importar, atualizar e excluir livros da biblioteca pessoal;
@@ -62,11 +63,13 @@ Para a implantação gratuita com Vercel, Render e Supabase, use o Dockerfile da
 
 | Método | Endpoint                                                  | Responsabilidade          |
 | ------ | --------------------------------------------------------- | ------------------------- |
-| GET    | `/api/auth/csrf`                                          | emitir cookie CSRF        |
-| POST   | `/api/auth/register`                                      | criar conta e sessão      |
-| POST   | `/api/auth/login`                                         | autenticar                |
-| GET    | `/api/auth/session`                                       | consultar sessão          |
-| POST   | `/api/auth/logout`                                        | encerrar sessão           |
+| GET    | `/api/auth/csrf`                                          | emitir cookie CSRF             |
+| POST   | `/api/auth/register`                                      | criar conta e sessão           |
+| POST   | `/api/auth/login`                                         | autenticar                     |
+| POST   | `/api/auth/password-reset`                                 | solicitar link de recuperação  |
+| POST   | `/api/auth/password-reset/confirm`                         | definir senha com token        |
+| GET    | `/api/auth/session`                                       | consultar sessão               |
+| POST   | `/api/auth/logout`                                        | encerrar sessão                |
 | GET    | `/api/readers/{readerId}`                                 | consultar leitor          |
 | POST   | `/api/readers/{readerId}/activities`                      | registrar uma leitura     |
 | GET    | `/api/readers/{readerId}/activities`                      | listar leituras do leitor |
@@ -88,6 +91,8 @@ Para a implantação gratuita com Vercel, Render e Supabase, use o Dockerfile da
 | POST   | `/api/readers/{readerId}/profile/import`                  | importar perfil local     |
 
 Os identificadores públicos de livros e atividades são gerados no cliente e preservados no servidor. Assim, a primeira sincronização importa dados do navegador de maneira idempotente, sem criar duplicatas. Criar, editar ou excluir uma atividade também ajusta o progresso do livro e reconcilia ofensiva e missões na mesma transação; a importação histórica não soma páginas nem XP novamente. O fuso do leitor define eventos noturnos e datas de livros, enquanto `occurredOn` mantém a data original da sessão.
+
+A recuperação de senha usa tokens aleatórios de uso único, guarda apenas o hash no banco e expira o link após 20 minutos. Para habilitar o envio, configure `PASSWORD_RESET_ENABLED=true`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` e `MAIL_FROM` no Render, além de manter `READVA_WEB_ORIGIN` com o domínio da Vercel. O formulário informa que o recurso está indisponível enquanto o SMTP não estiver configurado.
 
 Exemplo de cadastro:
 
