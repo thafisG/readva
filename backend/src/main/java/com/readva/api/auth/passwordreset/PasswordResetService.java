@@ -99,6 +99,10 @@ public class PasswordResetService {
         } catch (RuntimeException exception) {
             logger.warn("Could not send a password reset email.", exception);
             resetToken.consume();
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "Não foi possível enviar o e-mail de recuperação. Tente novamente mais tarde.",
+                    exception);
         }
     }
 

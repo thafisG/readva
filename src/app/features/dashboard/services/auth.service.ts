@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, TimeoutError, timeout } from 'rxjs';
 import {
   createAvatarDataUrl,
   isAvatarConfig,
@@ -17,6 +17,7 @@ import {
 } from '../../profile/services/reader-profile-api.service';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PASSWORD_RESET_REQUEST_TIMEOUT_MS = 22_000;
 
 interface AuthenticatedReader {
   id: string;
@@ -80,11 +81,13 @@ export class AuthService {
 
   async requestPasswordReset(email: string): Promise<void> {
     try {
-      await this.refreshCsrfToken();
+      await this.refreshCsrfToken(PASSWORD_RESET_REQUEST_TIMEOUT_MS);
       await firstValueFrom(
-        this.http.post('/api/auth/password-reset', {
-          email: email.trim().toLowerCase(),
-        }),
+        this.http
+          .post('/api/auth/password-reset', {
+            email: email.trim().toLowerCase(),
+          })
+          .pipe(timeout(PASSWORD_RESET_REQUEST_TIMEOUT_MS)),
       );
     } catch (error) {
       throw new Error(this.errorMessage(error), { cause: error });
@@ -94,9 +97,7 @@ export class AuthService {
   async confirmPasswordReset(token: string, password: string): Promise<void> {
     try {
       await this.refreshCsrfToken();
-      await firstValueFrom(
-        this.http.post('/api/auth/password-reset/confirm', { token, password }),
-      );
+      await firstValueFrom(this.http.post('/api/auth/password-reset/confirm', { token, password }));
     } catch (error) {
       throw new Error(this.errorMessage(error), { cause: error });
     }
@@ -168,8 +169,9 @@ export class AuthService {
     }
   }
 
-  private async refreshCsrfToken(): Promise<void> {
-    await firstValueFrom(this.http.get('/api/auth/csrf'));
+  private async refreshCsrfToken(timeoutMs?: number): Promise<void> {
+    const request = this.http.get('/api/auth/csrf');
+    await firstValueFrom(timeoutMs ? request.pipe(timeout(timeoutMs)) : request);
   }
 
   private requireAuthenticatedReader(value: unknown): AuthenticatedReader {
@@ -299,6 +301,9 @@ export class AuthService {
   }
 
   private errorMessage(error: unknown): string {
+    if (error instanceof TimeoutError) {
+      return 'O servidor demorou para responder. Tente novamente em alguns instantes.';
+    }
     const errorRecord =
       typeof error === 'object' && error !== null ? (error as Record<string, unknown>) : null;
     const technicalMessage = error instanceof Error ? error.message : String(error);
