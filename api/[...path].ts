@@ -1,4 +1,19 @@
-import type { IncomingMessage, ServerResponse } from 'node:http';
+type HeaderValue = string | string[] | undefined;
+
+interface ApiRequest extends AsyncIterable<string | Uint8Array> {
+  headers: Record<string, HeaderValue>;
+  method?: string;
+  url?: string;
+}
+
+interface ApiResponse {
+  writeHead(status: number, headers?: Record<string, string | string[]>): void;
+  end(body?: string | Uint8Array): void;
+}
+
+declare const process: {
+  env: Record<string, string | undefined>;
+};
 
 const HOP_BY_HOP_HEADERS = new Set([
   'connection',
@@ -14,8 +29,8 @@ const HOP_BY_HOP_HEADERS = new Set([
 ]);
 
 export default async function handler(
-  request: IncomingMessage,
-  response: ServerResponse,
+  request: ApiRequest,
+  response: ApiResponse,
 ): Promise<void> {
   const apiOrigin = process.env['READVA_API_URL'];
   if (!apiOrigin) {
@@ -77,7 +92,7 @@ export default async function handler(
   }
 }
 
-async function readBody(request: IncomingMessage): Promise<ArrayBuffer | undefined> {
+async function readBody(request: ApiRequest): Promise<ArrayBuffer | undefined> {
   const chunks: Uint8Array[] = [];
   let byteLength = 0;
 
@@ -99,7 +114,7 @@ async function readBody(request: IncomingMessage): Promise<ArrayBuffer | undefin
   return body.buffer;
 }
 
-function sendJson(response: ServerResponse, status: number, body: unknown): void {
+function sendJson(response: ApiResponse, status: number, body: unknown): void {
   response.writeHead(status, {
     'content-type': 'application/json; charset=utf-8',
     'cache-control': 'no-store',
