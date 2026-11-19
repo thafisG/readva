@@ -69,7 +69,7 @@ export default async function handler(
       response.end();
       return;
     }
-    response.end(Buffer.from(await upstream.arrayBuffer()));
+    response.end(new Uint8Array(await upstream.arrayBuffer()));
   } catch {
     sendJson(response, 502, {
       message: 'Não foi possível conectar à API. Verifique o serviço de backend.',
@@ -77,12 +77,26 @@ export default async function handler(
   }
 }
 
-async function readBody(request: IncomingMessage): Promise<Uint8Array | undefined> {
-  const chunks: Buffer[] = [];
+async function readBody(request: IncomingMessage): Promise<ArrayBuffer | undefined> {
+  const chunks: Uint8Array[] = [];
+  let byteLength = 0;
+
   for await (const chunk of request) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    const bytes = typeof chunk === 'string' ? new TextEncoder().encode(chunk) : new Uint8Array(chunk);
+    chunks.push(bytes);
+    byteLength += bytes.byteLength;
   }
-  return chunks.length > 0 ? Buffer.concat(chunks) : undefined;
+
+  if (chunks.length === 0) return undefined;
+
+  const body = new Uint8Array(byteLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  return body.buffer;
 }
 
 function sendJson(response: ServerResponse, status: number, body: unknown): void {
