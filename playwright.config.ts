@@ -4,7 +4,7 @@ const isCi = Boolean(process.env['CI']);
 const backendCommand =
   process.platform === 'win32'
     ? 'backend\\mvnw.cmd -f backend\\pom.xml spring-boot:run -Dspring-boot.run.profiles=e2e'
-    : './backend/mvnw -f backend/pom.xml spring-boot:run -Dspring-boot.run.profiles=e2e';
+    : 'bash backend/mvnw -f backend/pom.xml spring-boot:run -Dspring-boot.run.profiles=e2e';
 
 export default defineConfig({
   testDir: './e2e',

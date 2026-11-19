@@ -109,7 +109,7 @@
     }
 
     &:focus-visible {
-      outline: 3px solid rgba(62, 114, 179, 0.3);
+      outline: 3px solid rgba(121, 86, 63, 0.3);
       outline-offset: 2px;
     }
   }
@@ -163,9 +163,9 @@
     box-shadow 0.2s ease;
 
   &:focus {
-    border-color: #3e72b3;
+    border-color: #9a715a;
     outline: none;
-    box-shadow: 0 0 0 3px rgba(62, 114, 179, 0.12);
+    box-shadow: 0 0 0 3px rgba(121, 86, 63, 0.14);
   }
 }
 
@@ -200,20 +200,21 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: #3567a6;
+  color: #76513d;
   font: inherit;
   font-weight: 650;
-  text-decoration: underline;
+  text-decoration: none;
   text-underline-offset: 3px;
   cursor: pointer;
 
   &:hover {
-    color: #244e85;
+    color: #573b2c;
+    text-decoration: underline;
   }
 
   &:focus-visible {
     border-radius: 3px;
-    outline: 3px solid rgba(62, 114, 179, 0.3);
+    outline: 3px solid rgba(121, 86, 63, 0.3);
     outline-offset: 3px;
   }
 }
@@ -245,7 +246,7 @@
   margin-top: 8px;
   border: 0;
   border-radius: 12px;
-  background: #3e72b3;
+  background: #79563f;
   color: #fff;
   font: inherit;
   font-size: 0.875rem;
@@ -253,11 +254,11 @@
   cursor: pointer;
 
   &:hover:not(:disabled) {
-    background: #315f99;
+    background: #654632;
   }
 
   &:focus-visible {
-    outline: 3px solid rgba(62, 114, 179, 0.3);
+    outline: 3px solid rgba(121, 86, 63, 0.3);
     outline-offset: 2px;
   }
 
