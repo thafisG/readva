@@ -42,7 +42,16 @@ export default async function handler(
 
   let destination: URL;
   try {
-    destination = new URL(request.url ?? '/', apiOrigin);
+    const incomingUrl = new URL(request.url ?? '/', 'http://vercel.local');
+    const apiPath = incomingUrl.searchParams.get('path');
+    if (!apiPath || apiPath.split('/').some((segment) => segment === '..')) {
+      sendJson(response, 400, { message: 'A rota da API é inválida.' });
+      return;
+    }
+
+    destination = new URL(`/api/${apiPath}`, apiOrigin);
+    incomingUrl.searchParams.delete('path');
+    destination.search = incomingUrl.searchParams.toString();
     if (!['http:', 'https:'].includes(destination.protocol)) {
       throw new Error('Unsupported protocol');
     }
